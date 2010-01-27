@@ -5,7 +5,7 @@ aware that a libusb 1.0 wrapper was in the works (or was it when I started ?).
 I don't plan, for example, to add support for multiple backends as next pyusb
 version does.
 
-It certainly has some rough edges, and I wield them out whenthey annoy me too
+It certainly has some rough edges, and I wield them out when they annoy me too
 much.
 
 libusb1.py
