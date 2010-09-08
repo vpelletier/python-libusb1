@@ -1,6 +1,7 @@
 # pyusb compatibility layer for libus-1.0
 import libusb1
-from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER
+from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
+    create_unicode_buffer, c_wchar, cast, c_uint16, c_ubyte
 from cStringIO import StringIO
 
 __all__ = ['LibUSBContext']
@@ -210,7 +211,32 @@ class USBDeviceHandle(object):
         if result:
             raise libusb1.USBError, result
 
-    # TODO: getStringDescriptor (in unicode)
+    def getSupportedLanguageList(self):
+        descriptor_string = create_string_buffer(STRING_LENGTH)
+        result = libusb1.libusb_get_string_descriptor(self.handle,
+            0, 0, descriptor_string, sizeof(descriptor_string))
+        if result < 0:
+            if result == libusb1.LIBUSB_ERROR_PIPE:
+                # From libusb_control_transfer doc:
+                # control request not supported by the device
+                return []
+            raise libusb1.USBError, result
+        length = cast(descriptor_string, POINTER(c_ubyte))[0]
+        langid_list = cast(descriptor_string, POINTER(c_uint16))
+        result = []
+        append = result.append
+        for offset in xrange(1, length / 2):
+            append(libusb1.libusb_le16_to_cpu(langid_list[offset]))
+        return result
+
+    def getStringDescriptor(self, descriptor, lang_id):
+        descriptor_string = create_unicode_buffer(
+            STRING_LENGTH / sizeof(c_wchar))
+        result = libusb1.libusb_get_string_descriptor(self.handle,
+            descriptor, lang_id, descriptor_string, sizeof(descriptor_string))
+        if result < 0:
+            raise libusb1.USBError, result
+        return descriptor_string.value
 
     def getASCIIStringDescriptor(self, descriptor):
         descriptor_string = create_string_buffer(STRING_LENGTH)
@@ -478,6 +504,18 @@ class USBDevice(object):
 
     def getbcdDevice(self):
         return self.device_descriptor.bcdDevice
+
+    def getSupportedLanguageList(self):
+        temp_handle = self.open()
+        return temp_handle.getSupportedLanguageList()
+
+    def _getStringDescriptor(self, descriptor, lang_id):
+        if descriptor == 0:
+            result = None
+        else:
+            temp_handle = self.open()
+            result = temp_handle.getStringDescriptor(descriptor, lang_id)
+        return result
 
     def _getASCIIStringDescriptor(self, descriptor):
         if descriptor == 0:
