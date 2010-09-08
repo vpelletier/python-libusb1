@@ -43,6 +43,10 @@ class USBAsyncReaderBase(object):
         self._event_callback_dict = {}
         self._errorCallback = DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK
 
+    def _getTransfer(self, handle, endpoint, data, callbackDispatcher,
+            user_data, timeout):
+        raise NotImplementedError
+
     def submit(self):
         self._submited = True
         self._handle.submitTransfer(self._transfer)
