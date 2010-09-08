@@ -106,8 +106,6 @@ class USBPoller(object):
     def poll(self, timeout=None):
         fd_set = self.fd_set
         next_usb_timeout = self.context.getNextTimeout()
-        if next_usb_timeout == 0:
-            next_usb_timeout = None
         if timeout is None:
             usb_timeout = next_usb_timeout
         else:
@@ -625,5 +623,14 @@ class LibUSBContext(object):
                                             removed_cb, user_data)
 
     def getNextTimeout(self):
-        return libusb1.libusb_get_next_timeout(self.context_p, None)
+        timeval = libusb1.timeval()
+        result = libusb1.libusb_get_next_timeout(self.context_p,
+            byref(timeval))
+        if result == 0:
+            result = None
+        elif result == 1:
+            result = timeval.tv_sec + (timeval.tv_usec * 0.000001)
+        else:
+            raise libusb1.USBError, result
+        return result
 
