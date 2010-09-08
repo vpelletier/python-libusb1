@@ -215,7 +215,7 @@ class USBDeviceHandle(object):
     def getASCIIStringDescriptor(self, descriptor):
         descriptor_string = create_string_buffer(STRING_LENGTH)
         result = libusb1.libusb_get_string_descriptor_ascii(self.handle,
-             descriptor, descriptor_string, STRING_LENGTH)
+             descriptor, descriptor_string, sizeof(descriptor_string))
         if result < 0:
             raise libusb1.USBError, result
         return descriptor_string.value
