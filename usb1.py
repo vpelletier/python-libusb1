@@ -6,7 +6,8 @@ from cStringIO import StringIO
 __all__ = ['LibUSBContext']
 
 # Default string length
-STRING_LENGTH = 256
+# From a comment in libusb-1.0: "Some devices choke on size > 255"
+STRING_LENGTH = 255
 
 EVENT_CALLBACK_SET = frozenset((
   libusb1.LIBUSB_TRANSFER_COMPLETED,
