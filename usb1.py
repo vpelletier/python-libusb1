@@ -480,8 +480,12 @@ class USBDevice(object):
         return self.device_descriptor.bcdDevice
 
     def _getASCIIStringDescriptor(self, descriptor):
-        temp_handle = self.open()
-        return temp_handle.getASCIIStringDescriptor(descriptor)
+        if descriptor == 0:
+            result = None
+        else:
+            temp_handle = self.open()
+            result = temp_handle.getASCIIStringDescriptor(descriptor)
+        return result
 
     def getManufacturer(self):
         return self._getASCIIStringDescriptor(
