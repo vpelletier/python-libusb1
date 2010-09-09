@@ -784,7 +784,8 @@ class USBDevice(object):
         Get device's serial number.
         Note: opens the device temporarily.
         """
-        return self.device_descriptor.iSerialNumber
+        return self._getASCIIStringDescriptor(
+            self.device_descriptor.iSerialNumber)
 
     def getNumConfigurations(self):
         """
