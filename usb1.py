@@ -182,8 +182,7 @@ class USBPoller(object):
         """
         self.__context = context
         self.__poller = poller
-        fd_set = set()
-        self.fd_set = fd_set
+        self.__fd_set = set()
         context.setPollFDNotifiers(self._registerFD, self._unregisterFD)
         for fd, events in context.getPollFDList():
             self._registerFD(fd, events)
@@ -194,7 +193,7 @@ class USBPoller(object):
         timeout can be a float in seconds, or None for no timeout.
         Returns a list of (descriptor, event) pairs.
         """
-        fd_set = self.fd_set
+        fd_set = self.__fd_set
         next_usb_timeout = self.__context.getNextTimeout()
         if timeout is None:
             usb_timeout = next_usb_timeout
@@ -226,12 +225,12 @@ class USBPoller(object):
         self.__poller.unregister(fd)
 
     def _registerFD(self, fd, events, user_data=None):
-        self.fd_set.add(fd)
+        self.__fd_set.add(fd)
         self.register(fd, events)
 
     def _unregisterFD(self, fd, user_data=None):
         self.unregister(fd)
-        self.sd_set.discard(fd)
+        self.__fd_set.discard(fd)
 
 class USBDeviceHandle(object):
     """
