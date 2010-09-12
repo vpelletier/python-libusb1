@@ -192,7 +192,7 @@ class USBPoller(object):
         """
         Poll for events.
         timeout can be a float in seconds, or None for no timeout.
-        Returns the list of 
+        Returns a list of (descriptor, event) pairs.
         """
         fd_set = self.fd_set
         next_usb_timeout = self.__context.getNextTimeout()
