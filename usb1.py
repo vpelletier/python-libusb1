@@ -821,6 +821,8 @@ class LibUSBContext(object):
     """
     __libusb_exit = libusb1.libusb_exit
     __context_p = None
+    __added_cb = None
+    __removed_cb = None
 
     def __init__(self):
         """
@@ -843,6 +845,8 @@ class LibUSBContext(object):
         if context_p is not None:
             self.__libusb_exit(context_p)
             self.__context_p = None
+        self.__added_cb = None
+        self.__removed_cb = None
 
     def getDeviceList(self):
         """
@@ -926,6 +930,8 @@ class LibUSBContext(object):
             removed_cb = POINTER(None)
         else:
             removed_cb = libusb1.libusb_pollfd_removed_cb_p(removed_cb)
+        self.__added_cb = added_cb
+        self.__removed_cb = removed_cb
         libusb1.libusb_set_pollfd_notifiers(self.__context_p, added_cb,
                                             removed_cb, user_data)
 
