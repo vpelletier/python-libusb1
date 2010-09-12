@@ -955,3 +955,11 @@ class LibUSBContext(object):
             raise libusb1.USBError, result
         return result
 
+    def setDebug(self, level):
+        """
+        Set debugging level.
+        Note: depending on libusb compilation settings, this might have no
+        effect.
+        """
+        libusb1.libusb_set_debug(self.__context_p, level)
+
