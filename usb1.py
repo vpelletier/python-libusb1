@@ -919,13 +919,13 @@ class LibUSBContext(object):
         this class with a polling mechanism.
         """
         if added_cb is None:
-          added_cb = POINTER(None)
+            added_cb = POINTER(None)
         else:
-          added_cb = libusb1.libusb_pollfd_added_cb_p(added_cb)
+            added_cb = libusb1.libusb_pollfd_added_cb_p(added_cb)
         if removed_cb is None:
-          removed_cb = POINTER(None)
+            removed_cb = POINTER(None)
         else:
-          removed_cb = libusb1.libusb_pollfd_removed_cb_p(removed_cb)
+            removed_cb = libusb1.libusb_pollfd_removed_cb_p(removed_cb)
         libusb1.libusb_set_pollfd_notifiers(self.__context_p, added_cb,
                                             removed_cb, user_data)
 
