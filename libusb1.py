@@ -659,7 +659,7 @@ def libusb_fill_control_transfer(transfer_p, dev_handle, buffer, callback,
                           libusb_le16_to_cpu(setup.wLength)
         transfer.buffer = cast(buffer, c_void_p)
     transfer.user_data = user_data
-    transfer.callback = libusb_transfer_cb_fn_p(callback)
+    transfer.callback = callback
 
 def libusb_fill_bulk_transfer(transfer_p, dev_handle, endpoint, buffer, length,
                               callback, user_data, timeout):
@@ -671,7 +671,7 @@ def libusb_fill_bulk_transfer(transfer_p, dev_handle, endpoint, buffer, length,
     transfer.buffer = cast(buffer, c_void_p)
     transfer.length = length
     transfer.user_data = user_data
-    transfer.callback = libusb_transfer_cb_fn_p(callback)
+    transfer.callback = callback
 
 def libusb_fill_interrupt_transfer(transfer_p, dev_handle, endpoint, buffer,
                                    length, callback, user_data, timeout):
@@ -683,7 +683,7 @@ def libusb_fill_interrupt_transfer(transfer_p, dev_handle, endpoint, buffer,
     transfer.buffer = cast(buffer, c_void_p)
     transfer.length = length
     transfer.user_data = user_data
-    transfer.callback = libusb_transfer_cb_fn_p(callback)
+    transfer.callback = callback
 
 def libusb_fill_iso_transfer(transfer_p, dev_handle, endpoint, buffer, length,
                              num_iso_packets, callback, user_data, timeout):
@@ -696,7 +696,7 @@ def libusb_fill_iso_transfer(transfer_p, dev_handle, endpoint, buffer, length,
     transfer.length = length
     transfer.num_iso_packets = num_iso_packets
     transfer.user_data = user_data
-    transfer.callback = libusb_transfer_cb_fn_p(callback)
+    transfer.callback = callback
 
 def libusb_set_iso_packet_lengths(transfer_p, length):
     transfer = transfer_p.contents
