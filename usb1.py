@@ -187,6 +187,9 @@ class USBPoller(object):
         for fd, events in context.getPollFDList():
             self._registerFD(fd, events)
 
+    def __del__(self):
+        self.__context.setPollFDNotifiers(None, None)
+
     def poll(self, timeout=None):
         """
         Poll for events.
