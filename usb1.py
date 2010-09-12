@@ -234,6 +234,12 @@ class USBPoller(object):
         self.sd_set.discard(fd)
 
 class USBDeviceHandle(object):
+    """
+    Represents an opened USB device.
+
+    You should not instanciate this class directly, but should receive
+    instances from USBDevice.open() method.
+    """
     handle = None
 
     def __init__(self, context, handle):
