@@ -819,7 +819,7 @@ class LibUSBContext(object):
     Provides methods to enumerate & look up USB devices.
     Also provides access to global (device-independent) libusb1 functions.
     """
-
+    __libusb_exit = libusb1.libusb_exit
     __context_p = None
 
     def __init__(self):
@@ -841,7 +841,7 @@ class LibUSBContext(object):
         """
         context_p = self.__context_p
         if context_p is not None:
-            libusb1.libusb_exit(context_p)
+            self.__libusb_exit(context_p)
             self.__context_p = None
 
     def getDeviceList(self):
