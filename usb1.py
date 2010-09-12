@@ -236,13 +236,15 @@ class USBPoller(object):
 class USBDeviceHandle(object):
     """
     Represents an opened USB device.
-
-    You should not instanciate this class directly, but should receive
-    instances from USBDevice.open() method.
     """
     __handle = None
 
     def __init__(self, context, handle):
+        """
+        You should not instanciate this class directly.
+        Call "open" method on an USBDevice instance to get an USBDeviceHandle
+        instance.
+        """
         # XXX Context parameter is just here as a hint for garbage collector:
         # It must collect USBDeviceHandle instance before their LibUSBContext.
         self.__context = context
@@ -586,14 +588,15 @@ class USBDeviceHandle(object):
 class USBDevice(object):
     """
     Represents a USB device.
-
-    You should not instanciate this class directly, but should receive
-    instances from LibUSBContext methods.
     """
 
     __configuration_descriptor_list = None
 
     def __init__(self, context, device_p):
+        """
+        You should not instanciate this class directly.
+        Call LibUSBContext methods to receive instances of this class.
+        """
         self.__context = context
         libusb1.libusb_ref_device(device_p)
         self.device_p = device_p
