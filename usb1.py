@@ -910,7 +910,8 @@ class LibUSBContext(object):
         if result:
             raise libusb1.USBError, result
 
-    def setPollFDNotifiers(self, added_cb=None, removed_cb=None, user_data=None):
+    def setPollFDNotifiers(self, added_cb=None, removed_cb=None,
+            user_data=None):
         """
         Give libusb1 methods to call when it should add/remove file descriptor
         for polling.
