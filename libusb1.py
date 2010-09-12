@@ -550,6 +550,7 @@ libusb_get_device_address.restype = c_uint8
 #int libusb_get_max_packet_size(libusb_device *dev, unsigned char endpoint);
 libusb_get_max_packet_size = libusb.libusb_get_max_packet_size
 libusb_get_max_packet_size.argtypes = [libusb_device_p, c_uchar]
+#int libusb_get_max_iso_packet_size(libusb_device *dev, unsigned char endpoint);
 libusb_get_max_iso_packet_size = libusb.libusb_get_max_iso_packet_size
 libusb_get_max_iso_packet_size.argtypes = [libusb_device_p, c_uchar]
 
