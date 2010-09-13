@@ -253,18 +253,8 @@ class USBTransfer(object):
             raise ValueError, 'Cannot alter a submitted transfer'
         transfer = self.__transfer.contents
         if transfer.type == libusb1.LIBUSB_TRANSFER_TYPE_CONTROL:
-            setup = string_at(transfer.buffer,
-                libusb1.LIBUSB_CONTROL_SETUP_SIZE)
-            if isinstance(buffer_or_len, basestring):
-                wLength = len(buffer_or_len)
-                string_buffer = create_string_buffer(setup + buffer_or_len)
-            else:
-                wLength = buffer_or_len
-                string_buffer = create_string_buffer(setup, buffer_or_len + \
-                    libusb1.LIBUSB_CONTROL_SETUP_SIZE)
-            transfer.buffer = string_buffer
-            libusb1.libusb_control_transfer_get_setup(transfer).contents.\
-                wLength = wLength
+            raise ValueError, 'To alter control transfer buffer, use ' \
+                'setControl'
         else:
             string_buffer = create_string_buffer(buffer_or_len)
             transfer.buffer = string_buffer
