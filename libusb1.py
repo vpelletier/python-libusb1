@@ -654,11 +654,11 @@ def libusb_fill_control_transfer(transfer_p, dev_handle, buffer, callback,
     transfer.endpoint = 0
     transfer.type = LIBUSB_TRANSFER_TYPE_CONTROL
     transfer.timeout = timeout
+    transfer.buffer = cast(buffer, c_void_p)
     if buffer is not None:
         setup = cast(buffer, libusb_control_setup_p).contents
         transfer.length = LIBUSB_CONTROL_SETUP_SIZE + \
                           libusb_le16_to_cpu(setup.wLength)
-        transfer.buffer = cast(buffer, c_void_p)
     transfer.user_data = user_data
     transfer.callback = callback
 
