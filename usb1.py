@@ -240,7 +240,7 @@ class USBTransfer(object):
         transfer = self.__transfer.contents
         result = string_at(transfer.buffer, transfer.length)
         if transfer.type == libusb1.LIBUSB_TRANSFER_TYPE_CONTROL:
-            result = result[libusb1.LIBUSB_CONTROL_SETUP_SIZE - 1:]
+            result = result[libusb1.LIBUSB_CONTROL_SETUP_SIZE:]
         return result
 
     def setBuffer(self, buffer_or_len):
