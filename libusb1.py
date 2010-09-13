@@ -4,7 +4,7 @@ from ctypes import Structure, \
                    cdll, \
                    c_short, c_int, c_uint, c_size_t, c_long, \
                    c_uint8, c_uint16, \
-                   c_void_p, c_char_p, py_object
+                   c_void_p, c_char_p, py_object, string_at
 from ctypes.util import find_library
 import struct
 import platform
@@ -617,7 +617,8 @@ libusb_attach_kernel_driver.argtypes = [libusb_device_handle_p, c_int]
 # \returns pointer to the first byte of the data section
 
 def libusb_control_transfer_get_data(transfer):
-    return transfer.buffer.content[LIBUSB_CONTROL_SETUP_SIZE:]
+    return string_at(transfer.contents.buffer, transfer.length)[
+        LIBUSB_CONTROL_SETUP_SIZE:]
 
 def libusb_control_transfer_get_setup(transfer):
     return cast(transfer, libusb_control_setup_p)
