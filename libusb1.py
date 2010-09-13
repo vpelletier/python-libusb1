@@ -693,7 +693,7 @@ def libusb_fill_iso_transfer(transfer_p, dev_handle, endpoint, buffer, length,
     transfer.endpoint = endpoint
     transfer.type = LIBUSB_TRANSFER_TYPE_ISOCHRONOUS
     transfer.timeout = timeout
-    transfer.buffer = buffer
+    transfer.buffer = cast(buffer, c_void_p)
     transfer.length = length
     transfer.num_iso_packets = num_iso_packets
     transfer.user_data = user_data
