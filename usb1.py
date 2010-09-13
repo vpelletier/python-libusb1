@@ -23,7 +23,7 @@ Features:
 import libusb1
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
     create_unicode_buffer, c_wchar, cast, c_uint16, c_ubyte, string_at, \
-    addressof
+    addressof, c_void_p
 from cStringIO import StringIO
 
 __all__ = ['LibUSBContext', 'USBDeviceHandle', 'USBDevice',
@@ -44,6 +44,14 @@ EVENT_CALLBACK_SET = frozenset((
 ))
 
 DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK = lambda x, y: False
+
+def create_binary_buffer(string_or_len):
+    # Prevent ctypes from adding a trailing null char.
+    if isinstance(string_or_len, basestring):
+        result = create_string_buffer(string_or_len, len(string_or_len))
+    else:
+        result = create_string_buffer(string_or_len)
+    return result
 
 class USBTransfer(object):
     """
@@ -148,11 +156,11 @@ class USBTransfer(object):
             raise ValueError, 'Cannot alter a submitted transfer'
         if isinstance(buffer_or_len, basestring):
             length = len(buffer_or_len)
-            string_buffer = create_string_buffer(
+            string_buffer = create_binary_buffer(
                 ' ' * libusb1.LIBUSB_CONTROL_SETUP_SIZE + buffer_or_len)
         else:
             length = buffer_or_len
-            string_buffer = create_string_buffer(length + \
+            string_buffer = create_binary_buffer(length + \
                 libusb1.LIBUSB_CONTROL_SETUP_SIZE)
         libusb1.libusb_fill_control_setup(string_buffer, request_type,
             request, value, index, length)
@@ -178,7 +186,7 @@ class USBTransfer(object):
         """
         if self.__submitted:
             raise ValueError, 'Cannot alter a submitted transfer'
-        string_buffer = create_string_buffer(buffer_or_len)
+        string_buffer = create_binary_buffer(buffer_or_len)
         libusb1.libusb_fill_bulk_transfer(self.__transfer, self.__handle,
             endpoint, string_buffer, sizeof(string_buffer),
             self.__ctypesCallbackWrapper, user_data, timeout)
@@ -202,7 +210,7 @@ class USBTransfer(object):
         """
         if self.__submitted:
             raise ValueError, 'Cannot alter a submitted transfer'
-        string_buffer = create_string_buffer(buffer_or_len)
+        string_buffer = create_binary_buffer(buffer_or_len)
         libusb1.libusb_fill_interrupt_transfer(self.__transfer, self.__handle,
             endpoint, string_buffer,  sizeof(string_buffer),
             self.__ctypesCallbackWrapper, user_data, timeout)
@@ -255,10 +263,9 @@ class USBTransfer(object):
         if transfer.type == libusb1.LIBUSB_TRANSFER_TYPE_CONTROL:
             raise ValueError, 'To alter control transfer buffer, use ' \
                 'setControl'
-        else:
-            string_buffer = create_string_buffer(buffer_or_len)
-            transfer.buffer = string_buffer
-        transfer.length = sizeof(string_buffer)
+        buff = create_binary_buffer(buffer_or_len)
+        transfer.buffer = cast(buff, c_void_p)
+        transfer.length = sizeof(buff)
 
     def isSubmitted(self):
         """
