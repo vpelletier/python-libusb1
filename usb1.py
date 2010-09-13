@@ -245,11 +245,12 @@ class USBTransfer(object):
         Get data buffer content.
         Should not be called on a submitted transfer.
         """
-        transfer = self.__transfer
+        transfer_p = self.__transfer
+        transfer = transfer_p.contents
         if transfer.type == libusb1.LIBUSB_TRANSFER_TYPE_CONTROL:
-            result = libusb1.libusb_control_transfer_get_data(transfer)
+            result = libusb1.libusb_control_transfer_get_data(transfer_p)
         else:
-            result = string_at(transfer.contents.buffer, transfer.length)
+            result = string_at(transfer.buffer, transfer.length)
         return result
 
     def setBuffer(self, buffer_or_len):

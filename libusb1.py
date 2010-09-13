@@ -616,12 +616,13 @@ libusb_attach_kernel_driver.argtypes = [libusb_device_handle_p, c_int]
 # \param transfer a transfer
 # \returns pointer to the first byte of the data section
 
-def libusb_control_transfer_get_data(transfer):
-    return string_at(transfer.contents.buffer, transfer.length)[
+def libusb_control_transfer_get_data(transfer_p):
+    transfer = transfer_p.contents
+    return string_at(transfer.buffer, transfer.length)[
         LIBUSB_CONTROL_SETUP_SIZE:]
 
-def libusb_control_transfer_get_setup(transfer):
-    return cast(transfer.contents.buffer, libusb_control_setup_p)
+def libusb_control_transfer_get_setup(transfer_p):
+    return cast(transfer_p.contents.buffer, libusb_control_setup_p)
 
 def libusb_fill_control_setup(setup_p, bmRequestType, bRequest, wValue, wIndex,
                               wLength):
