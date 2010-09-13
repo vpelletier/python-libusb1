@@ -262,11 +262,12 @@ class USBTransfer(object):
                 wLength = buffer_or_len
                 string_buffer = create_string_buffer(setup, buffer_or_len + \
                     libusb1.LIBUSB_CONTROL_SETUP_SIZE)
-            cast(string_buffer, libusb1.libusb_control_setup_p).contents.\
+            transfer.buffer = string_buffer
+            libusb1.libusb_control_transfer_get_setup(transfer).contents.\
                 wLength = wLength
         else:
             string_buffer = create_string_buffer(buffer_or_len)
-        transfer.buffer = string_buffer
+            transfer.buffer = string_buffer
         transfer.length = sizeof(string_buffer)
 
     def isSubmitted(self):

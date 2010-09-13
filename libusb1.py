@@ -621,7 +621,7 @@ def libusb_control_transfer_get_data(transfer):
         LIBUSB_CONTROL_SETUP_SIZE:]
 
 def libusb_control_transfer_get_setup(transfer):
-    return cast(transfer, libusb_control_setup_p)
+    return cast(transfer.contents.buffer, libusb_control_setup_p)
 
 def libusb_fill_control_setup(setup_p, bmRequestType, bRequest, wValue, wIndex,
                               wLength):
