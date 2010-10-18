@@ -60,7 +60,7 @@ if libusb_path is None and platform.system() == 'Darwin' and \
         os.path.isfile('/opt/local/lib/libusb-1.0.dylib'):
     libusb_path = '/opt/local/lib/libusb-1.0.dylib'
 if libusb_path is None:
-    raise Exception('Can\'t locate usb-1.0 library' )
+    raise Exception('Can\'t locate usb-1.0 library')
 libusb = cdll.LoadLibrary(libusb_path)
 
 # libusb.h
