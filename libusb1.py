@@ -1,7 +1,6 @@
 # libusb-1.0 python wrapper
 from ctypes import Structure, \
                    CFUNCTYPE, POINTER, sizeof, cast, \
-                   cdll, \
                    c_short, c_int, c_uint, c_size_t, c_long, \
                    c_uint8, c_uint16, \
                    c_void_p, c_char_p, py_object, string_at
@@ -55,14 +54,20 @@ class timeval(Structure):
                 ('tv_usec', c_long)]
 timeval_p = POINTER(timeval)
 
-libusb_path = find_library("usb-1.0")
-# macport standard library path
-if libusb_path is None and platform.system() == 'Darwin' and \
-        os.path.isfile('/opt/local/lib/libusb-1.0.dylib'):
-    libusb_path = '/opt/local/lib/libusb-1.0.dylib'
-if libusb_path is None:
-    raise Exception('Can\'t locate usb-1.0 library')
-libusb = cdll.LoadLibrary(libusb_path)
+def _loadLibrary():
+    system = platform.system()
+    from ctypes import cdll as dll_loader
+    libusb_path = find_library("usb-1.0")
+    if libusb_path is None and system == 'Darwin':
+        # macport standard library path
+        libusb_path = '/opt/local/lib/libusb-1.0.dylib'
+        if not os.path.isfile(libusb_path):
+            libusb_path = None
+    if libusb_path is None:
+        raise Exception('Can\'t locate usb-1.0 library')
+    return dll_loader.LoadLibrary(libusb_path)
+
+libusb = _loadLibrary()
 
 # libusb.h
 def bswap16(x):
