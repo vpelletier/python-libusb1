@@ -22,8 +22,8 @@ class Enum(object):
                 next_value += 1
             forward_dict[name] = value
             if value in reverse_dict:
-                raise ValueError, 'Multiple names for value %r: %r, %r' % \
-                    (value, reverse_dict[value], name)
+                raise ValueError('Multiple names for value %r: %r, %r' %
+                    (value, reverse_dict[value], name))
             reverse_dict[value] = name
             module_globals[name] = value
         self.forward_dict = forward_dict
