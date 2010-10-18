@@ -9,6 +9,7 @@ from ctypes.util import find_library
 import struct
 import platform
 import os.path
+import sys
 
 class Enum(object):
     def __init__(self, member_dict):
@@ -47,7 +48,7 @@ c_uchar = c_uint8
 c_int_p = POINTER(c_int)
 
 PATH_MAX = 4096 # XXX: True on linux, no idea about others.
-LITTLE_ENDIAN = struct.unpack('h', '\x01\x00')[0] == 1
+LITTLE_ENDIAN = sys.byteorder == 'little'
 
 class timeval(Structure):
     _fields_ = [('tv_sec', c_long),
