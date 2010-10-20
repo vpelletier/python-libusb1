@@ -772,6 +772,10 @@ class USBDevice(object):
             config = libusb1.libusb_config_descriptor_p()
             result = libusb1.libusb_get_config_descriptor(device_p,
                 configuration_id, byref(config))
+            if result == libusb1.LIBUSB_ERROR_NOT_FOUND:
+                # Some devices (ex windows' root hubs) tell they have one
+                # configuration, but they have no configuration descriptor.
+                continue
             if result:
                 raise libusb1.USBError(result)
             append(config.contents)
