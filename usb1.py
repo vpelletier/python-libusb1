@@ -601,11 +601,14 @@ class USBDeviceHandle(object):
         Fetch description string for given descriptor and in given language.
         Use getSupportedLanguageList to know which languages are available.
         Return value is an unicode string.
+        Return None if there is no such descriptor on device.
         """
         descriptor_string = create_unicode_buffer(
             STRING_LENGTH / sizeof(c_wchar))
         result = libusb1.libusb_get_string_descriptor(self.__handle,
             descriptor, lang_id, descriptor_string, sizeof(descriptor_string))
+        if result == libusb1.LIBUSB_ERROR_NOT_FOUND:
+            return None
         if result < 0:
             raise libusb1.USBError(result)
         return descriptor_string.value
@@ -615,10 +618,13 @@ class USBDeviceHandle(object):
         Fetch description string for given descriptor in first available
         language.
         Return value is an ASCII string.
+        Return None if there is no such descriptor on device.
         """
         descriptor_string = create_string_buffer(STRING_LENGTH)
         result = libusb1.libusb_get_string_descriptor_ascii(self.__handle,
              descriptor, descriptor_string, sizeof(descriptor_string))
+        if result == libusb1.LIBUSB_ERROR_NOT_FOUND:
+            return None
         if result < 0:
             raise libusb1.USBError(result)
         return descriptor_string.value
