@@ -122,7 +122,9 @@ class USBTransfer(object):
         his = addressof(transfer_p.contents)
         assert mine == his, (mine, his)
         self.__submitted = False
-        self.__callback(self)
+        callback = self.__callback
+        if callback is not None:
+            __callback(self)
 
     def setCallback(self, callback):
         """
@@ -281,9 +283,6 @@ class USBTransfer(object):
         if not self.__initialized:
             raise ValueError('Cannot submit a transfer until it has been '
                 'initialized')
-        if self.__callback is None:
-            raise ValueError('A callback must be set on transfer before it '
-                'can be submitted')
         result = libusb1.libusb_submit_transfer(self.__transfer)
         if result:
             raise libusb1.USBError(result)
