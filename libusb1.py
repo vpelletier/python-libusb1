@@ -510,6 +510,16 @@ libusb_exit.restype = None
 libusb_set_debug = libusb.libusb_set_debug
 libusb_set_debug.argtypes = [libusb_context_p, c_int]
 libusb_set_debug.restype = None
+try:
+    #char *libusb_strerror(enum libusb_error errcode);
+    libusb_strerror = libusb.libusb_strerror
+except AttributeError:
+    # Place holder
+    def libusb_strerror(errcode):
+        return None
+else:
+    libusb_strerror.argtypes = [c_int]
+    libusb_strerror.restype = c_char_p
 
 #ssize_t libusb_get_device_list(libusb_context *ctx,
 #        libusb_device ***list);
