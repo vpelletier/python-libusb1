@@ -124,7 +124,7 @@ class USBTransfer(object):
         self.__submitted = False
         callback = self.__callback
         if callback is not None:
-            __callback(self)
+            callback(self)
 
     def setCallback(self, callback):
         """
