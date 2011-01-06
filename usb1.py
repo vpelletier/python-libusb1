@@ -43,7 +43,7 @@ EVENT_CALLBACK_SET = frozenset((
   libusb1.LIBUSB_TRANSFER_OVERFLOW,
 ))
 
-DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK = lambda x, y: False
+DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK = lambda x: False
 
 def create_binary_buffer(string_or_len):
     # Prevent ctypes from adding a trailing null char.
