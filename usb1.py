@@ -15,7 +15,7 @@ Features:
   codes
 - Synchronous I/O (control, bulk, interrupt)
 - Asyncrhonous I/O (control, bulk, interrupt)
-  Note: Isochronous support is not implemented yet.
+  Note: Isochronous support is experimental.
   See USBPoller, USBTransfer and USBTransferHelper.
 """
 
@@ -96,7 +96,11 @@ class USBTransfer(object):
         Call "getTransfer" method on an USBDeviceHandle instance to get
         instances of this class.
         """
+        if iso_packets < 0:
+            raise ValueError('Cannot request a negative number of iso '
+                'packets.')
         self.__handle = handle
+        self.__num_iso_packets = iso_packets
         result = libusb1.libusb_alloc_transfer(iso_packets)
         if not result:
             raise libusb1.USBError('Unable to get a transfer object')
@@ -239,14 +243,60 @@ class USBTransfer(object):
         self.__callback = callback
         self.__initialized = True
 
-    def setIsochronous(self, *args, **kw):
+    def setIsochronous(self, endpoint, buffer_or_len, callback=None,
+            user_data=None, timeout=0, iso_transfer_length_list=None):
         """
         Setup transfer for isochronous use.
-        XXX: Not implemented yet
+
+        endpoint: endpoint to submit transfer to (implicitly sets transfer
+          direction).
+        buffer_or_len: either a string (when sending data), or expected data
+          length (when receiving data)
+        callback: function to call upon event. Called with transfer as
+          parameter, return value ignored.
+        user_data: to pass some data to/from callback
+        timeout: in milliseconds, how long to wait for devices acknowledgement
+          or data. Set to 0 to disable.
+        iso_transfer_length_list: list of individual transfer sizes. If not
+          provided, buffer_or_len's size will be divided evenly among the
+          number of ISO transfers given to receive current instance, rounded
+          down. Providing a list allows overriding this (both the number of
+          ISO transfers and their individual lengths).
         """
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
-        raise NotImplementedError
+        num_iso_packets = self.__num_iso_packets
+        if num_iso_packets == 0:
+            raise TypeError('This transfer canot be used for isochronous I/O. '
+                'You must get another one with a non-zero iso_packets '
+                'parameter.')
+        string_buffer = create_binary_buffer(buffer_or_len)
+        buffer_length = sizeof(string_buffer)
+        if iso_transfer_length_list is None:
+            iso_length = buffer_length / num_iso_packets
+            iso_transfer_length_list = [iso_length for _ in
+                xrange(num_iso_packets)]
+        configured_iso_packets = len(iso_transfer_length_list)
+        if configured_iso_packets > num_iso_packets:
+            raise ValueError('Too many ISO transfer lengths (%i), there are '
+                'only %i ISO transfers available' % (configured_iso_packets,
+                    num_iso_packets))
+        if sum(iso_transfer_length_list) > buffer_length:
+            raise ValueError('ISO transfers too long (%i), there are only '
+                '%i bytes available' % (sum(iso_transfer_length_list),
+                    buffer_length))
+        transfer_p = self.__transfer
+        libusb1.libusb_fill_iso_transfer(transfer_p, self.__handle,
+            endpoint, string_buffer, buffer_length, num_iso_packets,
+            self.__ctypesCallbackWrapper, user_data, timeout)
+        for length, iso_packet_desc in zip(iso_transfer_length_list,
+                libusb1.get_iso_packet_list(transfer_p)):
+            if length <= 0:
+                raise ValueError('Negative/null transfer length are not '
+                    'possible.')
+            iso_packet_desc.length = length
+        self.__callback = callback
+        self.__initialized = True
 
     def getStatus(self):
         """
@@ -274,6 +324,37 @@ class USBTransfer(object):
         else:
             result = string_at(transfer.buffer, transfer.length)
         return result
+
+    def getISOBufferList(self):
+        """
+        Get individual ISO transfer's buffer.
+        Returns a list with one item per ISO transfer, with their
+        individually-configured sizes.
+        Should not be called on a submitted transfer.
+        """
+        transfer_p = self.__transfer
+        transfer = transfer_p.contents
+        if transfer.type != libusb1.LIBUSB_TRANSFER_TYPE_ISOCHRONOUS:
+            raise TypeError('This method cannot be called on non-iso '
+                'transfers.')
+        return libusb1.get_iso_packet_buffer_list(transfer_p)
+
+    def getISOSetupList(self):
+        """
+        Get individual ISO transfer's setup.
+        Returns a list of dicts, each containing an individual ISO transfer
+        parameters.
+        """
+        transfer_p = self.__transfer
+        transfer = transfer_p.contents
+        if transfer.type != libusb1.LIBUSB_TRANSFER_TYPE_ISOCHRONOUS:
+            raise TypeError('This method cannot be called on non-iso '
+                'transfers.')
+        return [{
+                'length': x.length,
+                'actual_length': x.actual_length,
+                'status': x.status,
+            } for x in libusb1.get_iso_packet_list(transfer_p)]
 
     def setBuffer(self, buffer_or_len):
         """
@@ -334,6 +415,8 @@ class USBTransferHelper(object):
     - True if transfer is to be submitted again (to receive/send more data)
     - False otherwise
     """
+    # TODO: handle the special case of isochronous transfers, where there is a
+    # global status and per-packet status.
     def __init__(self, transfer=None):
         """
         Create a transfer callback dispatcher.
