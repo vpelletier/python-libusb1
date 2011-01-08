@@ -314,26 +314,36 @@ class USBTransferHelper(object):
     - True if transfer is to be submitted again (to receive/send more data)
     - False otherwise
     """
-    def __init__(self, transfer):
+    def __init__(self, transfer=None):
         """
-        Create a helper for given USBTransfer.
-        Note: transfer's callback function is overwritten upon instanciation.
+        Create a transfer callback dispatcher.
+
+        transfer parameter is deprecated. If provided, it will be equivalent
+        to:
+            helper = USBTransferHelper()
+            transfer.setCallback(helper)
         """
-        self.__transfer = transfer
-        transfer.setCallback(self.__callbackDispatcher)
+        if transfer is not None:
+            # Deprecated: to drop
+            self.__transfer = transfer
+            transfer.setCallback(self)
         self.__event_callback_dict = {}
         self.__errorCallback = DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK
 
     def submit(self):
         """
         Submit the asynchronous read request.
+        Deprecated. Use submit on transfer.
         """
+        # Deprecated: to drop
         self.__transfer.submit()
 
     def cancel(self):
         """
         Cancel a pending read request.
+        Deprecated. Use cancel on transfer.
         """
+        # Deprecated: to drop
         self.__transfer.cancel()
 
     def setEventCallback(self, event, callback):
@@ -359,24 +369,30 @@ class USBTransferHelper(object):
         """
         return self.__event_callback_dict.get(event, default)
 
-    def __callbackDispatcher(self, transfer):
-        assert transfer is self.__transfer
+    def __call__(self, transfer):
+        """
+        Callback to set on transfers.
+        """
         if self.getEventCallback(transfer.getStatus(), self.__errorCallback)(
                 transfer):
-            self.submit()
+            transfer.submit()
 
     def isSubmited(self):
         """
         Returns whether this reader is currently waiting for an event.
+        Deprecatd. Use isSubmitted on transfer.
         """
+        # Deprecated: to drop
         return self.__transfer.isSubmitted()
 
     def __del__(self):
-        try:
-            self.cancel()
-        except libusb1.USBError, exception:
-            if exception.value != libusb1.LIBUSB_ERROR_NOT_FOUND:
-                raise
+        # To drop when deprecated methods are gone.
+        if self.__transfer is not None:
+            try:
+                self.cancel()
+            except libusb1.USBError, exception:
+                if exception.value != libusb1.LIBUSB_ERROR_NOT_FOUND:
+                    raise
 
 class USBPoller(object):
     """
