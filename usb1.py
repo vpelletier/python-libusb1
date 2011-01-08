@@ -781,8 +781,10 @@ class USBDevice(object):
         You should not instanciate this class directly.
         Call LibUSBContext methods to receive instances of this class.
         """
+        # Important: device_p refcount must be incremented before being given
+        # to this constructor. This class will decrement refcount upon
+        # destruction.
         self.__context = context
-        libusb1.libusb_ref_device(device_p)
         self.device_p = device_p
         # Fetch device descriptor
         device_descriptor = libusb1.libusb_device_descriptor()
@@ -1046,8 +1048,7 @@ class LibUSBContext(object):
         device_list_len = libusb1.libusb_get_device_list(self.__context_p,
                                                          byref(device_p_p))
         result = [USBDevice(self, x) for x in device_p_p[:device_list_len]]
-        # XXX: causes problems, why ?
-        #libusb1.libusb_free_device_list(device_p_p, 1)
+        libusb1.libusb_free_device_list(device_p_p, 0)
         return result
 
     def openByVendorIDAndProductID(self, vendor_id, product_id):
