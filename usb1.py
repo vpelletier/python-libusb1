@@ -293,7 +293,7 @@ class USBTransfer(object):
     def cancel(self):
         """
         Cancel given transfer.
-        Note: cancellation happensasynchronously, so you must wait for
+        Note: cancellation happens asynchronously, so you must wait for
         LIBUSB_TRANSFER_CANCELLED.
         """
         result = libusb1.libusb_cancel_transfer(self.__transfer)
