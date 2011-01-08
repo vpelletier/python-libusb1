@@ -57,10 +57,10 @@ timeval_p = POINTER(timeval)
 def _loadLibrary():
     system = platform.system()
     if system == 'Windows':
-        from ctypes import windll as dll_loader
+        from ctypes import WinDLL as dll_loader
         libusb_path = find_library("libusb-1.0.dll")
     else:
-        from ctypes import cdll as dll_loader
+        from ctypes import CDLL as dll_loader
         libusb_path = find_library("usb-1.0")
         if libusb_path is None and system == 'Darwin':
             # macport standard library path
@@ -69,7 +69,11 @@ def _loadLibrary():
                 libusb_path = None
     if libusb_path is None:
         raise Exception('Can\'t locate usb-1.0 library')
-    return dll_loader.LoadLibrary(libusb_path)
+    loader_kw = {}
+    if sys.version_info[:2] >= (2, 6):
+        loader_kw['use_errno'] = True
+        loader_kw['use_last_error'] = True
+    return dll_loader(libusb_path, **loader_kw)
 
 libusb = _loadLibrary()
 
