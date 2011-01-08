@@ -411,8 +411,7 @@ class USBPoller(object):
         - unregister(fd)
         - poll(timeout)
           timeout being a float in seconds, or None if there is no timeout.
-          It must return a list of pairs, in which the first event must be the
-          file descriptor on which an event happened.
+          It must return a list of (descriptor, event) pairs.
         """
         self.__context = context
         self.__poller = poller
