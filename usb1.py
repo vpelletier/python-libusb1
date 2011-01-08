@@ -1091,13 +1091,18 @@ class LibUSBContext(object):
         if result:
             raise libusb1.USBError(result)
 
-    def handleEventsTimeout(self, tv=None):
+    def handleEventsTimeout(self, tv=0):
         """
-        Handle any pending event (non-blocking).
-        tv: for future use. Do not give it a non-None value.
+        Handle any pending event.
+        If tv is 0, will return immediately after handling already-pending
+        events.
+        Othewire, defines the maximum amount of time to wait for events, in
+        seconds.
         """
-        assert tv is None, 'tv parameter is not supported yet'
-        tv = libusb1.timeval(0, 0)
+        if tv is None:
+            tv = 0
+        tv_s = int(tv)
+        tv = libusb1.timeval(tv_s, int((tv - tv_s) * 1000000))
         result = libusb1.libusb_handle_events_timeout(self.__context_p,
             byref(tv))
         if result:
