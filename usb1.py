@@ -304,7 +304,10 @@ class USBTransfer(object):
 class USBTransferHelper(object):
     """
     Simplifies subscribing to the same transfer over and over, and callback
-    handling.
+    handling:
+    - no need to read event status to execute apropriate code, just setup
+      different functions for each status code
+    - just return True instead of calling submit
 
     Callbacks used in this class must follow the callback API described in
     USBTransfer, and are expected to return a boolean:
