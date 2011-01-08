@@ -1,18 +1,40 @@
-python-libusb1 is a Python wrapper around libusb-1.0 [1].
-It is not intended to preempt work done by pyusb[2] author, but as a quick way
-to get a working wrapper with asynchronous transfer support. I actualy wasn't
-aware that a libusb 1.0 wrapper was in the works (or was it when I started ?).
-I don't plan, for example, to add support for multiple backends as next pyusb
-version does.
+python-libusb1 is a Python wrapper for libusb-1.0
 
-It certainly has some rough edges, and I wield them out when they annoy me too
-much.
+URL:
+  http://github.com/vpelletier/python-libusb1
 
-libusb1.py
+Requierments:
+- Python http://www.python.org/
+- ctypes (included in Python 2.5+) http://python.net/crew/theller/ctypes/
+- libusb1 http://libusb.sourceforge.net/api-1.0/
+
+Contents:
+- libusb1.py
   Bare ctype wrapper, inspired from library C header file.
-usb1.py
+- usb1.py
   Python-ish (classes, exceptions, ...) wrapper around libusb1.py .
+  See docstrings (pydoc recommended) for usage.
+- setup.py
+  To package as python egg.
+- stdeb.cfg
+  To package as Debian package. See https://github.com/astraw/stdeb .
 
-[1] http://libusb.sourceforge.net/api-1.0/
-[2] http://sourceforge.net/projects/pyusb/
+Install:
+python setup.py install
+(you might need root access to do this)
+
+History:
+python-libusb1 was created to get a python wrapper supporting asynchronous
+features of libusb1.
+0.0.1
+  Initial release
+0.1.1
+  Massive rework of usb1.py, making it more python-ish and fixing some
+  memory leaks.
+0.1.2
+  Deprecate "transfer" constructor parameter to allow instance reuse.
+
+See also:
+  pyusb: another python wrapper for (among others) libusb1
+    http://sourceforge.net/projects/pyusb/
 
