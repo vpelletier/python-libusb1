@@ -23,9 +23,10 @@ Features:
 import libusb1
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
     create_unicode_buffer, c_wchar, cast, c_uint16, c_ubyte, string_at, \
-    addressof, c_void_p
+    addressof, c_void_p, cdll
 from cStringIO import StringIO
 import sys
+from ctypes.util import find_library
 
 __all__ = ['LibUSBContext', 'USBDeviceHandle', 'USBDevice',
     'USBPoller', 'USBTransfer', 'USBTransferHelper', 'EVENT_CALLBACK_SET']
@@ -39,6 +40,15 @@ else:
     def get_errno():
         raise NotImplementedError("Your python version doesn't support "
             "errno/last_error")
+
+__libc_name = find_library('c')
+if __libc_name is None:
+    # Of course, will leak memory.
+    # Should we warn user ? How ?
+    __free = lambda x: None
+else:
+    __free = getattr(cdll, __libc_name).free
+del __libc_name
 
 # Default string length
 # From a comment in libusb-1.0: "Some devices choke on size > 255"
@@ -1090,15 +1100,16 @@ class LibUSBContext(object):
                 # Assume not implemented
                 raise NotImplementedError("Your libusb doesn't seem to "
                     "implement pollable FDs")
-        result = []
-        append = result.append
-        fd_index = 0
-        while pollfd_p_p[fd_index]:
-            append((pollfd_p_p[fd_index].contents.fd,
-                    pollfd_p_p[fd_index].contents.events))
-            fd_index += 1
-        # XXX: causes problems, why ?
-        #libusb1.libusb.free(pollfd_p_p)
+        try:
+            result = []
+            append = result.append
+            fd_index = 0
+            while pollfd_p_p[fd_index]:
+                append((pollfd_p_p[fd_index].contents.fd,
+                        pollfd_p_p[fd_index].contents.events))
+                fd_index += 1
+        finally:
+            __free(pollfd_p_p)
         return result
 
     def handleEvents(self):
