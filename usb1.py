@@ -280,6 +280,8 @@ class USBTransfer(object):
         """
         Submit a transfer for asynchronous handling.
         """
+        if self.__submitted:
+            raise ValueError('Cannot submit a submitted transfer')
         if not self.__initialized:
             raise ValueError('Cannot submit a transfer until it has been '
                 'initialized')
