@@ -25,9 +25,20 @@ from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
     create_unicode_buffer, c_wchar, cast, c_uint16, c_ubyte, string_at, \
     addressof, c_void_p
 from cStringIO import StringIO
+import sys
 
 __all__ = ['LibUSBContext', 'USBDeviceHandle', 'USBDevice',
     'USBPoller', 'USBTransfer', 'USBTransferHelper', 'EVENT_CALLBACK_SET']
+
+if sys.version_info[:2] >= (2, 6):
+    if sys.platform == 'win32':
+        from ctypes import get_last_error as get_errno
+    else:
+        from ctypes import get_errno
+else:
+    def get_errno():
+        raise NotImplementedError("Your python version doesn't support "
+            "errno/last_error")
 
 # Default string length
 # From a comment in libusb-1.0: "Some devices choke on size > 255"
@@ -1071,6 +1082,14 @@ class LibUSBContext(object):
         this class with a polling mechanism.
         """
         pollfd_p_p = libusb1.libusb_get_pollfds(self.__context_p)
+        if not pollfd_p_p:
+            errno = get_errno()
+            if errno:
+                raise OSError(errno)
+            else:
+                # Assume not implemented
+                raise NotImplementedError("Your libusb doesn't seem to "
+                    "implement pollable FDs")
         result = []
         append = result.append
         fd_index = 0
