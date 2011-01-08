@@ -14,7 +14,6 @@ Features:
 - String descriptor lookups (ASCII & unicode), and list supported language
   codes
 - Synchronous I/O (control, bulk, interrupt)
-  Note: Isochronous support is not implemented yet.
 - Asyncrhonous I/O (control, bulk, interrupt)
   Note: Isochronous support is not implemented yet.
   See USBPoller, USBTransfer and USBTransferHelper.
