@@ -784,7 +784,7 @@ class USBDeviceHandle(object):
     def controlRead(self, request_type, request, value, index, length,
                     timeout=0):
         """
-        Syncrhonous control read.
+        Synchronous control read.
         timeout: in milliseconds, how long to wait for data. Set to 0 to
           disable.
         See controlWrite for other parameters description.
@@ -806,7 +806,7 @@ class USBDeviceHandle(object):
 
     def bulkWrite(self, endpoint, data, timeout=0):
         """
-        Syncrhonous bulk write.
+        Synchronous bulk write.
         endpoint: endpoint to send data to.
         data: data to send.
         timeout: in milliseconds, how long to wait for device acknowledgement.
@@ -819,7 +819,7 @@ class USBDeviceHandle(object):
 
     def bulkRead(self, endpoint, length, timeout=0):
         """
-        Syncrhonous bulk read.
+        Synchronous bulk read.
         timeout: in milliseconds, how long to wait for data. Set to 0 to
           disable.
         See bulkWrite for other parameters description.
