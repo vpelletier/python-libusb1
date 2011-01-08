@@ -1,9 +1,9 @@
 # libusb-1.0 python wrapper
 from ctypes import Structure, \
-                   CFUNCTYPE, POINTER, sizeof, cast, \
+                   CFUNCTYPE, POINTER, addressof, sizeof, cast, \
                    c_short, c_int, c_uint, c_size_t, c_long, \
                    c_uint8, c_uint16, \
-                   c_void_p, c_char_p, py_object, string_at
+                   c_void_p, c_char, c_char_p, py_object, string_at
 from ctypes.util import find_library
 import platform
 import os.path
@@ -496,7 +496,7 @@ libusb_transfer._fields_ = [('dev_handle', libusb_device_handle_p),
                             ('user_data', py_object),
                             ('buffer', c_void_p),
                             ('num_iso_packets', c_int),
-                            ('iso_packet_desc', libusb_iso_packet_descriptor_p)
+                            ('iso_packet_desc', libusb_iso_packet_descriptor)
 ]
 
 #int libusb_init(libusb_context **ctx);
@@ -718,26 +718,56 @@ def libusb_fill_iso_transfer(transfer_p, dev_handle, endpoint, buffer, length,
     transfer.user_data = user_data
     transfer.callback = callback
 
+def _get_iso_packet_list(transfer):
+    list_type = libusb_iso_packet_descriptor * transfer.num_iso_packets
+    return list_type.from_address(addressof(transfer.iso_packet_desc))
+
+def get_iso_packet_list(transfer_p):
+    """
+    Python-specific helper extracting a list of iso packet descriptors,
+    because it's not as straight-forward as in C.
+    """
+    return _get_iso_packet_list(transfer_p.contents)
+
+def _get_iso_packet_buffer(transfer, offset, remain):
+    return (c_char * remain).from_address(addressof(transfer.buffer) + offset)
+
+def get_iso_packet_buffer_list(transfer_p):
+    """
+    Python-specific helper extracting a list of iso packet buffers.
+    """
+    transfer = transfer_p.contents
+    offset = 0
+    result = []
+    append = result.append
+    for iso_transfer in _get_iso_packet_list(transfer):
+        length = iso_transfer.length
+        append(_get_iso_packet_buffer(transfer, offset, length))
+        offset += length
+    return result
+
 def libusb_set_iso_packet_lengths(transfer_p, length):
     transfer = transfer_p.contents
-    for i in xrange(transfer.num_iso_packets):
-        transfer.iso_packet_desc[i].length = length
+    for iso_packet_desc in _get_iso_packet_list(transfer):
+        iso_packet_desc.length = length
 
 def libusb_get_iso_packet_buffer(transfer_p, packet):
     transfer = transfer_p.contents
     offset = 0
     if packet >= transfer.num_iso_packets:
         return None
+    iso_packet_desc_list = _get_iso_packet_list(transfer)
     for i in xrange(packet):
-        offset += transfer.iso_packet_desc[i].length
-    return transfer.buffer[offset:]
+        offset += iso_packet_desc_list[i].length
+    return _get_iso_packet_buffer(transfer, offset,
+        iso_packet_desc_list[packet].length)
 
 def libusb_get_iso_packet_buffer_simple(transfer_p, packet):
     transfer = transfer_p.contents
     if packet >= transfer.num_iso_packets:
         return None
-    return transfer.buffer[transfer.iso_packet_desc[0].length * packet:]
-
+    iso_length = transfer.iso_packet_desc.length
+    return _get_iso_packet_buffer(transfer, iso_length * packet, iso_length)
  
 # sync I/O
 
