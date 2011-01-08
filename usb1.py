@@ -432,8 +432,10 @@ class USBPoller(object):
         next_usb_timeout = self.__context.getNextTimeout()
         if timeout is None:
             usb_timeout = next_usb_timeout
+        elif next_usb_timeout:
+            usb_timeout = min(next_usb_timeout, timeout)
         else:
-            usb_timeout = min(next_usb_timeout or timeout, timeout)
+            usb_timeout = timeout
         event_list = self.__poller.poll(usb_timeout)
         if event_list:
             fd_set = self.__fd_set
