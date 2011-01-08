@@ -5,7 +5,6 @@ from ctypes import Structure, \
                    c_uint8, c_uint16, \
                    c_void_p, c_char_p, py_object, string_at
 from ctypes.util import find_library
-import struct
 import platform
 import os.path
 import sys
@@ -37,6 +36,7 @@ class Enum(object):
 
 class USBError(Exception):
     def __init__(self, value):
+        Exception.__init__(self)
         self.value = value
 
     def __str__(self):
