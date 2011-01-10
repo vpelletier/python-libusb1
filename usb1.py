@@ -359,7 +359,13 @@ class USBTransfer(object):
         """
         Get individual ISO transfer's setup.
         Returns a list of dicts, each containing an individual ISO transfer
-        parameters.
+        parameters:
+        - length
+        - actual_length
+        - status
+        (see libusb1's API documentation for their signification)
+        Should not be called on a submitted transfer (except for 'length'
+        values).
         """
         transfer_p = self.__transfer
         transfer = transfer_p.contents
@@ -395,7 +401,7 @@ class USBTransfer(object):
 
     def submit(self):
         """
-        Submit a transfer for asynchronous handling.
+        Submit transfer for asynchronous handling.
         """
         if self.__submitted:
             raise ValueError('Cannot submit a submitted transfer')
@@ -409,7 +415,7 @@ class USBTransfer(object):
 
     def cancel(self):
         """
-        Cancel given transfer.
+        Cancel transfer.
         Note: cancellation happens asynchronously, so you must wait for
         LIBUSB_TRANSFER_CANCELLED.
         """
@@ -441,6 +447,8 @@ class USBTransferHelper(object):
         to:
             helper = USBTransferHelper()
             transfer.setCallback(helper)
+        and also allows using deprecated methods on this class (otherwise,
+        they raise AttributeError).
         """
         if transfer is not None:
             # Deprecated: to drop
@@ -478,7 +486,7 @@ class USBTransferHelper(object):
         """
         Set the function to call for event which don't have a specific callback
         registered.
-        The initial default callback does nothing and returns false.
+        The initial default callback does nothing and returns False.
         """
         self.__errorCallback = callback
 
@@ -515,13 +523,14 @@ class USBPoller(object):
         Warning: it will not check if another poller instance was already
         present for that context, and will replace it.
 
-        poller is a polling instance implementing the follwing methods:
+        poller is a polling instance implementing the following methods:
         - register(fd, event_flags)
           event_flags have the same meaning as in poll API (POLLIN & POLLOUT)
         - unregister(fd)
         - poll(timeout)
           timeout being a float in seconds, or None if there is no timeout.
           It must return a list of (descriptor, event) pairs.
+        Note: USBPoller is itself a valid poller.
         """
         self.__context = context
         self.__poller = poller
@@ -796,6 +805,8 @@ class USBDeviceHandle(object):
         timeout: in milliseconds, how long to wait for data. Set to 0 to
           disable.
         See controlWrite for other parameters description.
+
+        Returns received data.
         """
         request_type = (request_type & ~libusb1.USB_ENDPOINT_DIR_MASK) | \
                         libusb1.LIBUSB_ENDPOINT_IN
@@ -819,6 +830,8 @@ class USBDeviceHandle(object):
         data: data to send.
         timeout: in milliseconds, how long to wait for device acknowledgement.
           Set to 0 to disable.
+
+        Returns the number of bytes actually sent.
         """
         endpoint = (endpoint & ~libusb1.USB_ENDPOINT_DIR_MASK) | \
                     libusb1.LIBUSB_ENDPOINT_OUT
@@ -831,6 +844,8 @@ class USBDeviceHandle(object):
         timeout: in milliseconds, how long to wait for data. Set to 0 to
           disable.
         See bulkWrite for other parameters description.
+
+        Returns received data.
         """
         endpoint = (endpoint & ~libusb1.USB_ENDPOINT_DIR_MASK) | \
                     libusb1.LIBUSB_ENDPOINT_IN
@@ -853,6 +868,8 @@ class USBDeviceHandle(object):
         data: data to send.
         timeout: in milliseconds, how long to wait for device acknowledgement.
           Set to 0 to disable.
+
+        Returns the number of bytes actually sent.
         """
         endpoint = (endpoint & ~libusb1.USB_ENDPOINT_DIR_MASK) | \
                     libusb1.LIBUSB_ENDPOINT_OUT
@@ -865,6 +882,8 @@ class USBDeviceHandle(object):
         timeout: in milliseconds, how long to wait for data. Set to 0 to
           disable.
         See interruptRead for other parameters description.
+
+        Returns received data.
         """
         endpoint = (endpoint & ~libusb1.USB_ENDPOINT_DIR_MASK) | \
                     libusb1.LIBUSB_ENDPOINT_IN
