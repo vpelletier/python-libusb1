@@ -84,6 +84,9 @@ class USBTransfer(object):
     # Prevent garbage collector from freeing the free function before our
     # instances, as we need it to property destruct them.
     __libusb_free_transfer = libusb1.libusb_free_transfer
+    __libusb_cancel_transfer = libusb1.libusb_cancel_transfer
+    __USBError = libusb1.USBError
+    __LIBUSB_ERROR_NOT_FOUND = libusb1.LIBUSB_ERROR_NOT_FOUND
     __transfer = None
     __initialized = False
     __submitted = False
@@ -139,8 +142,8 @@ class USBTransfer(object):
                 # reference to transfer, so a segfault might happen anyway.
                 # Should we warn user ? How ?
                 self.cancel()
-            except libusb1.USBError, exception:
-                if exception.value == libusb1.LIBUSB_ERROR_NOT_FOUND:
+            except self.__USBError, exception:
+                if exception.value == self.__LIBUSB_ERROR_NOT_FOUND:
                     # Transfer was not submitted, we can free it.
                     self.__libusb_free_transfer(self.__transfer)
                 else:
@@ -406,9 +409,9 @@ class USBTransfer(object):
         Note: cancellation happens asynchronously, so you must wait for
         LIBUSB_TRANSFER_CANCELLED.
         """
-        result = libusb1.libusb_cancel_transfer(self.__transfer)
+        result = self.__libusb_cancel_transfer(self.__transfer)
         if result:
-            raise libusb1.USBError(result)
+            raise self.__USBError(result)
         self.__submitted = False
 
 class USBTransferHelper(object):
@@ -497,15 +500,6 @@ class USBTransferHelper(object):
         # Deprecated: to drop
         return self.__transfer.isSubmitted()
 
-    def __del__(self):
-        # To drop when deprecated methods are gone.
-        if self.__transfer is not None:
-            try:
-                self.cancel()
-            except libusb1.USBError, exception:
-                if exception.value != libusb1.LIBUSB_ERROR_NOT_FOUND:
-                    raise
-
 class USBPoller(object):
     """
     Class allowing integration of USB event polling in a file-descriptor
@@ -586,6 +580,7 @@ class USBDeviceHandle(object):
     Represents an opened USB device.
     """
     __handle = None
+    __libusb_close = libusb1.libusb_close
 
     def __init__(self, context, handle):
         """
@@ -608,7 +603,7 @@ class USBDeviceHandle(object):
         """
         handle = self.__handle
         if handle is not None:
-            libusb1.libusb_close(handle)
+            self.__libusb_close(handle)
             self.__handle = None
 
     def getConfiguration(self):
@@ -887,6 +882,9 @@ class USBDevice(object):
     """
 
     __configuration_descriptor_list = None
+    __libusb_unref_device = libusb1.libusb_unref_device
+    __libusb_free_config_descriptor = libusb1.libusb_free_config_descriptor
+    __byref = byref
 
     def __init__(self, context, device_p):
         """
@@ -921,10 +919,11 @@ class USBDevice(object):
             append(config.contents)
 
     def __del__(self):
-        libusb1.libusb_unref_device(self.device_p)
+        self.__libusb_unref_device(self.device_p)
         if self.__configuration_descriptor_list is not None:
+            byref = self.__byref
             for config in self.__configuration_descriptor_list:
-                libusb1.libusb_free_config_descriptor(byref(config))
+                self.__libusb_free_config_descriptor(byref(config))
 
     def __str__(self):
         return 'Bus %03i Device %03i: ID %04x:%04x %s %s' % (
