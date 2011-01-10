@@ -129,13 +129,22 @@ class USBTransfer(object):
     def __del__(self):
         if self.__transfer is not None:
             try:
-                try:
-                    self.cancel()
-                except libusb1.USBError, exception:
-                    if exception.value != libusb1.LIBUSB_ERROR_NOT_FOUND:
-                        raise
-            finally:
-                self.__libusb_free_transfer(self.__transfer)
+                # If this doesn't raise, we're doomed; transfer was submitted,
+                # still python decided to garbage-collect this instance.
+                # Stick to libusb's documentation, and don't free the
+                # transfer. If interpreter is shutting down, kernel will
+                # reclaim memory anyway.
+                # Note: we can't prevent transfer's buffer from being
+                # garbage-collected as soon as there will be no remaining
+                # reference to transfer, so a segfault might happen anyway.
+                # Should we warn user ? How ?
+                self.cancel()
+            except libusb1.USBError, exception:
+                if exception.value == libusb1.LIBUSB_ERROR_NOT_FOUND:
+                    # Transfer was not submitted, we can free it.
+                    self.__libusb_free_transfer(self.__transfer)
+                else:
+                    raise
 
     def __callbackWrapper(self, transfer_p):
         """
