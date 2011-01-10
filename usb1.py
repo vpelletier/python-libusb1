@@ -200,6 +200,7 @@ class USBTransfer(object):
             length = buffer_or_len
             string_buffer = create_binary_buffer(length + \
                 libusb1.LIBUSB_CONTROL_SETUP_SIZE)
+        self.__initialized = False
         libusb1.libusb_fill_control_setup(string_buffer, request_type,
             request, value, index, length)
         libusb1.libusb_fill_control_transfer(self.__transfer, self.__handle,
@@ -225,6 +226,7 @@ class USBTransfer(object):
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
         string_buffer = create_binary_buffer(buffer_or_len)
+        self.__initialized = False
         libusb1.libusb_fill_bulk_transfer(self.__transfer, self.__handle,
             endpoint, string_buffer, sizeof(string_buffer),
             self.__ctypesCallbackWrapper, user_data, timeout)
@@ -249,6 +251,7 @@ class USBTransfer(object):
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
         string_buffer = create_binary_buffer(buffer_or_len)
+        self.__initialized = False
         libusb1.libusb_fill_interrupt_transfer(self.__transfer, self.__handle,
             endpoint, string_buffer,  sizeof(string_buffer),
             self.__ctypesCallbackWrapper, user_data, timeout)
@@ -298,6 +301,7 @@ class USBTransfer(object):
                 '%i bytes available' % (sum(iso_transfer_length_list),
                     buffer_length))
         transfer_p = self.__transfer
+        self.__initialized = False
         libusb1.libusb_fill_iso_transfer(transfer_p, self.__handle,
             endpoint, string_buffer, buffer_length, num_iso_packets,
             self.__ctypesCallbackWrapper, user_data, timeout)
