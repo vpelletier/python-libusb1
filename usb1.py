@@ -577,6 +577,9 @@ class USBPoller(object):
         Register an USB-unrelated fd to poller.
         Convenience method.
         """
+        if fd in self.__fd_set:
+            raise ValueError('This fd is a special USB event fd, it cannot '
+                'be polled.')
         self.__poller.register(fd, events)
 
     def unregister(self, fd):
@@ -584,15 +587,18 @@ class USBPoller(object):
         Unregister an USB-unrelated fd from poller.
         Convenience method.
         """
+        if fd in self.__fd_set:
+            raise ValueError('This fd is a special USB event fd, it must '
+                'stay registered.')
         self.__poller.unregister(fd)
 
     def _registerFD(self, fd, events, user_data=None):
-        self.__fd_set.add(fd)
         self.register(fd, events)
+        self.__fd_set.add(fd)
 
     def _unregisterFD(self, fd, user_data=None):
-        self.unregister(fd)
         self.__fd_set.discard(fd)
+        self.unregister(fd)
 
 class USBDeviceHandle(object):
     """
