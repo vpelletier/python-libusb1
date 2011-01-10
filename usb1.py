@@ -382,6 +382,8 @@ class USBTransfer(object):
         """
         Replace buffer with a new one.
         Allows resizing read buffer and replacing data sent.
+        Note: resizing is not allowed for isochornous buffer (use
+        setIsochronous).
         """
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
@@ -390,6 +392,10 @@ class USBTransfer(object):
             raise ValueError('To alter control transfer buffer, use '
                 'setControl')
         buff = create_binary_buffer(buffer_or_len)
+        if transfer.type == libusb1.LIBUSB_TRANSFER_TYPE_ISOCHRONOUS and \
+                sizeof(buff) != transfer.length:
+            raise ValueError('To alter isochronous transfer buffer length, '
+                'use setIsochronous')
         transfer.buffer = cast(buff, c_void_p)
         transfer.length = sizeof(buff)
 
