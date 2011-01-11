@@ -44,9 +44,9 @@ __libc_name = find_library('c')
 if __libc_name is None:
     # Of course, will leak memory.
     # Should we warn user ? How ?
-    __free = lambda x: None
+    _free = lambda x: None
 else:
-    __free = getattr(cdll, __libc_name).free
+    _free = getattr(cdll, __libc_name).free
 del __libc_name
 
 # Default string length
@@ -1234,7 +1234,7 @@ class LibUSBContext(object):
                         pollfd_p_p[fd_index].contents.events))
                 fd_index += 1
         finally:
-            __free(pollfd_p_p)
+            _free(pollfd_p_p)
         return result
 
     def handleEvents(self):
