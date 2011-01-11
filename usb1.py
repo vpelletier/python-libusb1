@@ -731,7 +731,7 @@ class USBDeviceHandle(object):
         Return a list of USB language identifiers (as integers) supported by
         current device for its string descriptors.
         """
-        descriptor_string = create_string_buffer(STRING_LENGTH)
+        descriptor_string = create_binary_buffer(STRING_LENGTH)
         result = libusb1.libusb_get_string_descriptor(self.__handle,
             0, 0, descriptor_string, sizeof(descriptor_string))
         if result < 0:
@@ -772,7 +772,7 @@ class USBDeviceHandle(object):
         Return value is an ASCII string.
         Return None if there is no such descriptor on device.
         """
-        descriptor_string = create_string_buffer(STRING_LENGTH)
+        descriptor_string = create_binary_buffer(STRING_LENGTH)
         result = libusb1.libusb_get_string_descriptor_ascii(self.__handle,
              descriptor, descriptor_string, sizeof(descriptor_string))
         if result == libusb1.LIBUSB_ERROR_NOT_FOUND:
@@ -806,9 +806,9 @@ class USBDeviceHandle(object):
         """
         request_type = (request_type & ~libusb1.USB_ENDPOINT_DIR_MASK) | \
                         libusb1.LIBUSB_ENDPOINT_OUT
-        data = create_string_buffer(data)
+        data = create_binary_buffer(data)
         return self._controlTransfer(request_type, request, value, index, data,
-                                     len(data)-1, timeout)
+                                     sizeof(data), timeout)
 
     def controlRead(self, request_type, request, value, index, length,
                     timeout=0):
@@ -822,7 +822,7 @@ class USBDeviceHandle(object):
         """
         request_type = (request_type & ~libusb1.USB_ENDPOINT_DIR_MASK) | \
                         libusb1.LIBUSB_ENDPOINT_IN
-        data = create_string_buffer(length)
+        data = create_binary_buffer(length)
         transferred = self._controlTransfer(request_type, request, value,
                                             index, data, length, timeout)
         return data.raw[:transferred]
@@ -847,8 +847,8 @@ class USBDeviceHandle(object):
         """
         endpoint = (endpoint & ~libusb1.USB_ENDPOINT_DIR_MASK) | \
                     libusb1.LIBUSB_ENDPOINT_OUT
-        data = create_string_buffer(data)
-        return self._bulkTransfer(endpoint, data, len(data) - 1, timeout)
+        data = create_binary_buffer(data)
+        return self._bulkTransfer(endpoint, data, sizeof(data), timeout)
 
     def bulkRead(self, endpoint, length, timeout=0):
         """
@@ -861,7 +861,7 @@ class USBDeviceHandle(object):
         """
         endpoint = (endpoint & ~libusb1.USB_ENDPOINT_DIR_MASK) | \
                     libusb1.LIBUSB_ENDPOINT_IN
-        data = create_string_buffer(length)
+        data = create_binary_buffer(length)
         transferred = self._bulkTransfer(endpoint, data, length, timeout)
         return data.raw[:transferred]
 
@@ -885,8 +885,8 @@ class USBDeviceHandle(object):
         """
         endpoint = (endpoint & ~libusb1.USB_ENDPOINT_DIR_MASK) | \
                     libusb1.LIBUSB_ENDPOINT_OUT
-        data = create_string_buffer(data)
-        return self._interruptTransfer(endpoint, data, len(data) - 1, timeout)
+        data = create_binary_buffer(data)
+        return self._interruptTransfer(endpoint, data, sizeof(data), timeout)
 
     def interruptRead(self, endpoint, length, timeout=0):
         """
@@ -899,7 +899,7 @@ class USBDeviceHandle(object):
         """
         endpoint = (endpoint & ~libusb1.USB_ENDPOINT_DIR_MASK) | \
                     libusb1.LIBUSB_ENDPOINT_IN
-        data = create_string_buffer(length)
+        data = create_binary_buffer(length)
         transferred = self._interruptTransfer(endpoint, data, length, timeout)
         return data.raw[:transferred]
 
