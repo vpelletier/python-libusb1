@@ -414,10 +414,11 @@ class USBTransfer(object):
         if not self.__initialized:
             raise ValueError('Cannot submit a transfer until it has been '
                 'initialized')
+        self.__submitted = True
         result = libusb1.libusb_submit_transfer(self.__transfer)
         if result:
+            self.__submitted = False
             raise libusb1.USBError(result)
-        self.__submitted = True
 
     def cancel(self):
         """
