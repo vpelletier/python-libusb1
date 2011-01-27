@@ -314,6 +314,19 @@ class USBTransfer(object):
         self.__callback = callback
         self.__initialized = True
 
+    def getType(self):
+        """
+        Get transfer type.
+        See libusb1.libusb_transfer_type.
+        """
+        return self.__transfer.contents.type
+
+    def getEndpoint(self):
+        """
+        Get endpoint.
+        """
+        return self.__transfer.contents.endpoint
+
     def getStatus(self):
         """
         Get transfer status.
