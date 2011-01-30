@@ -14,7 +14,7 @@ Features:
 - String descriptor lookups (ASCII & unicode), and list supported language
   codes
 - Synchronous I/O (control, bulk, interrupt)
-- Asyncrhonous I/O (control, bulk, interrupt)
+- Asynchronous I/O (control, bulk, interrupt, isochronous)
   Note: Isochronous support is experimental.
   See USBPoller, USBTransfer and USBTransferHelper.
 """
@@ -1301,7 +1301,8 @@ class LibUSBContext(object):
 
     def getNextTimeout(self):
         """
-        Determine the next internal timeout that libusb needs to handle.
+        Returns the next internal timeout that libusb needs to handle, in
+        seconds, or None if no timeout is needed.
         You should not have to call this method, unless you are integrating
         this class with a polling mechanism.
         """
