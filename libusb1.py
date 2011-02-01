@@ -740,7 +740,7 @@ def get_iso_packet_list(transfer_p):
     return _get_iso_packet_list(transfer_p.contents)
 
 def _get_iso_packet_buffer(transfer, offset, length):
-    return (c_char * length).from_address(addressof(transfer.buffer) + offset)
+    return string_at(addressof(transfer.buffer) + offset, length)
 
 def get_iso_packet_buffer_list(transfer_p):
     """
