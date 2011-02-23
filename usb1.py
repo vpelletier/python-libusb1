@@ -1155,7 +1155,7 @@ class USBDevice(object):
     def open(self):
         """
         Open device.
-        Returns an USBDeviceHandler instance.
+        Returns an USBDeviceHandle instance.
         """
         handle = libusb1.libusb_device_handle_p()
         result = libusb1.libusb_open(self.device_p, byref(handle))
@@ -1214,7 +1214,8 @@ class LibUSBContext(object):
     def openByVendorIDAndProductID(self, vendor_id, product_id):
         """
         Get the first USB device matching given vendor and product ids.
-        Returns an USBDevice instance, or None if no present devide match.
+        Returns an USBDeviceHandle instance, or None if no present device
+        match.
         """
         handle_p = libusb1.libusb_open_device_with_vid_pid(self.__context_p,
             vendor_id, product_id)
