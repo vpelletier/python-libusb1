@@ -306,7 +306,7 @@ class libusb_endpoint_descriptor(Structure):
                 ('bInterval', c_uint8),
                 ('bRefresh', c_uint8),
                 ('bSynchAddress', c_uint8),
-                ('extra', c_char_p),
+                ('extra', c_void_p),
                 ('extra_length', c_int)]
 libusb_endpoint_descriptor_p = POINTER(libusb_endpoint_descriptor)
 
@@ -321,7 +321,7 @@ class libusb_interface_descriptor(Structure):
                 ('bInterfaceProtocol', c_uint8),
                 ('iInterface', c_uint8),
                 ('endpoint', libusb_endpoint_descriptor_p),
-                ('extra', c_char_p),
+                ('extra', c_void_p),
                 ('extra_length', c_int)]
 libusb_interface_descriptor_p = POINTER(libusb_interface_descriptor)
 
@@ -340,7 +340,7 @@ class libusb_config_descriptor(Structure):
                 ('bmAttributes', c_uint8),
                 ('MaxPower', c_uint8),
                 ('interface', libusb_interface_p),
-                ('extra', c_char_p),
+                ('extra', c_void_p),
                 ('extra_length', c_int)]
 libusb_config_descriptor_p = POINTER(libusb_config_descriptor)
 libusb_config_descriptor_p_p = POINTER(libusb_config_descriptor_p)
