@@ -756,6 +756,27 @@ def get_iso_packet_buffer_list(transfer_p):
         offset += length
     return result
 
+def get_extra(descriptor):
+    """
+    Python-specific helper to access "extra" field of descriptors,
+    because it's not as straight-forward as in C.
+    Returns a list, where each entry is an individual extra descriptor.
+    """
+    result = []
+    extra_length = descriptor.extra_length
+    if extra_length:
+        print 'extra', descriptor.extra
+        extra = string_at(descriptor.extra, extra_length)
+        append = result.append
+        while extra:
+            length = ord(extra[0])
+            if not (0 < length <= len(extra)):
+                raise ValueError('Extra descriptor %i is incomplete/invalid' % (
+                    len(result), ))
+            append(extra[:length])
+            extra = extra[length:]
+    return result
+
 def libusb_set_iso_packet_lengths(transfer_p, length):
     transfer = transfer_p.contents
     for iso_packet_desc in _get_iso_packet_list(transfer):
