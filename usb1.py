@@ -975,13 +975,11 @@ class USBDevice(object):
                 self.__libusb_free_config_descriptor(byref(config))
 
     def __str__(self):
-        return 'Bus %03i Device %03i: ID %04x:%04x %s %s' % (
+        return 'Bus %03i Device %03i: ID %04x:%04x' % (
             self.getBusNumber(),
             self.getDeviceAddress(),
             self.getVendorID(),
             self.getProductID(),
-            self.getManufacturer(),
-            self.getProduct()
         )
 
     def reprConfigurations(self):
