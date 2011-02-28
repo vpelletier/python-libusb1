@@ -621,7 +621,7 @@ class USBDeviceHandle(object):
     __handle = None
     __libusb_close = libusb1.libusb_close
 
-    def __init__(self, context, handle):
+    def __init__(self, context, handle, device):
         """
         You should not instanciate this class directly.
         Call "open" method on an USBDevice instance to get an USBDeviceHandle
@@ -631,6 +631,7 @@ class USBDeviceHandle(object):
         # It must collect USBDeviceHandle instance before their LibUSBContext.
         self.__context = context
         self.__handle = handle
+        self.__device = device
 
     def __del__(self):
         self.close()
@@ -644,6 +645,13 @@ class USBDeviceHandle(object):
         if handle is not None:
             self.__libusb_close(handle)
             self.__handle = None
+
+    def getDevice(self):
+        """
+        Get an USBDevice instance for the device accessed through this handle.
+        Useful for example to query its configurations.
+        """
+        return self.__device
 
     def getConfiguration(self):
         """
@@ -1162,7 +1170,7 @@ class USBDevice(object):
         result = libusb1.libusb_open(self.device_p, byref(handle))
         if result:
             raise libusb1.USBError(result)
-        return USBDeviceHandle(self.__context, handle)
+        return USBDeviceHandle(self.__context, handle, self)
 
 class LibUSBContext(object):
     """
@@ -1224,10 +1232,11 @@ class LibUSBContext(object):
         Returns an USBDeviceHandle instance, or None if no present device
         match.
         """
-        handle_p = libusb1.libusb_open_device_with_vid_pid(self.__context_p,
-            vendor_id, product_id)
-        if handle_p:
-            result = USBDeviceHandle(self, handle_p)
+        for device in self.getDeviceList():
+            if device.getVendorID() == vendor_id and \
+                    device.getProductID() == product_id:
+                result = device.open()
+                break
         else:
             result = None
         return result
