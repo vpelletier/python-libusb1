@@ -986,6 +986,9 @@ class USBDevice(object):
         """
         Get a string representation of device's configurations.
         Note: opens the device temporarily.
+
+        Deprecated. This is useless. It doesn't even showcases API usage, as
+        it accesses privape properties.
         """
         out = StringIO()
         for config in self.__configuration_descriptor_list:
