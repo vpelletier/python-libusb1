@@ -1342,6 +1342,7 @@ class LibUSBContext(object):
     __context_p = None
     __added_cb = None
     __removed_cb = None
+    __libusb_set_pollfd_notifiers = libusb1.libusb_set_pollfd_notifiers
 
     def __init__(self):
         """
@@ -1472,7 +1473,7 @@ class LibUSBContext(object):
             removed_cb = libusb1.libusb_pollfd_removed_cb_p(removed_cb)
         self.__added_cb = added_cb
         self.__removed_cb = removed_cb
-        libusb1.libusb_set_pollfd_notifiers(self.__context_p, added_cb,
+        self.__libusb_set_pollfd_notifiers(self.__context_p, added_cb,
                                             removed_cb, user_data)
 
     def getNextTimeout(self):
