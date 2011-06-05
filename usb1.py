@@ -458,9 +458,12 @@ class USBTransferHelper(object):
     USBTransfer, and are expected to return a boolean:
     - True if transfer is to be submitted again (to receive/send more data)
     - False otherwise
+
+    Note: as per libusb1 specifications, isochronous transfer global state
+    might be LIBUSB_TRANSFER_COMPLETED although some individual packets might
+    have an error status. You can check individual packet status by calling
+    getISOSetupList on transfer object in your callback.
     """
-    # TODO: handle the special case of isochronous transfers, where there is a
-    # global status and per-packet status.
     def __init__(self, transfer=None):
         """
         Create a transfer callback dispatcher.
