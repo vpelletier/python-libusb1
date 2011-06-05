@@ -308,7 +308,7 @@ class USBTransfer(object):
         for length, iso_packet_desc in zip(iso_transfer_length_list,
                 libusb1.get_iso_packet_list(transfer_p)):
             if length <= 0:
-                raise ValueError('Negative/null transfer length are not '
+                raise ValueError('Negative/null length transfers are not '
                     'possible.')
             iso_packet_desc.length = length
         self.__callback = callback
@@ -395,7 +395,7 @@ class USBTransfer(object):
         """
         Replace buffer with a new one.
         Allows resizing read buffer and replacing data sent.
-        Note: resizing is not allowed for isochornous buffer (use
+        Note: resizing is not allowed for isochronous buffer (use
         setIsochronous).
         """
         if self.__submitted:
@@ -628,7 +628,7 @@ class USBDeviceHandle(object):
         instance.
         """
         # XXX Context parameter is just here as a hint for garbage collector:
-        # It must collect USBDeviceHandle instance before their LibUSBContext.
+        # It must collect USBDeviceHandle instances before their LibUSBContext.
         self.__context = context
         self.__handle = handle
         self.__device = device
