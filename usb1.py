@@ -299,7 +299,7 @@ class USBTransfer(object):
         transfer_p = self.__transfer
         self.__initialized = False
         libusb1.libusb_fill_iso_transfer(transfer_p, self.__handle,
-            endpoint, string_buffer, buffer_length, num_iso_packets,
+            endpoint, string_buffer, buffer_length, configured_iso_packets,
             self.__ctypesCallbackWrapper, user_data, timeout)
         for length, iso_packet_desc in zip(iso_transfer_length_list,
                 libusb1.get_iso_packet_list(transfer_p)):
