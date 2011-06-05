@@ -285,7 +285,7 @@ class USBTransfer(object):
         string_buffer = create_binary_buffer(buffer_or_len)
         buffer_length = sizeof(string_buffer)
         if iso_transfer_length_list is None:
-            iso_length = buffer_length / num_iso_packets
+            iso_length = buffer_length // num_iso_packets
             iso_transfer_length_list = [iso_length for _ in
                 xrange(num_iso_packets)]
         configured_iso_packets = len(iso_transfer_length_list)
