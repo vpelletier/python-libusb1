@@ -154,9 +154,6 @@ class USBTransfer(object):
         Makes it possible for user-provided callback to alter transfer when
         fired (ie, mark transfer as not submitted upon call).
         """
-        mine = addressof(self.__transfer.contents)
-        his = addressof(transfer_p.contents)
-        assert mine == his, (mine, his)
         self.__submitted = False
         callback = self.__callback
         if callback is not None:
