@@ -397,6 +397,7 @@ class USBTransfer(object):
         Allows resizing read buffer and replacing data sent.
         Note: resizing is not allowed for isochronous buffer (use
         setIsochronous).
+        Note: disallowed on control transfers (use setControl).
         """
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
