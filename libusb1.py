@@ -765,7 +765,6 @@ def get_extra(descriptor):
     result = []
     extra_length = descriptor.extra_length
     if extra_length:
-        print 'extra', descriptor.extra
         extra = string_at(descriptor.extra, extra_length)
         append = result.append
         while extra:
