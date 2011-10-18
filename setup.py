@@ -1,5 +1,5 @@
 from distutils.core import setup
-setup(name='python-libusb1',
+setup(name='libusb1',
       description='a Python wrapper around libusb-1.0',
       version='0.1.2',
       author='Vincent Pelletier',
