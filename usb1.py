@@ -15,7 +15,7 @@ Features:
   codes
 - Synchronous I/O (control, bulk, interrupt)
 - Asynchronous I/O (control, bulk, interrupt, isochronous)
-  Note: Isochronous support is experimental.
+  Note: Isochronous support is not well tested.
   See USBPoller, USBTransfer and USBTransferHelper.
 """
 

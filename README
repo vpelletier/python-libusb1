@@ -44,6 +44,9 @@ features of libusb1.
   memory leaks.
 0.1.2
   Deprecate "transfer" constructor parameter to allow instance reuse.
+0.1.3
+  Some work on isochronous "in" transfers. They don't raise exceptions anymore,
+  but data validity and python-induced latency impact weren't properly checked.
 
 See also (other projects, different author):
   pyusb: another python wrapper for (among others) libusb1
