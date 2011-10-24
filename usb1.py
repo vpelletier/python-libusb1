@@ -355,6 +355,7 @@ class USBTransfer(object):
         Get individual ISO transfer's buffer.
         Returns a list with one item per ISO transfer, with their
         individually-configured sizes.
+        Returned list is consistent with getISOSetupList return value.
         Should not be called on a submitted transfer.
         """
         transfer_p = self.__transfer
@@ -373,6 +374,7 @@ class USBTransfer(object):
         - actual_length
         - status
         (see libusb1's API documentation for their signification)
+        Returned list is consistent with getISOBufferList return value.
         Should not be called on a submitted transfer (except for 'length'
         values).
         """
