@@ -297,8 +297,6 @@ class USBTransfer(object):
                 '%i bytes available' % (sum(iso_transfer_length_list),
                     buffer_length))
         transfer_p = self.__transfer
-        max_iso_packet_size = self.__handle.getDevice().getMaxISOPacketSize(
-            endpoint)
         self.__initialized = False
         libusb1.libusb_fill_iso_transfer(transfer_p, self.__handle,
             endpoint, string_buffer, buffer_length, configured_iso_packets,
@@ -308,9 +306,6 @@ class USBTransfer(object):
             if length <= 0:
                 raise ValueError('Negative/null length transfers are not '
                     'possible.')
-            if length > max_iso_packet_size:
-                raise ValueError('Packet too big (%i) for this endpoint: %i '
-                    'bytes max')
             iso_packet_desc.length = length
         self.__callback = callback
         self.__initialized = True
