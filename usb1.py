@@ -1440,7 +1440,7 @@ class LibUSBContext(object):
         Handle any pending event.
         If tv is 0, will return immediately after handling already-pending
         events.
-        Othewire, defines the maximum amount of time to wait for events, in
+        Otherwise, defines the maximum amount of time to wait for events, in
         seconds.
         """
         if tv is None:
