@@ -933,9 +933,28 @@ libusb_wait_for_event.argtypes = [libusb_context_p, timeval_p]
 #int libusb_handle_events_timeout(libusb_context *ctx, struct timeval *tv);
 libusb_handle_events_timeout = libusb.libusb_handle_events_timeout
 libusb_handle_events_timeout.argtypes = [libusb_context_p, timeval_p]
+#int libusb_handle_events_timeout_completed(libusb_context *ctx,
+#   struct timeval *tv, int *completed);
+try:
+    libusb_handle_events_timeout_completed = libusb.\
+        libusb_handle_events_timeout_completed
+except AttributeError:
+    # No safe replacement possible.
+    pass
+else:
+    libusb_handle_events_timeout_completed.argtypes = [libusb_context_p,
+        timeval_p, c_int_p]
 #int libusb_handle_events(libusb_context *ctx);
 libusb_handle_events = libusb.libusb_handle_events
 libusb_handle_events.argtypes = [libusb_context_p]
+#int libusb_handle_events_completed(libusb_context *ctx, int *completed);
+try:
+    libusb_handle_events_completed = libusb.libusb_handle_events_completed
+except AttributeError:
+    # No safe replacement possible.
+    pass
+else:
+    libusb_handle_events_completed.argtypes = [libusb_context_p, c_int_p]
 #int libusb_handle_events_locked(libusb_context *ctx, struct timeval *tv);
 libusb_handle_events_locked = libusb.libusb_handle_events_locked
 libusb_handle_events_locked.argtypes = [libusb_context_p, timeval_p]

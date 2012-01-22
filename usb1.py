@@ -1442,6 +1442,8 @@ class LibUSBContext(object):
         if result:
             raise libusb1.USBError(result)
 
+    # TODO: handleEventsCompleted
+
     def handleEventsTimeout(self, tv=0):
         """
         Handle any pending event.
@@ -1458,6 +1460,8 @@ class LibUSBContext(object):
             byref(tv))
         if result:
             raise libusb1.USBError(result)
+
+    # TODO: handleEventsTimeoutCompleted
 
     def setPollFDNotifiers(self, added_cb=None, removed_cb=None,
             user_data=None):
