@@ -25,6 +25,7 @@ from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
     c_void_p, cdll
 from cStringIO import StringIO
 import sys
+import threading
 from ctypes.util import find_library
 
 __all__ = ['LibUSBContext', 'USBDeviceHandle', 'USBDevice',
@@ -534,10 +535,107 @@ class USBTransferHelper(object):
         # Deprecated: to drop
         return self.__transfer.isSubmitted()
 
+class USBPollerThread(threading.Thread):
+    """
+    Implements libusb1 documentation about threaded, asynchronous
+    applications.
+    In short, instanciate this class once (...per LibUSBContext instance), call
+    start() on the instance, and do whatever you need.
+    This thread will be used to execute transfer completion callbacks, and you
+    are free to use libusb1's synchronous API in another thread, and can forget
+    about libusb1 file descriptors.
+
+    See http://libusb.sourceforge.net/api-1.0/mtasync.html .
+    """
+    def __init__(self, context, poller, exc_callback=None):
+        """
+        Create a poller thread for given context.
+        Warning: it will not check if another poller instance was already
+        present for that context, and will replace it.
+
+        poller is a polling instance implementing the following methods:
+        - register(fd, event_flags)
+          event_flags have the same meaning as in poll API (POLLIN & POLLOUT)
+        - unregister(fd)
+        - poll()
+          Its return value must evaluate to true if there are events to handle,
+          false otherwise.
+        poller should not be used outside this class, and should not have
+        any registered file descriptor.
+
+        exc_callback (callable)
+          Called with a libusb_error value as single parameter when event
+          handling fails.
+          If not given, an USBError will be raised, interrupting the thread.
+        """
+        super(USBPollerThread, self).__init__()
+        self.daemon = True
+        self.__context = context
+        self.__poller = poller
+        self.__fd_set = set()
+        context.setPollFDNotifiers(self._registerFD, self._unregisterFD)
+        for fd, events in context.getPollFDList():
+            self._registerFD(fd, events, None)
+        if exc_callback is not None:
+            self.exceptionHandler = exc_callback
+
+    def __del__(self):
+        self.__context.setPollFDNotifiers(None, None)
+
+    @staticmethod
+    def exceptionHandler(error):
+        raise libusb1.USBError(error)
+
+    def run(self):
+        # We expect quite some spinning in below loop, so move any unneeded
+        # operation out of it.
+        context = self.__context
+        poll = self.__poller.poll
+        try_lock_events = libusb1.libusb_try_lock_events
+        lock_event_waiters = libusb1.libusb_lock_event_waiters
+        wait_for_event = libusb1.libusb_wait_for_event
+        unlock_event_waiters = libusb1.libusb_unlock_event_waiters
+        event_handling_ok = libusb1.libusb_event_handling_ok
+        unlock_events = libusb1.libusb_unlock_events
+        handle_events_locked = libusb1.libusb_handle_events_locked
+        event_handler_active = libusb1.libusb_event_handler_active
+        exc = self.exceptionHandler
+        fd_set = self.__fd_set
+        tv = libusb1.timeval(0, 0)
+        tv_p = byref(tv)
+        while fd_set:
+            if try_lock_events(context):
+                lock_event_waiters(context)
+                while event_handler_active(context):
+                    wait_for_event(context)
+                unlock_event_waiters(context)
+            else:
+                try:
+                    while event_handling_ok(context):
+                        if poll():
+                            result = handle_events_locked(context, tv_p)
+                            if result:
+                                exc(result)
+                finally:
+                    unlock_events(context)
+
+    def _registerFD(self, fd, events, _):
+        self.__poller.register(fd, events)
+        self.__fd_set.add(fd)
+
+    def _unregisterFD(self, fd, _):
+        self.__fd_set.discard(fd)
+        self.__poller.unregister(fd)
+
 class USBPoller(object):
     """
     Class allowing integration of USB event polling in a file-descriptor
     monitoring event loop.
+
+    WARNING: Do not call "poll" from several threads concurently. Do not use
+    synchronous USB transfers in a thread while "poll" is running. Doing so
+    will result in unnecessarily long pauses in some threads. Opening and/or
+    closing devices while polling can cause race conditions to occur.
     """
     def __init__(self, context, poller):
         """
