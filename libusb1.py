@@ -2,7 +2,7 @@
 from ctypes import Structure, \
                    CFUNCTYPE, POINTER, addressof, sizeof, cast, \
                    c_short, c_int, c_uint, c_size_t, c_long, \
-                   c_uint8, c_uint16, \
+                   c_uint8, c_uint16, c_uint32, \
                    c_void_p, c_char, c_char_p, py_object, string_at
 from ctypes.util import find_library
 import platform
@@ -525,6 +525,11 @@ libusb_transfer._fields_ = [('dev_handle', libusb_device_handle_p),
                             ('iso_packet_desc', libusb_iso_packet_descriptor)
 ]
 
+libusb_capability = Enum({
+# The libusb_has_capability() API is available.
+'LIBUSB_CAP_HAS_CAPABILITY': 0,
+})
+
 #int libusb_init(libusb_context **ctx);
 libusb_init = libusb.libusb_init
 libusb_init.argtypes = [libusb_context_p_p]
@@ -536,6 +541,14 @@ libusb_exit.restype = None
 libusb_set_debug = libusb.libusb_set_debug
 libusb_set_debug.argtypes = [libusb_context_p, c_int]
 libusb_set_debug.restype = None
+#int libusb_has_capability(uint32_t capability);
+try:
+    libusb_has_capability = libusb.libusb_has_capability
+except AttributeError:
+    def libusb_has_capability(_):
+        return 0
+else:
+    libusb_has_capability.argtypes = [c_uint32]
 try:
     #char *libusb_strerror(enum libusb_error errcode);
     libusb_strerror = libusb.libusb_strerror
