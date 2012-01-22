@@ -418,6 +418,19 @@ class libusb_device_handle(Structure):
 libusb_device_handle_p = POINTER(libusb_device_handle)
 libusb_device_handle_p_p = POINTER(libusb_device_handle_p)
 
+libusb_speed = Enum({
+# The OS doesn't report or know the device speed.
+'LIBUSB_SPEED_UNKNOWN': 0,
+# The device is operating at low speed (1.5MBit/s).
+'LIBUSB_SPEED_LOW': 1,
+# The device is operating at full speed (12MBit/s).
+'LIBUSB_SPEED_FULL': 2,
+# The device is operating at high speed (480MBit/s).
+'LIBUSB_SPEED_HIGH': 3,
+# The device is operating at super speed (5000MBit/s).
+'LIBUSB_SPEED_SUPER': 4,
+})
+
 # Error codes. Most libusb functions return 0 on success or one of these
 # codes on failure.
 libusb_error = Enum({
@@ -588,6 +601,15 @@ libusb_get_bus_number.restype = c_uint8
 libusb_get_device_address = libusb.libusb_get_device_address
 libusb_get_device_address.argtypes = [libusb_device_p]
 libusb_get_device_address.restype = c_uint8
+try:
+    #int libusb_get_device_speed(libusb_device *dev);
+    libusb_get_device_speed = libusb.libusb_get_device_speed
+except AttributeError:
+    # Place holder
+    def libusb_get_device_speed(_):
+        return LIBUSB_SPEED_UNKNOWN
+else:
+    libusb_get_device_speed.argtypes = [libusb_device_p]
 #int libusb_get_max_packet_size(libusb_device *dev, unsigned char endpoint);
 libusb_get_max_packet_size = libusb.libusb_get_max_packet_size
 libusb_get_max_packet_size.argtypes = [libusb_device_p, c_uchar]

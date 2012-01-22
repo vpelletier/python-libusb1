@@ -1317,6 +1317,13 @@ class USBDevice(object):
         """
         return self.device_descriptor.bNumConfigurations
 
+    def getDeviceSpeed(self):
+        """
+        Get device's speed (see libusb1.libusb_speed for possible return
+        values).
+        """
+        return libusb1.libusb_get_device_speed(self.device_p)
+
     def open(self):
         """
         Open device.
