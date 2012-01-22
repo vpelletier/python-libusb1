@@ -22,7 +22,7 @@ Features:
 import libusb1
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
     create_unicode_buffer, c_wchar, cast, c_uint16, c_ubyte, string_at, \
-    addressof, c_void_p, cdll
+    c_void_p, cdll
 from cStringIO import StringIO
 import sys
 from ctypes.util import find_library
