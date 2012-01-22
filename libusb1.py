@@ -550,6 +550,17 @@ except AttributeError:
 else:
     libusb_has_capability.argtypes = [c_uint32]
 try:
+    # Note: Should be equivalent to libusb_error.get (except libusb_error.get
+    # one raises on unknown values).
+    #char *libusb_error_name(int errcode);
+    libusb_error_name = libusb.libusb_error_name
+except AttributeError:
+    def libusb_error_name(errcode):
+        return None
+else:
+    libusb_error_name.argtypes = [c_int]
+    libusb_error_name.restype = c_char_p
+try:
     #char *libusb_strerror(enum libusb_error errcode);
     libusb_strerror = libusb.libusb_strerror
 except AttributeError:
