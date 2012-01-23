@@ -3,7 +3,7 @@ from ctypes import Structure, \
                    CFUNCTYPE, POINTER, addressof, sizeof, cast, \
                    c_short, c_int, c_uint, c_size_t, c_long, \
                    c_uint8, c_uint16, c_uint32, \
-                   c_void_p, c_char, c_char_p, py_object, string_at
+                   c_void_p, c_char_p, py_object, string_at
 from ctypes.util import find_library
 import platform
 import os.path
