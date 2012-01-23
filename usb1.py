@@ -68,10 +68,10 @@ DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK = lambda x: False
 
 def create_binary_buffer(string_or_len):
     # Prevent ctypes from adding a trailing null char.
-    if isinstance(string_or_len, basestring):
-        result = create_string_buffer(string_or_len, len(string_or_len))
-    else:
+    if isinstance(string_or_len, (int, long)):
         result = create_string_buffer(string_or_len)
+    else:
+        result = create_string_buffer(string_or_len, len(string_or_len))
     return result
 
 class USBTransfer(object):

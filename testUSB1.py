@@ -1,7 +1,16 @@
 import unittest
+import sys
 import usb1
 import libusb1
 from ctypes import pointer
+
+if sys.version_info[0] == 3:
+    buff = b'\x00\xff'
+    other_buff = b'foo'
+else:
+    buff = '\x00\xff'
+    other_buff = 'foo'
+buff_len = 2
 
 class USBTransferTests(unittest.TestCase):
     def getTransfer(self, iso_packets=0):
@@ -18,8 +27,6 @@ class USBTransferTests(unittest.TestCase):
         request = libusb1.LIBUSB_REQUEST_GET_STATUS
         value = 0
         index = 0
-        buff = '\x00\xff'
-        buff_len = 2
         def callback(transfer):
             pass
         user_data = []
@@ -45,9 +52,6 @@ class USBTransferTests(unittest.TestCase):
     def _testSetBulkOrInterrupt(self, setter_id):
         transfer = self.getTransfer()
         endpoint = 0x81
-        buff = '\x00\xff'
-        buff_len = 2
-        other_buff = 'foo'
         def callback(transfer):
             pass
         user_data = []
