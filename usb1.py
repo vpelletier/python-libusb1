@@ -1224,65 +1224,6 @@ class USBDevice(object):
             self.getProductID(),
         )
 
-    def reprConfigurations(self):
-        """
-        Get a string representation of device's configurations.
-        Note: opens the device temporarily.
-
-        Deprecated. This is useless. It doesn't even showcases API usage, as
-        it accesses private properties.
-        """
-        out = StringIO()
-        for config in self.__configuration_descriptor_list:
-            print >> out, 'Configuration %i: %s' % (config.bConfigurationValue,
-                self._getASCIIStringDescriptor(config.iConfiguration))
-            print >> out, '  Max Power: %i mA' % (config.MaxPower * 2, )
-            # TODO: bmAttributes dump
-            for interface_num in xrange(config.bNumInterfaces):
-                interface = config.interface[interface_num]
-                print >> out, '  Interface %i' % (interface_num, )
-                for alt_setting_num in xrange(interface.num_altsetting):
-                    altsetting = interface.altsetting[alt_setting_num]
-                    print >> out, '    Alt Setting %i: %s' % (alt_setting_num,
-                        self._getASCIIStringDescriptor(altsetting.iInterface))
-                    print >> out, '      Class: %02x Subclass: %02x' % \
-                        (altsetting.bInterfaceClass,
-                         altsetting.bInterfaceSubClass)
-                    print >> out, '      Protocol: %02x' % \
-                        (altsetting.bInterfaceProtocol, )
-                    for endpoint_num in xrange(altsetting.bNumEndpoints):
-                        endpoint = altsetting.endpoint[endpoint_num]
-                        print >> out, '      Endpoint %i' % (endpoint_num, )
-                        print >> out, '        Address: %02x' % \
-                            (endpoint.bEndpointAddress, )
-                        attribute_list = []
-                        transfer_type = endpoint.bmAttributes & \
-                            libusb1.LIBUSB_TRANSFER_TYPE_MASK
-                        attribute_list.append(libusb1.libusb_transfer_type(
-                            transfer_type
-                        ))
-                        if transfer_type == \
-                            libusb1.LIBUSB_TRANSFER_TYPE_ISOCHRONOUS:
-                            attribute_list.append(libusb1.libusb_iso_sync_type(
-                                (endpoint.bmAttributes & \
-                                 libusb1.LIBUSB_ISO_SYNC_TYPE_MASK) >> 2
-                            ))
-                            attribute_list.append(libusb1.libusb_iso_usage_type(
-                                (endpoint.bmAttributes & \
-                                 libusb1.LIBUSB_ISO_USAGE_TYPE_MASK) >> 4
-                            ))
-                        print >> out, '        Attributes: %s' % \
-                            (', '.join(attribute_list), )
-                        print >> out, '        Max Packet Size: %i' % \
-                            (endpoint.wMaxPacketSize, )
-                        print >> out, '        Interval: %i' % \
-                            (endpoint.bInterval, )
-                        print >> out, '        Refresh: %i' % \
-                            (endpoint.bRefresh, )
-                        print >> out, '        Sync Address: %02x' % \
-                            (endpoint.bSynchAddress, )
-        return out.getvalue()
-
     def iterConfiguations(self):
         for config in self.__configuration_descriptor_list:
             yield USBConfiguration(config)
