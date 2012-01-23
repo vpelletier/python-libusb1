@@ -583,41 +583,40 @@ class USBPollerThread(threading.Thread):
         self.__context.setPollFDNotifiers(None, None)
 
     @staticmethod
-    def exceptionHandler(error):
-        raise libusb1.USBError(error)
+    def exceptionHandler(exc):
+        raise exc
 
     def run(self):
         # We expect quite some spinning in below loop, so move any unneeded
         # operation out of it.
         context = self.__context
         poll = self.__poller.poll
-        try_lock_events = libusb1.libusb_try_lock_events
-        lock_event_waiters = libusb1.libusb_lock_event_waiters
-        wait_for_event = libusb1.libusb_wait_for_event
-        unlock_event_waiters = libusb1.libusb_unlock_event_waiters
-        event_handling_ok = libusb1.libusb_event_handling_ok
-        unlock_events = libusb1.libusb_unlock_events
-        handle_events_locked = libusb1.libusb_handle_events_locked
-        event_handler_active = libusb1.libusb_event_handler_active
-        exc = self.exceptionHandler
+        try_lock_events = context.tryLockEvents
+        lock_event_waiters = context.lockEventWaiters
+        wait_for_event = context.waitForEvent
+        unlock_event_waiters = context.unlockEventWaiters
+        event_handling_ok = context.eventHandlingOK
+        unlock_events = context.unlockEvents
+        handle_events_locked = context.handleEventsLocked
+        event_handler_active = context.eventHandlerActive
+        exceptionHandler = self.exceptionHandler
         fd_set = self.__fd_set
-        tv = libusb1.timeval(0, 0)
-        tv_p = byref(tv)
         while fd_set:
-            if try_lock_events(context):
-                lock_event_waiters(context)
-                while event_handler_active(context):
-                    wait_for_event(context)
-                unlock_event_waiters(context)
+            if try_lock_events():
+                lock_event_waiters()
+                while event_handler_active():
+                    wait_for_event()
+                unlock_event_waiters()
             else:
                 try:
-                    while event_handling_ok(context):
+                    while event_handling_ok():
                         if poll():
-                            result = handle_events_locked(context, tv_p)
-                            if result:
-                                exc(result)
+                            try:
+                                handle_events_locked()
+                            except libusb1.USBError, exc:
+                                exceptionHandler(exc)
                 finally:
-                    unlock_events(context)
+                    unlock_events()
 
     def _registerFD(self, fd, events, _):
         self.__poller.register(fd, events)
@@ -1374,6 +1373,9 @@ class USBDevice(object):
             raise libusb1.USBError(result)
         return USBDeviceHandle(self.__context, handle, self)
 
+_zero_tv = libusb1.timeval(0, 0)
+_zero_tv_p = byref(_zero_tv)
+
 class LibUSBContext(object):
     """
     libusb1 USB context.
@@ -1572,6 +1574,65 @@ class LibUSBContext(object):
         effect.
         """
         libusb1.libusb_set_debug(self.__context_p, level)
+
+    @_validContext
+    def tryLockEvents(self):
+        """
+        See libusb_try_lock_events doc.
+        """
+        return libusb1.libusb_try_lock_events(self.__context_p)
+
+    @_validContext
+    def lockEventWaiters(self):
+        """
+        See libusb_lock_event_waiters doc.
+        """
+        libusb1.libusb_lock_event_waiters(self.__context_p)
+
+    @_validContext
+    def waitForEvent(self):
+        """
+        See libusb_wait_for_event doc.
+        """
+        libusb1.libusb_wait_for_event(self.__context_p)
+
+    @_validContext
+    def unlockEventWaiters(self):
+        """
+        See libusb_unlock_event_waiters doc.
+        """
+        libusb1.libusb_unlock_event_waiters(self.__context_p)
+
+    @_validContext
+    def eventHandlingOK(self):
+        """
+        See libusb_event_handling_ok doc.
+        """
+        return libusb1.libusb_event_handling_ok(self.__context_p)
+
+    @_validContext
+    def unlockEvents(self):
+        """
+        See libusb_unlock_events doc.
+        """
+        libusb1.libusb_unlock_events(self.__context_p)
+
+    @_validContext
+    def handleEventsLocked(self):
+        """
+        See libusb_handle_events_locked doc.
+        """
+        # XXX: does tv parameter need to be exposed ?
+        result = libusb1.libusb_handle_events_locked(self.__context_p, _zero_tv_p)
+        if result:
+            raise libusb1.USBError(result)
+
+    @_validContext
+    def eventHandlerActive(self):
+        """
+        See libusb_event_handler_active doc.
+        """
+        return libusb1.libusb_event_handler_active(self.__context_p)
 
 del LibUSBContext._validContext
 

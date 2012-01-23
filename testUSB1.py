@@ -1,5 +1,7 @@
 import unittest
 import sys
+import select
+import threading
 import usb1
 import libusb1
 from ctypes import pointer
@@ -11,6 +13,21 @@ else:
     buff = '\x00\xff'
     other_buff = 'foo'
 buff_len = 2
+
+class PollDetector(object):
+    def __init__(self, *args, **kw):
+        self.__poll = select.poll(*args, **kw)
+        self.__event = threading.Event()
+
+    def poll(self, *args, **kw):
+        self.__event.set()
+        return self.__poll.poll(*args, **kw)
+
+    def wait(self, *args, **kw):
+        self.__event.wait(*args, **kw)
+
+    def __getattr__(self, name):
+        return getattr(self.__poll, name)
 
 class USBTransferTests(unittest.TestCase):
     def getTransfer(self, iso_packets=0):
@@ -96,6 +113,43 @@ class USBTransferTests(unittest.TestCase):
         transfer.setCallback(callback)
         got_callback = transfer.getCallback()
         self.assertEqual(callback, got_callback)
+
+    def testUSBPollerThreadExit(self):
+        """
+        USBPollerThread must exit by itself when context is destroyed.
+        """
+        context = usb1.LibUSBContext()
+        poll_detector = PollDetector()
+        poller = usb1.USBPollerThread(context, poll_detector)
+        poller.start()
+        poll_detector.wait(1)
+        context.exit()
+        poller.join(1)
+        self.assertFalse(poller.is_alive())
+
+    def testUSBPollerThreadException(self):
+        """
+        USBPollerThread exception handling.
+        """
+        class FakeEventPoll(PollDetector):
+            def poll(self, *args, **kw):
+                self.poll = super(FakeEventPoll, self).poll
+                return ['dummy']
+        context = usb1.LibUSBContext()
+        def fakeHandleEventsLocked():
+            raise libusb1.USBError(0)
+        context.handleEventsLocked = fakeHandleEventsLocked
+        exception_event = threading.Event()
+        exception_list = []
+        def exceptionHandler(exc):
+            exception_list.append(exc)
+            exception_event.set()
+        poller = usb1.USBPollerThread(context, FakeEventPoll(),
+            exceptionHandler)
+        poller.start()
+        exception_event.wait(1)
+        self.assertTrue(exception_list, exception_list)
+        self.assertTrue(poller.is_alive())
 
 if __name__ == '__main__':
     unittest.main()
