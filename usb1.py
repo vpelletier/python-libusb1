@@ -1387,6 +1387,17 @@ class LibUSBContext(object):
     __removed_cb = None
     __libusb_set_pollfd_notifiers = libusb1.libusb_set_pollfd_notifiers
 
+    def _validContext(func):
+        # Defined inside LibUSBContext so we can access "self.__*".
+        def wrapper(self, *args, **kw):
+            self.__context_lock.acquire()
+            try:
+                if self.__context_p is not None:
+                    return func(self, *args, **kw)
+            finally:
+                self.__context_lock.release()
+        return wrapper
+
     def __init__(self):
         """
         Create a new USB context.
@@ -1396,21 +1407,28 @@ class LibUSBContext(object):
         if result:
             raise libusb1.USBError(result)
         self.__context_p = context_p
+        # Used to prevent an exit to cause a segfault if a concurent thread
+        # is still in libusb.
+        self.__context_lock = threading.RLock()
 
     def __del__(self):
         self.exit()
 
+    @_validContext
     def exit(self):
         """
         Close (destroy) this USB context.
+
+        When this function has been called, methods on its instance will
+        become mosty no-ops, returning None.
         """
         context_p = self.__context_p
-        if context_p is not None:
-            self.__libusb_exit(context_p)
-            self.__context_p = None
+        self.__libusb_exit(context_p)
+        self.__context_p = None
         self.__added_cb = None
         self.__removed_cb = None
 
+    @_validContext
     def getDeviceList(self):
         """
         Return a list of all USB devices currently plugged in, as USBDevice
@@ -1444,6 +1462,7 @@ class LibUSBContext(object):
             result = None
         return result
 
+    @_validContext
     def getPollFDList(self):
         """
         Return file descriptors to be used to poll USB events.
@@ -1471,6 +1490,7 @@ class LibUSBContext(object):
             _free(pollfd_p_p)
         return result
 
+    @_validContext
     def handleEvents(self):
         """
         Handle any pending event (blocking).
@@ -1483,6 +1503,7 @@ class LibUSBContext(object):
 
     # TODO: handleEventsCompleted
 
+    @_validContext
     def handleEventsTimeout(self, tv=0):
         """
         Handle any pending event.
@@ -1502,6 +1523,7 @@ class LibUSBContext(object):
 
     # TODO: handleEventsTimeoutCompleted
 
+    @_validContext
     def setPollFDNotifiers(self, added_cb=None, removed_cb=None,
             user_data=None):
         """
@@ -1523,6 +1545,7 @@ class LibUSBContext(object):
         self.__libusb_set_pollfd_notifiers(self.__context_p, added_cb,
                                             removed_cb, user_data)
 
+    @_validContext
     def getNextTimeout(self):
         """
         Returns the next internal timeout that libusb needs to handle, in
@@ -1541,6 +1564,7 @@ class LibUSBContext(object):
             raise libusb1.USBError(result)
         return result
 
+    @_validContext
     def setDebug(self, level):
         """
         Set debugging level.
@@ -1548,4 +1572,6 @@ class LibUSBContext(object):
         effect.
         """
         libusb1.libusb_set_debug(self.__context_p, level)
+
+del LibUSBContext._validContext
 
