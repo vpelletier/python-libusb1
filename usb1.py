@@ -1225,6 +1225,9 @@ class USBDevice(object):
             self.getProductID(),
         )
 
+    def __getitem__(self, index):
+        return USBConfiguration(self.__configuration_descriptor_list[index])
+
     def iterConfiguations(self):
         for config in self.__configuration_descriptor_list:
             yield USBConfiguration(config)
