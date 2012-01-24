@@ -557,7 +557,8 @@ class USBPollerThread(threading.Thread):
         - register(fd, event_flags)
           event_flags have the same meaning as in poll API (POLLIN & POLLOUT)
         - unregister(fd)
-        - poll()
+        - poll(timeout)
+          timeout being a float in seconds, or None if there is no timeout.
           Its return value must evaluate to true if there are events to handle,
           false otherwise.
         poller should not be used outside this class, and should not have
@@ -599,6 +600,7 @@ class USBPollerThread(threading.Thread):
         unlock_events = context.unlockEvents
         handle_events_locked = context.handleEventsLocked
         event_handler_active = context.eventHandlerActive
+        getNextTimeout = context.getNextTimeout
         exceptionHandler = self.exceptionHandler
         fd_set = self.__fd_set
         while fd_set:
@@ -610,7 +612,7 @@ class USBPollerThread(threading.Thread):
             else:
                 try:
                     while event_handling_ok():
-                        if poll():
+                        if poll(getNextTimeout()):
                             try:
                                 handle_events_locked()
                             except libusb1.USBError, exc:
