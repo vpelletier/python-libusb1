@@ -1277,6 +1277,15 @@ class USBDevice(object):
         """
         return self.device_descriptor.bMaxPacketSize0
 
+    def getMaxPacketSize(self, endpoint):
+        """
+        Get device's max packet size for given endpoint.
+        """
+        result = libusb1.libusb_get_max_packet_size(self.device_p, endpoint)
+        if result < 0:
+            raise libusb1.USBError(result)
+        return result
+
     def getMaxISOPacketSize(self, endpoint):
         """
         Get the maximum size for a single isochronous packet for given
@@ -1583,6 +1592,13 @@ class LibUSBContext(object):
         See libusb_try_lock_events doc.
         """
         return libusb1.libusb_try_lock_events(self.__context_p)
+
+    @_validContext
+    def lockEvents(self):
+        """
+        See libusb_lock_events doc.
+        """
+        libusb1.libusb_lock_events(self.__context_p)
 
     @_validContext
     def lockEventWaiters(self):
