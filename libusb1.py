@@ -359,7 +359,7 @@ libusb_config_descriptor_p = POINTER(libusb_config_descriptor)
 libusb_config_descriptor_p_p = POINTER(libusb_config_descriptor_p)
 
 class libusb_control_setup(Structure):
-    _fields_ = [('bRequestType', c_uint8),
+    _fields_ = [('bmRequestType', c_uint8),
                 ('bRequest', c_uint8),
                 ('wValue', c_uint16),
                 ('wIndex', c_uint16),
