@@ -58,10 +58,10 @@ def _loadLibrary():
     system = platform.system()
     if system == 'Windows':
         from ctypes import WinDLL as dll_loader
-        libusb_path = find_library("libusb-1.0.dll")
+        libusb_path = find_library('libusb-1.0.dll')
     else:
         from ctypes import CDLL as dll_loader
-        libusb_path = find_library("usb-1.0")
+        libusb_path = find_library('usb-1.0')
         if libusb_path is None and system == 'Darwin':
             # macport standard library path
             libusb_path = '/opt/local/lib/libusb-1.0.dylib'
