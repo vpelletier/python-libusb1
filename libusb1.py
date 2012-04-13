@@ -62,6 +62,8 @@ def _loadLibrary():
     else:
         from ctypes import CDLL as dll_loader
         libusb_path = find_library('usb-1.0')
+        if libusb_path is None and system == 'FreeBSD':
+            libusb_path = find_library('usb')
         if libusb_path is None and system == 'Darwin':
             # macport standard library path
             libusb_path = '/opt/local/lib/libusb-1.0.dylib'
@@ -638,8 +640,16 @@ else:
 libusb_get_max_packet_size = libusb.libusb_get_max_packet_size
 libusb_get_max_packet_size.argtypes = [libusb_device_p, c_uchar]
 #int libusb_get_max_iso_packet_size(libusb_device *dev, unsigned char endpoint);
-libusb_get_max_iso_packet_size = libusb.libusb_get_max_iso_packet_size
-libusb_get_max_iso_packet_size.argtypes = [libusb_device_p, c_uchar]
+try:
+    libusb_get_max_iso_packet_size = libusb.libusb_get_max_iso_packet_size
+except AttributeError:
+    # FreeBSD's reimplmentation of the API [used to ]lack[s] this function.
+    # It has been added in r234193, but is lacking in default 9.x install as
+    # of this change. Provide a fallback to error-out only if actually used.
+    def libusb_get_max_iso_packet_size(_, __):
+        raise NotImplementedError
+else:
+    libusb_get_max_iso_packet_size.argtypes = [libusb_device_p, c_uchar]
 
 #int libusb_open(libusb_device *dev, libusb_device_handle **handle);
 libusb_open = libusb.libusb_open
