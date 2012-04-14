@@ -67,9 +67,7 @@ def _loadLibrary():
         if libusb_path is None and system == 'Darwin':
             # macport standard library path
             libusb_path = '/opt/local/lib/libusb-1.0.dylib'
-            if not os.path.isfile(libusb_path):
-                libusb_path = None
-    if libusb_path is None:
+    if libusb_path is None or not os.path.isfile(libusb_path):
         raise Exception('Can\'t locate usb-1.0 library')
     loader_kw = {}
     if sys.version_info[:2] >= (2, 6):
