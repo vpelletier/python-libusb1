@@ -17,6 +17,7 @@ python-libusb1 is expected to work on any OS supported by libusb. It is known
 to be used on:
 - Linux
 - Windows
+  *not* libusb-win32 (this is libusb0.1, the old API)
 - OSX
 - FreeBSD
   libusb reimplementation: http://svnweb.freebsd.org/base/head/lib/libusb/
