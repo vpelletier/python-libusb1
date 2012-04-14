@@ -499,6 +499,9 @@ libusb_transfer_flags = Enum({
 # from your transfer callback, as this will result in a double-free
 # when this flag is acted upon.
 'LIBUSB_TRANSFER_FREE_TRANSFER': 1<<2,
+# Terminate transfers that are a multiple of the endpoint's
+# wMaxPacketSize with an extra zero length packet.
+'LIBUSB_TRANSFER_ADD_ZERO_PACKET': 1<<3,
 })
 
 # Isochronous packet descriptor.
