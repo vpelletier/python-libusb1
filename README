@@ -17,6 +17,8 @@ to be used on:
 - Linux
 - Windows
 - OSX
+- FreeBSD
+  libusb reimplementation: http://svnweb.freebsd.org/base/head/lib/libusb/
 
 Contents:
 - libusb1.py
@@ -54,6 +56,8 @@ History:
   released libusb versions (up to their commit 4630fc2).
   2to3 friendly.
   Drop deprecated USBDevice.reprConfigurations method.
+0.2.1
+  Add FreeBSD support.
 
 [1] http://www.python.org/
 [2] http://python.net/crew/theller/ctypes/

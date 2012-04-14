@@ -4,7 +4,7 @@ setup(
     name='libusb1',
     description='Python wrapper around libusb-1.0',
     keywords='usb libusb',
-    version='0.2.0',
+    version='0.2.1',
     author='Vincent Pelletier',
     author_email='plr.vincent@gmail.com',
     url='http://github.com/vpelletier/python-libusb1',
