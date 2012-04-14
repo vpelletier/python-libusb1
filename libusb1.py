@@ -71,7 +71,7 @@ def _loadLibrary():
             elif system.startswith('CYGWIN'):
                 # Why, oh why bin/ and custom soname ?
                 libusb_path = '/usr/bin/cygusb-1.0.dll'
-    if libusb_path is None or not os.path.isfile(libusb_path):
+    if libusb_path is None:
         raise Exception('Can\'t locate usb-1.0 library')
     loader_kw = {}
     if sys.version_info[:2] >= (2, 6):
