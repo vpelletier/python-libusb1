@@ -62,11 +62,12 @@ def _loadLibrary():
     else:
         from ctypes import CDLL as dll_loader
         libusb_path = find_library('usb-1.0')
-        if libusb_path is None and system == 'FreeBSD':
-            libusb_path = find_library('usb')
-        if libusb_path is None and system == 'Darwin':
-            # macport standard library path
-            libusb_path = '/opt/local/lib/libusb-1.0.dylib'
+        if libusb_path is None:
+            if 'FreeBSD' in system:
+                libusb_path = find_library('usb')
+            elif system == 'Darwin':
+                # macport standard library path
+                libusb_path = '/opt/local/lib/libusb-1.0.dylib'
     if libusb_path is None or not os.path.isfile(libusb_path):
         raise Exception('Can\'t locate usb-1.0 library')
     loader_kw = {}
