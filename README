@@ -4,6 +4,7 @@ Supports all transfer types, both in synchronous and asynchronous mode.
 
 URL:
   http://github.com/vpelletier/python-libusb1
+  http://pypi.python.org/pypi/libusb1
 
 Requirements:
 - Python [1] 2.4+ required, 2.6+ recommended
