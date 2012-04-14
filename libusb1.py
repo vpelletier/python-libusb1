@@ -158,7 +158,7 @@ libusb_descriptor_type = Enum({
 # Physical descriptor
 'LIBUSB_DT_PHYSICAL': 0x23,
 # Hub descriptor
-'LIBUSB_DT_HUB': 0x29
+'LIBUSB_DT_HUB': 0x29,
 })
 
 # Descriptor sizes per descriptor type
@@ -191,7 +191,7 @@ libusb_transfer_type = Enum({
 # Bulk endpoint
 'LIBUSB_TRANSFER_TYPE_BULK': 2,
 # Interrupt endpoint
-'LIBUSB_TRANSFER_TYPE_INTERRUPT': 3
+'LIBUSB_TRANSFER_TYPE_INTERRUPT': 3,
 })
 
 # Standard requests, as defined in table 9-3 of the USB2 specifications
@@ -219,7 +219,7 @@ libusb_standard_request = Enum({
 # Select an alternate interface for the specified interface
 'LIBUSB_REQUEST_SET_INTERFACE': 0x0b,
 # Set then report an endpoint's synchronization frame
-'LIBUSB_REQUEST_SYNCH_FRAME': 0x0c
+'LIBUSB_REQUEST_SYNCH_FRAME': 0x0c,
 })
 
 # Request type bits of the bmRequestType field in control transfers.
@@ -231,7 +231,7 @@ libusb_request_type = Enum({
 # Vendor
 'LIBUSB_TYPE_VENDOR': (0x02 << 5),
 # Reserved
-'LIBUSB_TYPE_RESERVED': (0x03 << 5)
+'LIBUSB_TYPE_RESERVED': (0x03 << 5),
 })
 
 # Recipient bits of the bmRequestType field in control transfers. Values 4
@@ -244,7 +244,7 @@ libusb_request_recipient = Enum({
 # Endpoint
 'LIBUSB_RECIPIENT_ENDPOINT': 0x02,
 # Other
-'LIBUSB_RECIPIENT_OTHER': 0x03
+'LIBUSB_RECIPIENT_OTHER': 0x03,
 })
 
 LIBUSB_ISO_SYNC_TYPE_MASK = 0x0c
@@ -259,7 +259,7 @@ libusb_iso_sync_type = Enum({
 # Adaptive
 'LIBUSB_ISO_SYNC_TYPE_ADAPTIVE': 2,
 # Synchronous
-'LIBUSB_ISO_SYNC_TYPE_SYNC': 3
+'LIBUSB_ISO_SYNC_TYPE_SYNC': 3,
 })
 
 LIBUSB_ISO_USAGE_TYPE_MASK = 0x30
@@ -272,7 +272,7 @@ libusb_iso_usage_type = Enum({
 # Feedback endpoint
 'LIBUSB_ISO_USAGE_TYPE_FEEDBACK': 1,
 # Implicit feedback Data endpoint
-'LIBUSB_ISO_USAGE_TYPE_IMPLICIT': 2
+'LIBUSB_ISO_USAGE_TYPE_IMPLICIT': 2,
 })
 
 # A structure representing the standard USB device descriptor. This
@@ -465,7 +465,7 @@ libusb_error = Enum({
 # Operation not supported or unimplemented on this platform
 'LIBUSB_ERROR_NOT_SUPPORTED': -12,
 # Other error
-'LIBUSB_ERROR_OTHER': -99
+'LIBUSB_ERROR_OTHER': -99,
 })
 
 # Transfer status codes
@@ -485,7 +485,7 @@ libusb_transfer_status = Enum({
 # Device was disconnected
 'LIBUSB_TRANSFER_NO_DEVICE': 5,
 # Device sent more data than requested
-'LIBUSB_TRANSFER_OVERFLOW': 6
+'LIBUSB_TRANSFER_OVERFLOW': 6,
 })
 
 # libusb_transfer.flags values
@@ -498,7 +498,7 @@ libusb_transfer_flags = Enum({
 # If this flag is set, it is illegal to call libusb_free_transfer()
 # from your transfer callback, as this will result in a double-free
 # when this flag is acted upon.
-'LIBUSB_TRANSFER_FREE_TRANSFER': 1<<2
+'LIBUSB_TRANSFER_FREE_TRANSFER': 1<<2,
 })
 
 # Isochronous packet descriptor.
