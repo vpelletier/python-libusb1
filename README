@@ -19,7 +19,7 @@ expected to work on:
 - Windows
   *not* libusb-win32 (this is libusb0.1, the old API)
 - Cygwin
-- OSX
+- OSX (macports and fink)
 - FreeBSD
   libusb reimplementation: http://svnweb.freebsd.org/base/head/lib/libusb/
 - OpenBSD

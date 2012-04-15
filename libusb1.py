@@ -68,6 +68,9 @@ def _loadLibrary():
             elif system == 'Darwin':
                 # macport standard library path
                 libusb_path = '/opt/local/lib/libusb-1.0.dylib'
+                if not os.path.isfile(libusb_path):
+                    # Try fink standard path
+                    libusb_path = '/sw/lib/libusb-1.0.dylib'
             elif system.startswith('CYGWIN'):
                 # Why, oh why bin/ and custom soname ?
                 libusb_path = '/usr/bin/cygusb-1.0.dll'
