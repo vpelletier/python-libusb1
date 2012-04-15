@@ -13,14 +13,16 @@ Requirements:
 - libusb-1.0 [3]
 
 Compatibility:
-python-libusb1 is expected to work on any OS supported by libusb. It is known
-to be used on:
+python-libusb1 is expected to work on any OS supported by libusb. It can be
+expected to work on:
 - Linux
 - Windows
   *not* libusb-win32 (this is libusb0.1, the old API)
+- Cygwin
 - OSX
 - FreeBSD
   libusb reimplementation: http://svnweb.freebsd.org/base/head/lib/libusb/
+- OpenBSD
 
 Contents:
 - libusb1.py
@@ -60,6 +62,9 @@ History:
   Drop deprecated USBDevice.reprConfigurations method.
 0.2.1
   Add FreeBSD support.
+0.2.2
+  Add Cygwin support.
+  OpenBSD support checked (no change).
 
 [1] http://www.python.org/
 [2] http://python.net/crew/theller/ctypes/
