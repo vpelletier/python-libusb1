@@ -46,7 +46,6 @@ class USBError(Exception):
 c_uchar = c_uint8
 c_int_p = POINTER(c_int)
 
-PATH_MAX = 4096 # XXX: True on linux, no idea about others.
 LITTLE_ENDIAN = sys.byteorder == 'little'
 
 class timeval(Structure):
