@@ -4,7 +4,7 @@ from ctypes import Structure, \
                    c_short, c_int, c_uint, c_size_t, c_long, \
                    c_uint8, c_uint16, c_uint32, \
                    c_void_p, c_char_p, py_object, string_at
-from ctypes.util import find_library
+import ctypes.util
 import platform
 import os.path
 import sys
@@ -56,30 +56,37 @@ timeval_p = POINTER(timeval)
 def _loadLibrary():
     system = platform.system()
     if system == 'Windows':
-        from ctypes import WinDLL as dll_loader
-        libusb_path = find_library('libusb-1.0.dll')
+        dll_loader = ctypes.WinDLL
+        suffix = '.dll'
     else:
-        from ctypes import CDLL as dll_loader
-        libusb_path = find_library('usb-1.0')
-        if libusb_path is None:
-            if 'FreeBSD' in system:
-                libusb_path = find_library('usb')
-            elif system == 'Darwin':
-                # macport standard library path
-                libusb_path = '/opt/local/lib/libusb-1.0.dylib'
-                if not os.path.isfile(libusb_path):
-                    # Try fink standard path
-                    libusb_path = '/sw/lib/libusb-1.0.dylib'
-            elif system.startswith('CYGWIN'):
-                # Why, oh why bin/ and custom soname ?
-                libusb_path = '/usr/bin/cygusb-1.0.dll'
-    if libusb_path is None:
-        raise Exception('Can\'t locate usb-1.0 library')
+        dll_loader = ctypes.CDLL
+        suffix = system == 'Darwin' and '.dylib' or '.so'
     loader_kw = {}
     if sys.version_info[:2] >= (2, 6):
         loader_kw['use_errno'] = True
         loader_kw['use_last_error'] = True
-    return dll_loader(libusb_path, **loader_kw)
+    try:
+        return dll_loader('libusb-1.0' + suffix, **loader_kw)
+    except OSError:
+        if 'FreeBSD' in system:
+            # libusb.so.2 on FreeBSD: load('libusb.so') would work fine, but...
+            # libusb.so.2debian on Debian GNU/kFreeBSD: here it wouldn't work.
+            # So use find_library instead.
+            libusb_path = ctypes.util.find_library('usb')
+        elif system == 'Darwin':
+            for libusb_path in (
+                        # macport standard path
+                        '/opt/local/lib/libusb-1.0.dylib',
+                        # fink standard path
+                        '/sw/lib/libusb-1.0.dylib',
+                    ):
+                if os.path.exists(libusb_path):
+                    break
+            else:
+                raise
+        else:
+            raise
+        return dll_loader(libusb_path, **loader_kw)
 
 libusb = _loadLibrary()
 
