@@ -68,11 +68,13 @@ def _loadLibrary():
     try:
         return dll_loader('libusb-1.0' + suffix, **loader_kw)
     except OSError:
+        libusb_path = None
+        base_name = 'usb-1.0'
         if 'FreeBSD' in system:
             # libusb.so.2 on FreeBSD: load('libusb.so') would work fine, but...
             # libusb.so.2debian on Debian GNU/kFreeBSD: here it wouldn't work.
             # So use find_library instead.
-            libusb_path = ctypes.util.find_library('usb')
+            base_name = 'usb'
         elif system == 'Darwin':
             for libusb_path in (
                         # macport standard path
@@ -83,9 +85,11 @@ def _loadLibrary():
                 if os.path.exists(libusb_path):
                     break
             else:
+                libusb_path = None
+        if libusb_path is None:
+            libusb_path = ctypes.util.find_library(base_name)
+            if libusb_path is None:
                 raise
-        else:
-            raise
         return dll_loader(libusb_path, **loader_kw)
 
 libusb = _loadLibrary()
