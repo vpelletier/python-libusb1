@@ -812,7 +812,7 @@ class USBDeviceHandle(object):
         """
         Reinitialise current device.
         Attempts to restore current configuration & alt settings.
-        If this fails, will result in a device diconnect & reconnect, so you
+        If this fails, will result in a device disconnect & reconnect, so you
         have to close current device and rediscover it (notified by a
         LIBUSB_ERROR_NOT_FOUND error code).
         """
@@ -1028,7 +1028,7 @@ class USBDeviceHandle(object):
 
     def getTransfer(self, iso_packets=0):
         """
-        Get an empty transfer for asynchronous use.
+        Get an USBTransfer instance for asynchronous use.
         iso_packets: the number of isochronous transfer descriptors to
           allocate.
         """
