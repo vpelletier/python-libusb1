@@ -65,6 +65,10 @@ History:
 0.2.2
   Add Cygwin support.
   OpenBSD support checked (no change).
+0.2.3
+  Add fink and homebrew support on OSX.
+  Drop PATH_MAX definition.
+  Try harder when looking for libusb.
 
 [1] http://www.python.org/
 [2] http://python.net/crew/theller/ctypes/
