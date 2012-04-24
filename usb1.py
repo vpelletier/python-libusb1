@@ -27,8 +27,9 @@ from cStringIO import StringIO
 import sys
 import threading
 from ctypes.util import find_library
+import warnings
 
-__all__ = ['LibUSBContext', 'USBDeviceHandle', 'USBDevice',
+__all__ = ['USBContext', 'USBDeviceHandle', 'USBDevice',
     'USBPoller', 'USBTransfer', 'USBTransferHelper', 'EVENT_CALLBACK_SET']
 
 if sys.version_info[:2] >= (2, 6):
@@ -1390,7 +1391,7 @@ class USBDevice(object):
 _zero_tv = libusb1.timeval(0, 0)
 _zero_tv_p = byref(_zero_tv)
 
-class LibUSBContext(object):
+class USBContext(object):
     """
     libusb1 USB context.
 
@@ -1655,5 +1656,14 @@ class LibUSBContext(object):
         """
         return libusb1.libusb_event_handler_active(self.__context_p)
 
-del LibUSBContext._validContext
+del USBContext._validContext
+
+class LibUSBContext(USBContext):
+    """
+    Backward-compatibility alias for USBContext.
+    """
+    def __init__(self):
+        warnings.warn('LibUSBContext is being renamed to USBContext',
+            DeprecationWarning)
+        super(LibUSBContext, self).__init__()
 
