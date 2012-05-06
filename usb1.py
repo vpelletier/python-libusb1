@@ -1133,16 +1133,16 @@ class USBInterfaceSetting(object):
     def iterEndpoints(self):
         endpoint_list = self.__alt_setting.endpoint
         for endpoint_num in xrange(self.getNumEndpoints()):
-            yield USBEndPoint(endpoint_list[endpoint_num])
+            yield USBEndpoint(endpoint_list[endpoint_num])
 
     def __getitem__(self, endpoint):
         if not isinstance(endpoint, int):
             raise TypeError('endpoint parameter must be an integer')
         if not (0 <= endpoint < self.getNumEndpoints()):
             raise ValueError('No such endpoint: %r' % (endpoint, ))
-        return USBEndPoint(self.__alt_setting.endpoint[endpoint])
+        return USBEndpoint(self.__alt_setting.endpoint[endpoint])
 
-class USBEndPoint(object):
+class USBEndpoint(object):
     def __init__(self, endpoint):
         if not isinstance(endpoint, libusb1.libusb_endpoint_descriptor):
             raise TypeError('Unexpected descriptor type.')
