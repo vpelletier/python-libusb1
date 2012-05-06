@@ -1464,19 +1464,29 @@ class USBContext(object):
         libusb1.libusb_free_device_list(device_p_p, 0)
         return result
 
+    def getByVendorIDAndProductID(self, vendor_id, product_id):
+        """
+        Get the first USB device matching given vendor and product ids.
+        Returns an USBDevice instance, or None if no present device match.
+        """
+        for device in self.getDeviceList():
+            if device.getVendorID() == vendor_id and \
+                    device.getProductID() == product_id:
+                result = device
+                break
+        else:
+            result = None
+        return result
+
     def openByVendorIDAndProductID(self, vendor_id, product_id):
         """
         Get the first USB device matching given vendor and product ids.
         Returns an USBDeviceHandle instance, or None if no present device
         match.
         """
-        for device in self.getDeviceList():
-            if device.getVendorID() == vendor_id and \
-                    device.getProductID() == product_id:
-                result = device.open()
-                break
-        else:
-            result = None
+        result = self.getByVendorIDAndProductID(vendor_id, product_id)
+        if result is not None:
+            result = result.open()
         return result
 
     @_validContext
