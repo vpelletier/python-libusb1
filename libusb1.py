@@ -1,5 +1,5 @@
 # libusb-1.0 python wrapper
-from ctypes import Structure, \
+from ctypes import Structure, LittleEndianStructure, \
                    CFUNCTYPE, POINTER, addressof, sizeof, cast, \
                    c_short, c_int, c_uint, c_size_t, c_long, \
                    c_uint8, c_uint16, c_uint32, \
@@ -33,6 +33,48 @@ class Enum(object):
 
     def get(self, value, default=None):
         return self.reverse_dict.get(value, default)
+
+_desc_type_dict = {
+  'b': ctypes.c_uint8,
+  'bcd': ctypes.c_uint16,
+  'bm': ctypes.c_uint8,
+  'dw': ctypes.c_uint32,
+  'i': ctypes.c_uint8,
+  'id': ctypes.c_uint16,
+  'w': ctypes.c_uint16,
+}
+
+def newStruct(field_name_list):
+    """
+    Create a ctype structure class based on USB standard field naming
+    (type-prefixed).
+    """
+    field_list = []
+    append = field_list.append
+    for field in field_name_list:
+        type_prefix = ''
+        for char in field:
+            if not char.islower():
+                break
+            type_prefix += char
+        append((field, _desc_type_dict[type_prefix]))
+    result = type('some_descriptor', (LittleEndianStructure, ), {})
+    # Not using type()'s 3rd param to initialise class, as per ctypes
+    # documentation:
+    #   _pack_ must already be defined when _fields_ is assigned, otherwise it
+    #   will have no effect.
+    result._pack_ = 1
+    result._fields_ = field_list
+    return result
+
+def newDescriptor(field_name_list):
+    """
+    Create a USB descriptor ctype structure, ie starting with bLength and
+    bDescriptorType fields.
+
+    See newStruct().
+    """
+    return newStruct(['bLength', 'bDescriptorType'] + list(field_name_list))
 
 class USBError(Exception):
     def __init__(self, value):
