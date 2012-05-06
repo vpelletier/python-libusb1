@@ -650,7 +650,8 @@ class USBPoller(object):
           event_flags have the same meaning as in poll API (POLLIN & POLLOUT)
         - unregister(fd)
         - poll(timeout)
-          timeout being a float in seconds, or None if there is no timeout.
+          timeout being a float in seconds, or negative/None if there is no
+          timeout.
           It must return a list of (descriptor, event) pairs.
         Note: USBPoller is itself a valid poller.
         """
@@ -671,7 +672,7 @@ class USBPoller(object):
         Returns a list of (descriptor, event) pairs.
         """
         next_usb_timeout = self.__context.getNextTimeout()
-        if timeout is None:
+        if timeout is None or timeout < 0:
             usb_timeout = next_usb_timeout
         elif next_usb_timeout:
             usb_timeout = min(next_usb_timeout, timeout)
