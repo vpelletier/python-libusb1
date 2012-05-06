@@ -1408,31 +1408,37 @@ class USBContext(object):
     def _validContext(func):
         # Defined inside LibUSBContext so we can access "self.__*".
         def wrapper(self, *args, **kw):
-            self.__context_lock.acquire()
+            self.__context_cond.acquire()
+            self.__context_refcount += 1
+            self.__context_cond.release()
             try:
                 if self.__context_p is not None:
                     return func(self, *args, **kw)
             finally:
-                self.__context_lock.release()
+                self.__context_cond.acquire()
+                self.__context_refcount -= 1
+                if not self.__context_refcount:
+                    self.__context_cond.notifyAll()
+                self.__context_cond.release()
         return wrapper
 
     def __init__(self):
         """
         Create a new USB context.
         """
+        # Used to prevent an exit to cause a segfault if a concurrent thread
+        # is still in libusb.
+        self.__context_refcount = 0
+        self.__context_cond = threading.Condition()
         context_p = libusb1.libusb_context_p()
         result = libusb1.libusb_init(byref(context_p))
         if result:
             raise libusb1.USBError(result)
         self.__context_p = context_p
-        # Used to prevent an exit to cause a segfault if a concurent thread
-        # is still in libusb.
-        self.__context_lock = threading.RLock()
 
     def __del__(self):
         self.exit()
 
-    @_validContext
     def exit(self):
         """
         Close (destroy) this USB context.
@@ -1440,11 +1446,19 @@ class USBContext(object):
         When this function has been called, methods on its instance will
         become mosty no-ops, returning None.
         """
-        context_p = self.__context_p
-        self.__libusb_exit(context_p)
-        self.__context_p = None
-        self.__added_cb = None
-        self.__removed_cb = None
+        self.__context_cond.acquire()
+        try:
+            while self.__context_refcount and self.__context_p is not None:
+                self.__context_cond.wait()
+            context_p = self.__context_p
+            if context_p is not None:
+                self.__libusb_exit(context_p)
+                self.__context_p = None
+                self.__added_cb = None
+                self.__removed_cb = None
+        finally:
+            self.__context_cond.notifyAll()
+            self.__context_cond.release()
 
     @_validContext
     def getDeviceList(self):
