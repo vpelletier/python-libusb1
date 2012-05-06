@@ -1437,7 +1437,11 @@ class USBContext(object):
         self.__context_p = context_p
 
     def __del__(self):
-        self.exit()
+        # Avoid locking.
+        # XXX: Assumes __del__ should not normally be called while any
+        # instance's method is being executed. It seems unlikely (they hold a
+        # reference to their instance).
+        self._exit()
 
     def exit(self):
         """
@@ -1450,15 +1454,18 @@ class USBContext(object):
         try:
             while self.__context_refcount and self.__context_p is not None:
                 self.__context_cond.wait()
-            context_p = self.__context_p
-            if context_p is not None:
-                self.__libusb_exit(context_p)
-                self.__context_p = None
-                self.__added_cb = None
-                self.__removed_cb = None
+            self._exit()
         finally:
             self.__context_cond.notifyAll()
             self.__context_cond.release()
+
+    def _exit(self):
+        context_p = self.__context_p
+        if context_p is not None:
+            self.__libusb_exit(context_p)
+            self.__context_p = None
+            self.__added_cb = None
+            self.__removed_cb = None
 
     @_validContext
     def getDeviceList(self):
