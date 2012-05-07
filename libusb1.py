@@ -35,13 +35,13 @@ class Enum(object):
         return self.reverse_dict.get(value, default)
 
 _desc_type_dict = {
-  'b': ctypes.c_uint8,
-  'bcd': ctypes.c_uint16,
-  'bm': ctypes.c_uint8,
-  'dw': ctypes.c_uint32,
-  'i': ctypes.c_uint8,
-  'id': ctypes.c_uint16,
-  'w': ctypes.c_uint16,
+  'b': c_uint8,
+  'bcd': c_uint16,
+  'bm': c_uint8,
+  'dw': c_uint32,
+  'i': c_uint8,
+  'id': c_uint16,
+  'w': c_uint16,
 }
 
 def newStruct(field_name_list):
