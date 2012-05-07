@@ -572,20 +572,32 @@ libusb_transfer_p = POINTER(libusb_transfer)
 
 libusb_transfer_cb_fn_p = CFUNCTYPE(None, libusb_transfer_p)
 
-libusb_transfer._fields_ = [('dev_handle', libusb_device_handle_p),
-                            ('flags', c_uint8),
-                            ('endpoint', c_uchar),
-                            ('type', c_uchar),
-                            ('timeout', c_uint),
-                            ('status', c_int), # enum libusb_transfer_status
-                            ('length', c_int),
-                            ('actual_length', c_int),
-                            ('callback', libusb_transfer_cb_fn_p),
-                            ('user_data', py_object),
-                            ('buffer', c_void_p),
-                            ('num_iso_packets', c_int),
-                            ('iso_packet_desc', libusb_iso_packet_descriptor)
+_libusb_transfer_fields = [
+    ('dev_handle', libusb_device_handle_p),
+    ('flags', c_uint8),
+    ('endpoint', c_uchar),
+    ('type', c_uchar),
+    ('timeout', c_uint),
+    ('status', c_int), # enum libusb_transfer_status
+    ('length', c_int),
+    ('actual_length', c_int),
+    ('callback', libusb_transfer_cb_fn_p),
+    ('user_data', py_object),
+    ('buffer', c_void_p),
+    ('num_iso_packets', c_int),
+    ('iso_packet_desc', libusb_iso_packet_descriptor)
 ]
+if platform.system() == 'FreeBSD' and getattr(libusb,
+        'libusb_get_string_descriptor', None) is None:
+    # Old FreeBSD version has a slight ABI incompatibility.
+    # Work around it unless libusb_get_string_descriptor is available, as it
+    # is only available on fixed versions.
+    assert _libusb_transfer_fields[2][0] == 'endpoint'
+    _libusb_transfer_fields[2] = ('endpoint', c_uint32)
+    assert _libusb_transfer_fields[11][0] == 'num_iso_packets'
+    _libusb_transfer_fields.insert(11, ('os_priv', c_void_p))
+
+libusb_transfer._fields_ = _libusb_transfer_fields
 
 libusb_capability = Enum({
 # The libusb_has_capability() API is available.
