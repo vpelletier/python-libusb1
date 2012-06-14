@@ -115,21 +115,15 @@ class USBTransfer(object):
 
     def close(self):
         """
-        Stop using this transfer.
-        This removes some references to other python objects, to help garbage
-        collection.
+        Break reference cycles to allow instance to be garbage-collected.
         Raises if called on a submitted transfer.
-        This does not prevent future reuse of instance (calling one of
-        "setControl", "setBulk", "setInterrupt" or "setIsochronous" methods
-        will initialize it properly again), just makes it ready to be
-        garbage-collected.
-        It is not mandatory to call it either, if you have no problems with
-        garbage collection.
         """
         if self.__submitted:
             raise ValueError('Cannot close a submitted transfer')
         self.__initialized = False
         self.__callback = None
+        self.__ctypesCallbackWrapper = None
+        self.__handle = None
 
     def __del__(self):
         if self.__transfer is not None:
