@@ -126,9 +126,17 @@ class USBTransfer(object):
             raise ValueError('Cannot close a submitted transfer')
         self.doom()
         self.__initialized = False
+        # Break possible external reference cycle
         self.__callback = None
+        # Break libusb_transfer reference cycles
         self.__ctypesCallbackWrapper = None
-        self.__handle = None
+        # For some reason, overwriting callback is not enough to remove this
+        # reference cycle - though sometimes it works:
+        #   self -> self.__dict__ -> libusb_transfer -> dict[x] -> dict[x] ->
+        #   CThunkObject -> __callbackWrapper -> self
+        # So free transfer altogether.
+        self.__libusb_free_transfer(self.__transfer)
+        self.__transfer = None
 
     def doom(self):
         """
