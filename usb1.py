@@ -440,6 +440,11 @@ class USBTransfer(object):
         Note: cancellation happens asynchronously, so you must wait for
         LIBUSB_TRANSFER_CANCELLED.
         """
+        if not self.__submitted:
+            # XXX: Workaround for a bug reported on libusb 1.0.8: calling
+            # libusb_cancel_transfer on a non-submitted transfer might
+            # trigger a segfault.
+            raise self.__USBError(self.__LIBUSB_ERROR_NOT_FOUND)
         result = self.__libusb_cancel_transfer(self.__transfer)
         if result:
             raise self.__USBError(result)
