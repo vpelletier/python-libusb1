@@ -448,7 +448,6 @@ class USBTransfer(object):
         result = self.__libusb_cancel_transfer(self.__transfer)
         if result:
             raise self.__USBError(result)
-        self.__submitted = False
 
 class USBTransferHelper(object):
     """
