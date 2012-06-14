@@ -75,6 +75,9 @@ def create_binary_buffer(string_or_len):
         result = create_string_buffer(string_or_len, len(string_or_len))
     return result
 
+class DoomedTransferError(Exception):
+    pass
+
 class USBTransfer(object):
     """
     USB asynchronous transfer control & data.
@@ -94,6 +97,7 @@ class USBTransfer(object):
     __submitted = False
     __callback = None
     __ctypesCallbackWrapper = None
+    __doomed = False
 
     def __init__(self, handle, iso_packets=0):
         """
@@ -120,10 +124,17 @@ class USBTransfer(object):
         """
         if self.__submitted:
             raise ValueError('Cannot close a submitted transfer')
+        self.doom()
         self.__initialized = False
         self.__callback = None
         self.__ctypesCallbackWrapper = None
         self.__handle = None
+
+    def doom(self):
+        """
+        Prevent transfer from being submitted again.
+        """
+        self.__doomed = True
 
     def __del__(self):
         if self.__transfer is not None:
@@ -154,6 +165,8 @@ class USBTransfer(object):
         callback = self.__callback
         if callback is not None:
             callback(self)
+        if self.__doomed:
+            self.close()
 
     def setCallback(self, callback):
         """
@@ -185,6 +198,8 @@ class USBTransfer(object):
         """
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
+        if self.__doomed:
+            raise DoomedTransferError('Cannot reuse a doomed transfer')
         if isinstance(buffer_or_len, basestring):
             length = len(buffer_or_len)
             string_buffer = create_binary_buffer(
@@ -218,6 +233,8 @@ class USBTransfer(object):
         """
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
+        if self.__doomed:
+            raise DoomedTransferError('Cannot reuse a doomed transfer')
         string_buffer = create_binary_buffer(buffer_or_len)
         self.__initialized = False
         libusb1.libusb_fill_bulk_transfer(self.__transfer, self.__handle,
@@ -243,6 +260,8 @@ class USBTransfer(object):
         """
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
+        if self.__doomed:
+            raise DoomedTransferError('Cannot reuse a doomed transfer')
         string_buffer = create_binary_buffer(buffer_or_len)
         self.__initialized = False
         libusb1.libusb_fill_interrupt_transfer(self.__transfer, self.__handle,
@@ -278,6 +297,8 @@ class USBTransfer(object):
             raise TypeError('This transfer canot be used for isochronous I/O. '
                 'You must get another one with a non-zero iso_packets '
                 'parameter.')
+        if self.__doomed:
+            raise DoomedTransferError('Cannot reuse a doomed transfer')
         string_buffer = create_binary_buffer(buffer_or_len)
         buffer_length = sizeof(string_buffer)
         if iso_transfer_length_list is None:
@@ -436,6 +457,8 @@ class USBTransfer(object):
         if not self.__initialized:
             raise ValueError('Cannot submit a transfer until it has been '
                 'initialized')
+        if self.__doomed:
+            raise DoomedTransferError('Cannot submit doomed transfer')
         self.__submitted = True
         result = libusb1.libusb_submit_transfer(self.__transfer)
         if result:
@@ -464,6 +487,8 @@ class USBTransferHelper(object):
     - no need to read event status to execute apropriate code, just setup
       different functions for each status code
     - just return True instead of calling submit
+    - no need to check if transfer is doomed before submitting it again,
+      DoomedTransferError is caught.
 
     Callbacks used in this class must follow the callback API described in
     USBTransfer, and are expected to return a boolean:
@@ -538,7 +563,10 @@ class USBTransferHelper(object):
         """
         if self.getEventCallback(transfer.getStatus(), self.__errorCallback)(
                 transfer):
-            transfer.submit()
+            try:
+                transfer.submit()
+            except DoomedTransferError:
+                pass
 
     def isSubmited(self):
         """
