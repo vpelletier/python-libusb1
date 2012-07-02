@@ -4,6 +4,13 @@ from ctypes import Structure, LittleEndianStructure, \
                    c_short, c_int, c_uint, c_size_t, c_long, \
                    c_uint8, c_uint16, c_uint32, \
                    c_void_p, c_char_p, py_object, string_at
+try:
+    from ctypes import c_ssize_t
+except ImportError:
+    # c_ssize_t is new in Python 2.7
+    from ctypes import c_long as c_ssize_t
+    assert sizeof(c_ssize_t) == sizeof(c_size_t), (sizeof(c_ssize_t),
+        sizeof(c_size_t))
 import ctypes.util
 import platform
 import os.path
@@ -649,7 +656,7 @@ else:
 #        libusb_device ***list);
 libusb_get_device_list = libusb.libusb_get_device_list
 libusb_get_device_list.argtypes = [libusb_context_p, libusb_device_p_p_p]
-libusb_get_device_list.restype = c_size_t
+libusb_get_device_list.restype = c_ssize_t
 #void libusb_free_device_list(libusb_device **list, int unref_devices);
 libusb_free_device_list = libusb.libusb_free_device_list
 libusb_free_device_list.argtypes = [libusb_device_p_p, c_int]
