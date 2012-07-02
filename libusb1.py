@@ -8,9 +8,15 @@ try:
     from ctypes import c_ssize_t
 except ImportError:
     # c_ssize_t is new in Python 2.7
-    from ctypes import c_long as c_ssize_t
-    assert sizeof(c_ssize_t) == sizeof(c_size_t), (sizeof(c_ssize_t),
-        sizeof(c_size_t))
+    if sizeof(c_uint) == sizeof(c_size_t):
+        c_ssize_t = c_int
+    elif sizeof(c_ulong) == sizeof(c_size_t):
+        c_ssize_t = c_long
+    elif sizeof(c_ulonglong) == sizeof(c_size_t):
+        c_ssize_t = c_longlong
+    else:
+        raise ValueError('Unsupported arch: sizeof(c_size_t) = %r' % (
+            sizeof(c_size_t), ))
 import ctypes.util
 import platform
 import os.path
