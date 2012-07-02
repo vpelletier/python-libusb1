@@ -346,6 +346,20 @@ class USBTransfer(object):
             result = string_at(transfer.buffer, transfer.length)
         return result
 
+    def getUserData(self):
+        """
+        Retrieve user data provided on setup.
+        """
+        return self.__transfer.contents.user_data
+
+    def setUserData(self, user_data):
+        """
+        Change user data.
+        """
+        if self.__submitted:
+            raise ValueError('Cannot alter a submitted transfer')
+        self.__transfer.contents.user_data = user_data
+
     def getISOBufferList(self):
         """
         Get individual ISO transfer's buffer.
