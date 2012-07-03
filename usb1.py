@@ -1525,6 +1525,8 @@ class USBContext(object):
         libusb_device_p = libusb1.libusb_device_p
         device_list_len = libusb1.libusb_get_device_list(self.__context_p,
                                                          byref(device_p_p))
+        if device_list_len < 0:
+            raise libusb1.USBError(device_list_len)
         # Instanciate our own libusb_device_p object so we can free
         # libusb-provided device list. Is this a bug in ctypes that it doesn't
         # copy pointer value (=pointed memory address) ? At least, it's not so
