@@ -7,12 +7,13 @@ from ctypes import Structure, LittleEndianStructure, \
 try:
     from ctypes import c_ssize_t
 except ImportError:
+    from ctypes import c_longlong
     # c_ssize_t is new in Python 2.7
-    if sizeof(c_uint) == sizeof(c_size_t):
+    if sizeof(c_int) == sizeof(c_size_t):
         c_ssize_t = c_int
-    elif sizeof(c_ulong) == sizeof(c_size_t):
+    elif sizeof(c_long) == sizeof(c_size_t):
         c_ssize_t = c_long
-    elif sizeof(c_ulonglong) == sizeof(c_size_t):
+    elif sizeof(c_longlong) == sizeof(c_size_t):
         c_ssize_t = c_longlong
     else:
         raise ValueError('Unsupported arch: sizeof(c_size_t) = %r' % (
