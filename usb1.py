@@ -23,7 +23,6 @@ import libusb1
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
     create_unicode_buffer, c_wchar, cast, c_uint16, c_ubyte, string_at, \
     c_void_p, cdll
-from cStringIO import StringIO
 import sys
 import threading
 from ctypes.util import find_library
@@ -1723,7 +1722,8 @@ class USBContext(object):
         See libusb_handle_events_locked doc.
         """
         # XXX: does tv parameter need to be exposed ?
-        result = libusb1.libusb_handle_events_locked(self.__context_p, _zero_tv_p)
+        result = libusb1.libusb_handle_events_locked(self.__context_p,
+            _zero_tv_p)
         if result:
             raise libusb1.USBError(result)
 
