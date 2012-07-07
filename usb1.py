@@ -135,8 +135,9 @@ class USBTransfer(object):
         #   self -> self.__dict__ -> libusb_transfer -> dict[x] -> dict[x] ->
         #   CThunkObject -> __callbackWrapper -> self
         # So free transfer altogether.
-        self.__libusb_free_transfer(self.__transfer)
-        self.__transfer = None
+        if self.__transfer is not None:
+            self.__libusb_free_transfer(self.__transfer)
+            self.__transfer = None
 
     def doom(self):
         """
