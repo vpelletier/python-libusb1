@@ -98,7 +98,7 @@ class USBTransfer(object):
     __ctypesCallbackWrapper = None
     __doomed = False
 
-    def __init__(self, handle, iso_packets=0):
+    def __init__(self, handle, iso_packets, before_submit, after_completion):
         """
         You should not instanciate this class directly.
         Call "getTransfer" method on an USBDeviceHandle instance to get
@@ -108,6 +108,8 @@ class USBTransfer(object):
             raise ValueError('Cannot request a negative number of iso '
                 'packets.')
         self.__handle = handle
+        self.__before_submit = before_submit
+        self.__after_completion = after_completion
         self.__num_iso_packets = iso_packets
         result = libusb1.libusb_alloc_transfer(iso_packets)
         if not result:
@@ -137,6 +139,9 @@ class USBTransfer(object):
         if self.__transfer is not None:
             self.__libusb_free_transfer(self.__transfer)
             self.__transfer = None
+        # Break USBDeviceHandle reference cycle
+        self.__before_submit = None
+        self.__after_completion = None
 
     def doom(self):
         """
@@ -170,6 +175,7 @@ class USBTransfer(object):
         fired (ie, mark transfer as not submitted upon call).
         """
         self.__submitted = False
+        self.__after_completion(self)
         callback = self.__callback
         if callback is not None:
             callback(self)
@@ -467,9 +473,11 @@ class USBTransfer(object):
                 'initialized')
         if self.__doomed:
             raise DoomedTransferError('Cannot submit doomed transfer')
+        self.__before_submit(self)
         self.__submitted = True
         result = libusb1.libusb_submit_transfer(self.__transfer)
         if result:
+            self.__after_completion(self)
             self.__submitted = False
             raise libusb1.USBError(result)
 
@@ -776,6 +784,16 @@ class USBDeviceHandle(object):
         # XXX Context parameter is just here as a hint for garbage collector:
         # It must collect USBDeviceHandle instances before their LibUSBContext.
         self.__context = context
+        # Strong references to inflight transfers so they do not get freed
+        # even if user drops all strong references to them. If this instance
+        # is garbage-collected, we close all transfers, so it's fine.
+        self.__inflight = inflight = set()
+        # XXX: For some reason, doing self.__inflight.{add|remove} inside
+        # getTransfer causes extra intermediate python objects for each
+        # allocated transfer. Storing them as properties solves this. Found
+        # with objgraph.
+        self.__inflight_add = inflight.add
+        self.__inflight_remove = inflight.remove
         self.__handle = handle
         self.__device = device
 
@@ -1077,7 +1095,11 @@ class USBDeviceHandle(object):
         iso_packets: the number of isochronous transfer descriptors to
           allocate.
         """
-        return USBTransfer(self.__handle, iso_packets)
+        result = USBTransfer(self.__handle, iso_packets,
+            self.__inflight_add, self.__inflight_remove,
+        )
+        self.__transfer_set.add(result)
+        return result
 
 class USBConfiguration(object):
     def __init__(self, config):
