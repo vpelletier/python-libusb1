@@ -602,16 +602,8 @@ class USBPollerThread(threading.Thread):
         Warning: it will not check if another poller instance was already
         present for that context, and will replace it.
 
-        poller is a polling instance implementing the following methods:
-        - register(fd, event_flags)
-          event_flags have the same meaning as in poll API (POLLIN & POLLOUT)
-        - unregister(fd)
-        - poll(timeout)
-          timeout being a float in seconds, or None if there is no timeout.
-          Its return value must evaluate to true if there are events to handle,
-          false otherwise.
-        poller should not be used outside this class, and should not have
-        any registered file descriptor.
+        poller
+            (same as USBPoller.__init__ "poller" parameter)
 
         exc_callback (callable)
           Called with a libusb_error value as single parameter when event
@@ -702,6 +694,9 @@ class USBPoller(object):
           timeout.
           It must return a list of (descriptor, event) pairs.
         Note: USBPoller is itself a valid poller.
+        Note2: select.poll uses a timeout in milliseconds, for some reason
+        (all other select.* classes use seconds for timeout), so you should
+        wrap it to convert & round/truncate timeout.
         """
         self.__context = context
         self.__poller = poller
