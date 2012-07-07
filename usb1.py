@@ -27,6 +27,7 @@ import sys
 import threading
 from ctypes.util import find_library
 import warnings
+import weakref
 
 __all__ = ['USBContext', 'USBDeviceHandle', 'USBDevice',
     'USBPoller', 'USBTransfer', 'USBTransferHelper', 'EVENT_CALLBACK_SET']
@@ -49,6 +50,20 @@ if __libc_name is None:
 else:
     _free = getattr(cdll, __libc_name).free
 del __libc_name
+
+try:
+    WeakSet = weakref.WeakSet
+except AttributeError:
+    # Python < 2.7: tiny wrapper around WeakKeyDictionary
+    class WeakSet(object):
+        def __init__(self):
+            self.__dict = weakref.WeakKeyDictionary()
+
+        def add(self, item):
+            self.__dict[item] = None
+
+        def pop(self):
+            return self.__dict.popitem()[0]
 
 # Default string length
 # From a comment in libusb-1.0: "Some devices choke on size > 255"
@@ -774,6 +789,8 @@ class USBDeviceHandle(object):
     """
     __handle = None
     __libusb_close = libusb1.libusb_close
+    __USBError = libusb1.USBError
+    __LIBUSB_ERROR_NOT_FOUND = libusb1.LIBUSB_ERROR_NOT_FOUND
 
     def __init__(self, context, handle, device):
         """
@@ -781,9 +798,10 @@ class USBDeviceHandle(object):
         Call "open" method on an USBDevice instance to get an USBDeviceHandle
         instance.
         """
-        # XXX Context parameter is just here as a hint for garbage collector:
-        # It must collect USBDeviceHandle instances before their LibUSBContext.
         self.__context = context
+        # Weak reference to transfers about this device so we can clean up
+        # before closing device.
+        self.__transfer_set = WeakSet()
         # Strong references to inflight transfers so they do not get freed
         # even if user drops all strong references to them. If this instance
         # is garbage-collected, we close all transfers, so it's fine.
@@ -804,9 +822,42 @@ class USBDeviceHandle(object):
         """
         Close this handle. If not called explicitely, will be called by
         destructor.
+
+        This method cancels any in-flight transfer when it is called. As
+        cancellation is not immediate, this method needs to let libusb handle
+        events until transfers are actually cancelled.
+        In multi-threaded programs, this can lead to stalls. To avoid this,
+        do not close nor let GC collect a USBDeviceHandle which has in-flight
+        transfers.
         """
         handle = self.__handle
         if handle is not None:
+            # Build a strong set from weak self.__transfer_set so we can doom
+            # and close all contained transfers.
+            # Because of backward compatibility, self.__transfer_set might be a
+            # wrapper around WeakKeyDictionary. As it might be modified by gc,
+            # we must pop until there is not key left instead of iterating over
+            # it.
+            weak_transfer_set = self.__transfer_set
+            transfer_set = set()
+            while True:
+                try:
+                    transfer = weak_transfer_set.pop()
+                except KeyError:
+                    break
+                transfer_set.add(transfer)
+                transfer.doom()
+            inflight = self.__inflight
+            for transfer in inflight:
+                try:
+                    transfer.cancel()
+                except self.__USBError, exception:
+                    if exception.value != self.__LIBUSB_ERROR_NOT_FOUND:
+                        raise
+            while inflight:
+                self.__context.handleEvents()
+            for transfer in transfer_set:
+                transfer.close()
             self.__libusb_close(handle)
             self.__handle = None
 
