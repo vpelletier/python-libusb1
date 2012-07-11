@@ -791,6 +791,7 @@ class USBDeviceHandle(object):
     __libusb_close = libusb1.libusb_close
     __USBError = libusb1.USBError
     __LIBUSB_ERROR_NOT_FOUND = libusb1.LIBUSB_ERROR_NOT_FOUND
+    __set = set
 
     def __init__(self, context, handle, device):
         """
@@ -839,7 +840,7 @@ class USBDeviceHandle(object):
             # we must pop until there is not key left instead of iterating over
             # it.
             weak_transfer_set = self.__transfer_set
-            transfer_set = set()
+            transfer_set = self.__set()
             while True:
                 try:
                     transfer = weak_transfer_set.pop()
