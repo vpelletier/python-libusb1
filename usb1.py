@@ -1584,10 +1584,14 @@ class USBContext(object):
             self.__removed_cb = None
 
     @_validContext
-    def getDeviceList(self):
+    def getDeviceList(self, skip_on_access_error=False):
         """
         Return a list of all USB devices currently plugged in, as USBDevice
         instances.
+
+        skip_on_access_error (bool)
+            If True, catch LIBUSB_ERROR_ACCESS errors and just skip to next
+            device.
         """
         device_p_p = libusb1.libusb_device_p_p()
         libusb_device_p = libusb1.libusb_device_p
@@ -1595,21 +1599,35 @@ class USBContext(object):
                                                          byref(device_p_p))
         if device_list_len < 0:
             raise libusb1.USBError(device_list_len)
-        # Instanciate our own libusb_device_p object so we can free
-        # libusb-provided device list. Is this a bug in ctypes that it doesn't
-        # copy pointer value (=pointed memory address) ? At least, it's not so
-        # convenient and forces using such weird code.
-        result = [USBDevice(self, libusb_device_p(x.contents))
-            for x in device_p_p[:device_list_len]]
+        result = []
+        append = result.append
+        for device_p in device_p_p[:device_list_len]:
+            try:
+                # Instanciate our own libusb_device_p object so we can free
+                # libusb-provided device list. Is this a bug in ctypes that it
+                # doesn't copy pointer value (=pointed memory address) ? At
+                # least, it's not so convenient and forces using such weird
+                # code.
+                device = USBDevice(self, libusb_device_p(device_p.contents)
+            except libusb1.USBError, exc:
+                if exc.value != libusb1.LIBUSB_ERROR_ACCESS or \
+                        not skip_on_access_error:
+                    raise
+            else:
+                append(device)
         libusb1.libusb_free_device_list(device_p_p, 0)
         return result
 
-    def getByVendorIDAndProductID(self, vendor_id, product_id):
+    def getByVendorIDAndProductID(self, vendor_id, product_id,
+            skip_on_access_error=False):
         """
         Get the first USB device matching given vendor and product ids.
         Returns an USBDevice instance, or None if no present device match.
+        skip_on_access_error (bool)
+            (see getDeviceList)
         """
-        for device in self.getDeviceList():
+        for device in self.getDeviceList(
+                skip_on_access_error=skip_on_access_error):
             if device.getVendorID() == vendor_id and \
                     device.getProductID() == product_id:
                 result = device
@@ -1618,13 +1636,17 @@ class USBContext(object):
             result = None
         return result
 
-    def openByVendorIDAndProductID(self, vendor_id, product_id):
+    def openByVendorIDAndProductID(self, vendor_id, product_id,
+            skip_on_access_error=False):
         """
         Get the first USB device matching given vendor and product ids.
         Returns an USBDeviceHandle instance, or None if no present device
         match.
+        skip_on_access_error (bool)
+            (see getDeviceList)
         """
-        result = self.getByVendorIDAndProductID(vendor_id, product_id)
+        result = self.getByVendorIDAndProductID(vendor_id, product_id,
+            skip_on_access_error=skip_on_access_error)
         if result is not None:
             result = result.open()
         return result
