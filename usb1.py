@@ -1608,7 +1608,7 @@ class USBContext(object):
                 # doesn't copy pointer value (=pointed memory address) ? At
                 # least, it's not so convenient and forces using such weird
                 # code.
-                device = USBDevice(self, libusb_device_p(device_p.contents)
+                device = USBDevice(self, libusb_device_p(device_p.contents))
             except libusb1.USBError, exc:
                 if exc.value != libusb1.LIBUSB_ERROR_ACCESS or \
                         not skip_on_access_error:
