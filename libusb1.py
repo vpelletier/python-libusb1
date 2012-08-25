@@ -596,7 +596,7 @@ _libusb_transfer_fields = [
     ('length', c_int),
     ('actual_length', c_int),
     ('callback', libusb_transfer_cb_fn_p),
-    ('user_data', py_object),
+    ('user_data', c_void_p),
     ('buffer', c_void_p),
     ('num_iso_packets', c_int),
     ('iso_packet_desc', libusb_iso_packet_descriptor)
