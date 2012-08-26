@@ -118,6 +118,7 @@ class USBTransfer(object):
     __ctypesCallbackWrapper = None
     __doomed = False
     __user_data = None
+    __transfer_buffer = None
 
     def __init__(self, handle, iso_packets, before_submit, after_completion):
         """
@@ -244,6 +245,7 @@ class USBTransfer(object):
             string_buffer = create_binary_buffer(length + \
                 libusb1.LIBUSB_CONTROL_SETUP_SIZE)
         self.__initialized = False
+        self.__transfer_buffer = string_buffer
         self.__user_data = user_data
         libusb1.libusb_fill_control_setup(string_buffer, request_type,
             request, value, index, length)
@@ -273,6 +275,7 @@ class USBTransfer(object):
             raise DoomedTransferError('Cannot reuse a doomed transfer')
         string_buffer = create_binary_buffer(buffer_or_len)
         self.__initialized = False
+        self.__transfer_buffer = string_buffer
         self.__user_data = user_data
         libusb1.libusb_fill_bulk_transfer(self.__transfer, self.__handle,
             endpoint, string_buffer, sizeof(string_buffer),
@@ -301,6 +304,7 @@ class USBTransfer(object):
             raise DoomedTransferError('Cannot reuse a doomed transfer')
         string_buffer = create_binary_buffer(buffer_or_len)
         self.__initialized = False
+        self.__transfer_buffer = string_buffer
         self.__user_data = user_data
         libusb1.libusb_fill_interrupt_transfer(self.__transfer, self.__handle,
             endpoint, string_buffer,  sizeof(string_buffer),
@@ -353,6 +357,7 @@ class USBTransfer(object):
                     buffer_length))
         transfer_p = self.__transfer
         self.__initialized = False
+        self.__transfer_buffer = string_buffer
         self.__user_data = user_data
         libusb1.libusb_fill_iso_transfer(transfer_p, self.__handle,
             endpoint, string_buffer, buffer_length, configured_iso_packets,
@@ -478,6 +483,7 @@ class USBTransfer(object):
                 sizeof(buff) != transfer.length:
             raise ValueError('To alter isochronous transfer buffer length, '
                 'use setIsochronous')
+        self.__transfer_buffer = buff
         transfer.buffer = cast(buff, c_void_p)
         transfer.length = sizeof(buff)
 
