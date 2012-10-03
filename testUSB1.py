@@ -33,7 +33,7 @@ class USBTransferTests(unittest.TestCase):
     def getTransfer(self, iso_packets=0):
         # Dummy handle
         return usb1.USBTransfer(pointer(libusb1.libusb_device_handle()),
-            iso_packets)
+            iso_packets, lambda x: None, lambda x: None)
 
     def testSetControl(self):
         """
