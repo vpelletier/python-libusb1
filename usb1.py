@@ -1619,22 +1619,24 @@ class USBContext(object):
                                                          byref(device_p_p))
         if device_list_len < 0:
             raise libusb1.USBError(device_list_len)
-        result = []
-        append = result.append
-        for device_p in device_p_p[:device_list_len]:
-            try:
-                # Instanciate our own libusb_device_p object so we can free
-                # libusb-provided device list. Is this a bug in ctypes that it
-                # doesn't copy pointer value (=pointed memory address) ? At
-                # least, it's not so convenient and forces using such weird
-                # code.
-                device = USBDevice(self, libusb_device_p(device_p.contents))
-            except libusb1.USBError, exc:
-                if not skip_on_error:
-                    raise
-            else:
-                append(device)
-        libusb1.libusb_free_device_list(device_p_p, 0)
+        try:
+            result = []
+            append = result.append
+            for device_p in device_p_p[:device_list_len]:
+                try:
+                    # Instanciate our own libusb_device_p object so we can free
+                    # libusb-provided device list. Is this a bug in ctypes that it
+                    # doesn't copy pointer value (=pointed memory address) ? At
+                    # least, it's not so convenient and forces using such weird
+                    # code.
+                    device = USBDevice(self, libusb_device_p(device_p.contents))
+                except libusb1.USBError, exc:
+                    if not skip_on_error:
+                        raise
+                else:
+                    append(device)
+        finally:
+            libusb1.libusb_free_device_list(device_p_p, 0)
         return result
 
     def getByVendorIDAndProductID(self, vendor_id, product_id,
