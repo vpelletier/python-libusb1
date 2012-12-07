@@ -3,7 +3,7 @@ from ctypes import Structure, LittleEndianStructure, \
                    CFUNCTYPE, POINTER, addressof, sizeof, cast, \
                    c_short, c_int, c_uint, c_size_t, c_long, \
                    c_uint8, c_uint16, c_uint32, \
-                   c_void_p, c_char_p, py_object, string_at
+                   c_void_p, c_char_p, py_object, string_at, pointer
 try:
     from ctypes import c_ssize_t
 except ImportError:
@@ -491,6 +491,16 @@ class libusb_device_handle(Structure):
 libusb_device_handle_p = POINTER(libusb_device_handle)
 libusb_device_handle_p_p = POINTER(libusb_device_handle_p)
 
+class libusb_version(Structure):
+    _fields_ = [
+        ('major', c_uint16),
+        ('minor', c_uint16),
+        ('micro', c_uint16),
+        ('nano', c_uint16),
+        ('rc', c_char_p),
+        ('describe', c_char_p),
+    ]
+
 libusb_speed = Enum({
 # The OS doesn't report or know the device speed.
 'LIBUSB_SPEED_UNKNOWN': 0,
@@ -629,6 +639,14 @@ libusb_exit.restype = None
 libusb_set_debug = libusb.libusb_set_debug
 libusb_set_debug.argtypes = [libusb_context_p, c_int]
 libusb_set_debug.restype = None
+#const struct libusb_version * libusb_get_version(void);
+try:
+    libusb_get_version = libusb.libusb_get_version
+except AttributeError:
+    _dummy_version = libusb_version(0, 0, 0, 0, '', '')
+    _dummy_version_p = pointer(_dummy_version)
+    def libusb_get_version():
+        return _dummy_version_p
 #int libusb_has_capability(uint32_t capability);
 try:
     libusb_has_capability = libusb.libusb_has_capability
