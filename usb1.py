@@ -894,7 +894,7 @@ class USBDeviceHandle(object):
                                                   byref(configuration))
         if result:
             raise libusb1.USBError(result)
-        return configuration
+        return configuration.value
 
     def setConfiguration(self, configuration):
         """
