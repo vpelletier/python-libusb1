@@ -655,6 +655,7 @@ except AttributeError:
         return 0
 else:
     libusb_has_capability.argtypes = [c_uint32]
+    libusb_has_capability.restype = c_int
 try:
     # Note: Should be equivalent to libusb_error.get (except libusb_error.get
     # one raises on unknown values).

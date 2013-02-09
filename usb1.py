@@ -1856,6 +1856,13 @@ class USBContext(object):
         """
         return libusb1.libusb_event_handler_active(self.__context_p)
 
+    def hasCapability(self, capability):
+        """
+        Tests feature presence.
+        See libusb1.libusb_capability .
+        """
+        return libusb1.libusb_has_capability(capability)
+
 del USBContext._validContext
 
 class LibUSBContext(USBContext):
