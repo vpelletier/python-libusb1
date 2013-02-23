@@ -1418,6 +1418,10 @@ class USBDevice(object):
     def getMaxPacketSize(self, endpoint):
         """
         Get device's max packet size for given endpoint.
+
+        Warning: this function will not always give you the expected result.
+        See https://libusb.org/ticket/77 . You should instead consult the
+        endpoint descriptor of current configuration and alternate setting.
         """
         result = libusb1.libusb_get_max_packet_size(self.device_p, endpoint)
         if result < 0:
@@ -1428,6 +1432,10 @@ class USBDevice(object):
         """
         Get the maximum size for a single isochronous packet for given
         endpoint.
+
+        Warning: this function will not always give you the expected result.
+        See https://libusb.org/ticket/77 . You should instead consult the
+        endpoint descriptor of current configuration and alternate setting.
         """
         result = libusb1.libusb_get_max_iso_packet_size(self.device_p, endpoint)
         if result < 0:
