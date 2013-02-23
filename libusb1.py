@@ -22,12 +22,13 @@ import ctypes.util
 import platform
 import os.path
 import sys
+import inspect
 
 class Enum(object):
     def __init__(self, member_dict):
         forward_dict = {}
         reverse_dict = {}
-        module_globals = globals()
+        global_dict = inspect.stack()[1][0].f_globals
         next_value = 0
         for name, value in member_dict.iteritems():
             if value is None:
@@ -38,7 +39,7 @@ class Enum(object):
                 raise ValueError('Multiple names for value %r: %r, %r' %
                     (value, reverse_dict[value], name))
             reverse_dict[value] = name
-            module_globals[name] = value
+            global_dict[name] = value
         self.forward_dict = forward_dict
         self.reverse_dict = reverse_dict
 
