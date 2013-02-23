@@ -1,12 +1,12 @@
 """
 Pythonic wrapper for libusb-1.0.
 
-The first thing you must do is to get an "USB context". To do so, create a
-LibUSBContext instance.
+The first thing you must do is to get an "USB context". To do so, create an
+USBContext instance.
 Then, you can use it to browse available USB devices and open the one you want
 to talk to.
 At this point, you should have a USBDeviceHandle instance (as returned by
-LibUSBContext or USBDevice instances), and you can start exchanging with the
+USBContext or USBDevice instances), and you can start exchanging with the
 device.
 
 Features:
