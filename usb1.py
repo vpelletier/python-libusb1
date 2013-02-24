@@ -21,8 +21,7 @@ Features:
 
 import libusb1
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
-    create_unicode_buffer, c_wchar, cast, c_uint16, c_ubyte, string_at, \
-    c_void_p, cdll
+    cast, c_uint16, c_ubyte, string_at, c_void_p, cdll
 import sys
 import threading
 from ctypes.util import find_library
@@ -1004,6 +1003,11 @@ class USBDeviceHandle(object):
         """
         Return a list of USB language identifiers (as integers) supported by
         current device for its string descriptors.
+
+        Note: language identifiers seem (I didn't check them all...) very
+        similar to windows language identifiers, so you may want to use
+        locales.windows_locale to get an rfc3066 representation. The 5 standard
+        HID language codes are missing though.
         """
         descriptor_string = create_binary_buffer(STRING_LENGTH)
         result = libusb1.libusb_get_string_descriptor(self.__handle,
@@ -1029,15 +1033,14 @@ class USBDeviceHandle(object):
         Return value is an unicode string.
         Return None if there is no such descriptor on device.
         """
-        descriptor_string = create_unicode_buffer(
-            STRING_LENGTH / sizeof(c_wchar))
+        descriptor_string = create_binary_buffer(STRING_LENGTH)
         result = libusb1.libusb_get_string_descriptor(self.__handle,
             descriptor, lang_id, descriptor_string, sizeof(descriptor_string))
         if result == libusb1.LIBUSB_ERROR_NOT_FOUND:
             return None
         if result < 0:
             raise libusb1.USBError(result)
-        return descriptor_string.value
+        return descriptor_string.value.decode('UTF-16-LE')
 
     def getASCIIStringDescriptor(self, descriptor):
         """
