@@ -35,6 +35,12 @@ class USBTransferTests(unittest.TestCase):
         return usb1.USBTransfer(pointer(libusb1.libusb_device_handle()),
             iso_packets, lambda x: None, lambda x: None)
 
+    def testGetVersion(self):
+        """
+        Just testing getVersion doesn't raise...
+        """
+        usb1.getVersion()
+
     def testSetControl(self):
         """
         Simplest test: feed some data, must not raise.

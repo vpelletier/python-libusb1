@@ -28,6 +28,14 @@ import threading
 from ctypes.util import find_library
 import warnings
 import weakref
+import collections
+try:
+    namedtuple = collections.namedtuple
+except AttributeError:
+    Version = lambda *x: x
+else:
+    Version = namedtuple('Version', ['major', 'minor', 'micro', 'nano', 'rc',
+        'describe'])
 
 __all__ = ['USBContext', 'USBDeviceHandle', 'USBDevice',
     'USBPoller', 'USBTransfer', 'USBTransferHelper', 'EVENT_CALLBACK_SET']
@@ -1872,6 +1880,22 @@ class USBContext(object):
         return libusb1.libusb_has_capability(capability)
 
 del USBContext._validContext
+
+def getVersion():
+    """
+    Returns underlying libusb's version information as a 6-namedtuple (or
+    6-tuple if namedtuples are not avaiable):
+    - major
+    - minor
+    - micro
+    - nano
+    - rc
+    - describe
+    Returns (0, 0, 0, 0, '', '') if libusb doesn't have required entry point.
+    """
+    version = libusb1.libusb_get_version().contents
+    return Version(version.major, version.minor, version.micro, version.nano,
+        version.rc, version.describe)
 
 class LibUSBContext(USBContext):
     """

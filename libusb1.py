@@ -648,6 +648,9 @@ except AttributeError:
     _dummy_version_p = pointer(_dummy_version)
     def libusb_get_version():
         return _dummy_version_p
+else:
+    libusb_get_version.argtypes = []
+    libusb_get_version.restype = POINTER(libusb_version)
 #int libusb_has_capability(uint32_t capability);
 try:
     libusb_has_capability = libusb.libusb_has_capability
