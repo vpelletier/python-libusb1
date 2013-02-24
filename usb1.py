@@ -1211,9 +1211,17 @@ class USBConfiguration(object):
         return self.__config.bmAttributes
 
     def getMaxPower(self):
+        """
+        Returns device's power consumption in mW.
+        Beware of unit: USB descriptor uses 2mW increments, this method
+        converts it to mW units.
+        """
         return self.__config.MaxPower * 2
 
     def getExtra(self):
+        """
+        Returns a list of extra (non-basic) descriptors (DFU, HID, ...).
+        """
         return libusb1.get_extra(self.__config)
 
     def __iter__(self):
