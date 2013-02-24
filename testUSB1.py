@@ -124,7 +124,7 @@ class USBTransferTests(unittest.TestCase):
         """
         USBPollerThread must exit by itself when context is destroyed.
         """
-        context = usb1.LibUSBContext()
+        context = usb1.USBContext()
         poll_detector = PollDetector()
         poller = usb1.USBPollerThread(context, poll_detector)
         poller.start()
@@ -141,7 +141,7 @@ class USBTransferTests(unittest.TestCase):
             def poll(self, *args, **kw):
                 self.poll = super(FakeEventPoll, self).poll
                 return ['dummy']
-        context = usb1.LibUSBContext()
+        context = usb1.USBContext()
         def fakeHandleEventsLocked():
             raise libusb1.USBError(0)
         context.handleEventsLocked = fakeHandleEventsLocked
