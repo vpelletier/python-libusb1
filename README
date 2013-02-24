@@ -18,13 +18,14 @@ Requirements:
 Compatibility:
 python-libusb1 is expected to work on any OS supported by libusb. It can be
 expected to work on:
-- Linux
+- GNU/Linux
 - Windows
   *not* libusb-win32 (this is libusb0.1, the old API)
 - Cygwin
 - OSX (macports, fink, homebrew)
 - FreeBSD
   libusb reimplementation: http://svnweb.freebsd.org/base/head/lib/libusb/
+  (including Debian GNU/kFreeBSD)
 - OpenBSD
 
 Contents:
