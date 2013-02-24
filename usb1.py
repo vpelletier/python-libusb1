@@ -1052,7 +1052,7 @@ class USBDeviceHandle(object):
             return None
         if result < 0:
             raise libusb1.USBError(result)
-        return descriptor_string.value
+        return descriptor_string.value.decode('ASCII')
 
     # Sync I/O
 

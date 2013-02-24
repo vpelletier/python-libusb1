@@ -100,6 +100,11 @@ class USBError(Exception):
         return '%s [%s]' % (libusb_error.get(self.value, 'Unknown error'),
                             self.value)
 
+if sys.version_info[0] == 3:
+    _string_item_to_int = lambda x: x
+else:
+    _string_item_to_int = ord
+
 c_uchar = c_uint8
 c_int_p = POINTER(c_int)
 
@@ -946,7 +951,7 @@ def get_extra(descriptor):
         extra = string_at(descriptor.extra, extra_length)
         append = result.append
         while extra:
-            length = ord(extra[0])
+            length = _string_item_to_int(extra[0])
             if not (0 < length <= len(extra)):
                 raise ValueError('Extra descriptor %i is incomplete/invalid' % (
                     len(result), ))
