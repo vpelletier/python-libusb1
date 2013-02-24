@@ -157,5 +157,24 @@ class USBTransferTests(unittest.TestCase):
         self.assertTrue(exception_list, exception_list)
         self.assertTrue(poller.is_alive())
 
+    def testDescriptors(self):
+        """
+        Test descriptor walk.
+        Needs any usb device, which won't be opened.
+        """
+        context = usb1.USBContext()
+        device_list = context.getDeviceList(skip_on_error=True)
+        for device in device_list:
+            for settings in device.iterSettings():
+                for endpoint in settings:
+                    pass
+            for configuration in device.iterConfigurations():
+                for interface in configuration:
+                    for settings in interface:
+                        for endpoint in settings:
+                            found = True
+        if not found:
+            raise unittest.SkipTest('descriptor walk test did not complete')
+
 if __name__ == '__main__':
     unittest.main()

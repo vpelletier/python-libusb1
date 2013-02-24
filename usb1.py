@@ -1201,10 +1201,13 @@ class USBConfiguration(object):
     def getExtra(self):
         return libusb1.get_extra(self.__config)
 
-    def iterInterfaces(self):
+    def __iter__(self):
         interface_list = self.__config.interface
         for interface_num in xrange(self.getNumInterfaces()):
             yield USBInterface(interface_list[interface_num])
+
+    # BBB
+    iterInterfaces = __iter__
 
     def __getitem__(self, interface):
         if not isinstance(interface, int):
@@ -1222,10 +1225,13 @@ class USBInterface(object):
     def getNumSettings(self):
         return self.__interface.num_altsetting
 
-    def iterSettings(self):
+    def __iter__(self):
         alt_setting_list = self.__interface.altsetting
         for alt_setting_num in xrange(self.getNumSettings()):
             yield USBInterfaceSetting(alt_setting_list[alt_setting_num])
+
+    # BBB
+    iterSettings = __iter__
 
     def __getitem__(self, alt_setting):
         if not isinstance(alt_setting, int):
@@ -1272,10 +1278,13 @@ class USBInterfaceSetting(object):
     def getExtra(self):
         return libusb1.get_extra(self.__alt_setting)
 
-    def iterEndpoints(self):
+    def __iter__(self):
         endpoint_list = self.__alt_setting.endpoint
         for endpoint_num in xrange(self.getNumEndpoints()):
             yield USBEndpoint(endpoint_list[endpoint_num])
+
+    # BBB
+    iterEndpoints = __iter__
 
     def __getitem__(self, endpoint):
         if not isinstance(endpoint, int):
@@ -1371,14 +1380,17 @@ class USBDevice(object):
     def __getitem__(self, index):
         return USBConfiguration(self.__configuration_descriptor_list[index])
 
-    def iterConfiguations(self):
+    def iterConfigurations(self):
         for config in self.__configuration_descriptor_list:
             yield USBConfiguration(config)
 
+    # BBB
+    iterConfiguations = iterConfigurations
+
     def iterSettings(self):
         for config in self.__configuration_descriptor_list:
-            for interface in USBConfiguration(config).iterInterfaces():
-                for setting in interface.iterSettings():
+            for interface in USBConfiguration(config):
+                for setting in interface:
                     yield setting
 
     def getBusNumber(self):
