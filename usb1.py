@@ -1369,7 +1369,7 @@ class USBDevice(object):
     Represents a USB device.
     """
 
-    __configuration_descriptor_list = None
+    __configuration_descriptor_list = ()
     __libusb_unref_device = libusb1.libusb_unref_device
     __libusb_free_config_descriptor = libusb1.libusb_free_config_descriptor
     __byref = byref
@@ -1408,10 +1408,9 @@ class USBDevice(object):
 
     def __del__(self):
         self.__libusb_unref_device(self.device_p)
-        if self.__configuration_descriptor_list is not None:
-            byref = self.__byref
-            for config in self.__configuration_descriptor_list:
-                self.__libusb_free_config_descriptor(byref(config))
+        byref = self.__byref
+        for config in self.__configuration_descriptor_list:
+            self.__libusb_free_config_descriptor(byref(config))
 
     def __str__(self):
         return 'Bus %03i Device %03i: ID %04x:%04x' % (
