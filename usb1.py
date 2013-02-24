@@ -1659,7 +1659,7 @@ class USBContext(object):
         """
         Close (destroy) this USB context.
 
-        When this function has been called, methods on its instance will
+        When this method has been called, methods on its instance will
         become mosty no-ops, returning None.
         """
         self.__context_cond.acquire()
