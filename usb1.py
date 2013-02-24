@@ -37,6 +37,14 @@ else:
     Version = namedtuple('Version', ['major', 'minor', 'micro', 'nano', 'rc',
         'describe'])
 
+if sys.version_info[0] == 3:
+    BYTE = b'\x00'
+    xrange = range
+    long = int
+else:
+    BYTE = '\x00'
+CONTROL_SETUP = BYTE * libusb1.LIBUSB_CONTROL_SETUP_SIZE
+
 __all__ = ['USBContext', 'USBDeviceHandle', 'USBDevice',
     'USBPoller', 'USBTransfer', 'USBTransferHelper', 'EVENT_CALLBACK_SET',
     'USBPollerThread', 'USBEndpoint', 'USBInterfaceSetting', 'USBInterface',
@@ -196,8 +204,8 @@ class USBTransfer(object):
                 # reference to transfer, so a segfault might happen anyway.
                 # Should we warn user ? How ?
                 self.cancel()
-            except self.__USBError, exception:
-                if exception.value == self.__LIBUSB_ERROR_NOT_FOUND:
+            except self.__USBError:
+                if sys.exc_info()[1].value == self.__LIBUSB_ERROR_NOT_FOUND:
                     # Transfer was not submitted, we can free it.
                     self.__libusb_free_transfer(self.__transfer)
                 else:
@@ -248,14 +256,13 @@ class USBTransfer(object):
             raise ValueError('Cannot alter a submitted transfer')
         if self.__doomed:
             raise DoomedTransferError('Cannot reuse a doomed transfer')
-        if isinstance(buffer_or_len, basestring):
-            length = len(buffer_or_len)
-            string_buffer = create_binary_buffer(
-                ' ' * libusb1.LIBUSB_CONTROL_SETUP_SIZE + buffer_or_len)
-        else:
+        if isinstance(buffer_or_len, (int, long)):
             length = buffer_or_len
             string_buffer = create_binary_buffer(length + \
                 libusb1.LIBUSB_CONTROL_SETUP_SIZE)
+        else:
+            length = len(buffer_or_len)
+            string_buffer = create_binary_buffer(CONTROL_SETUP + buffer_or_len)
         self.__initialized = False
         self.__transfer_buffer = string_buffer
         self.__user_data = user_data
@@ -707,8 +714,8 @@ class USBPollerThread(threading.Thread):
                         if poll(getNextTimeout()):
                             try:
                                 handle_events_locked()
-                            except libusb1.USBError, exc:
-                                exceptionHandler(exc)
+                            except libusb1.USBError:
+                                exceptionHandler(sys.exc_info()[1])
                 finally:
                     unlock_events()
 
@@ -880,8 +887,9 @@ class USBDeviceHandle(object):
             for transfer in inflight:
                 try:
                     transfer.cancel()
-                except self.__USBError, exception:
-                    if exception.value != self.__LIBUSB_ERROR_NOT_FOUND:
+                except self.__USBError:
+                    if sys.exc_info()[1].value != \
+                            self.__LIBUSB_ERROR_NOT_FOUND:
                         raise
             while inflight:
                 self.__context.handleEvents()
@@ -1695,7 +1703,7 @@ class USBContext(object):
                     # least, it's not so convenient and forces using such weird
                     # code.
                     device = USBDevice(self, libusb_device_p(device_p.contents))
-                except libusb1.USBError, exc:
+                except libusb1.USBError:
                     if not skip_on_error:
                         raise
                 else:

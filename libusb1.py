@@ -30,7 +30,7 @@ class Enum(object):
         reverse_dict = {}
         global_dict = inspect.stack()[1][0].f_globals
         next_value = 0
-        for name, value in member_dict.iteritems():
+        for name, value in member_dict.items():
             if value is None:
                 value = next_value
                 next_value += 1
