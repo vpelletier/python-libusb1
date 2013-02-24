@@ -227,8 +227,6 @@ class USBTransfer(object):
         """
         Change transfer's callback.
         """
-        if self.__submitted:
-            raise ValueError('Cannot alter a submitted transfer')
         self.__callback = callback
 
     def getCallback(self):
@@ -439,8 +437,6 @@ class USBTransfer(object):
         """
         Change user data.
         """
-        if self.__submitted:
-            raise ValueError('Cannot alter a submitted transfer')
         self.__user_data = user_data
 
     def getISOBufferList(self):
