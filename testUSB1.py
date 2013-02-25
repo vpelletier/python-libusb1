@@ -164,6 +164,7 @@ class USBTransferTests(unittest.TestCase):
         """
         context = usb1.USBContext()
         device_list = context.getDeviceList(skip_on_error=True)
+        found = False
         for device in device_list:
             for settings in device.iterSettings():
                 for endpoint in settings:
