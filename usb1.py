@@ -240,14 +240,20 @@ class USBTransfer(object):
         """
         Setup transfer for control use.
 
-        request_type, request, value, index: See USBDeviceHandle.controlWrite.
-        buffer_or_len: either a string (when sending data), or expected data
-          length (when receiving data)
-        callback: function to call upon event. Called with transfer as
-          parameter, return value ignored.
-        user_data: to pass some data to/from callback
-        timeout: in milliseconds, how long to wait for devices acknowledgement
-          or data. Set to 0 to disable.
+        request_type, request, value, index
+            See USBDeviceHandle.controlWrite.
+            request_type defines transfer direction (see
+            libusb1.LIBUSB_ENDPOINT_OUT and libusb1.LIBUSB_ENDPOINT_IN)).
+        buffer_or_len
+            Either a string (when sending data), or expected data length (when
+            receiving data).
+        callback
+            Callback function to be invoked on transfer completion.
+            Called with transfer as parameter, return value ignored.
+        user_data
+            User data to pass to callback function.
+        timeout
+            Transfer timeout in milliseconds. 0 to disable.
         """
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
@@ -275,15 +281,19 @@ class USBTransfer(object):
         """
         Setup transfer for bulk use.
 
-        endpoint: endpoint to submit transfer to (implicitly sets transfer
-          direction).
-        buffer_or_len: either a string (when sending data), or expected data
-          length (when receiving data)
-        callback: function to call upon event. Called with transfer as
-          parameter, return value ignored.
-        user_data: to pass some data to/from callback
-        timeout: in milliseconds, how long to wait for devices acknowledgement
-          or data. Set to 0 to disable.
+        endpoint
+            Endpoint to submit transfer to. Defines transfer direction (see
+            libusb1.LIBUSB_ENDPOINT_OUT and libusb1.LIBUSB_ENDPOINT_IN)).
+        buffer_or_len
+            Either a string (when sending data), or expected data length (when
+            receiving data)
+        callback
+            Callback function to be invoked on transfer completion.
+            Called with transfer as parameter, return value ignored.
+        user_data
+            User data to pass to callback function.
+        timeout
+            Transfer timeout in milliseconds. 0 to disable.
         """
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
@@ -304,15 +314,19 @@ class USBTransfer(object):
         """
         Setup transfer for interrupt use.
 
-        endpoint: endpoint to submit transfer to (implicitly sets transfer
-          direction).
-        buffer_or_len: either a string (when sending data), or expected data
-          length (when receiving data)
-        callback: function to call upon event. Called with transfer as
-          parameter, return value ignored.
-        user_data: to pass some data to/from callback
-        timeout: in milliseconds, how long to wait for devices acknowledgement
-          or data. Set to 0 to disable.
+        endpoint
+            Endpoint to submit transfer to. Defines transfer direction (see
+            libusb1.LIBUSB_ENDPOINT_OUT and libusb1.LIBUSB_ENDPOINT_IN)).
+        buffer_or_len
+            Either a string (when sending data), or expected data length (when
+            receiving data)
+        callback
+            Callback function to be invoked on transfer completion.
+            Called with transfer as parameter, return value ignored.
+        user_data
+            User data to pass to callback function.
+        timeout
+            Transfer timeout in milliseconds. 0 to disable.
         """
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
@@ -333,20 +347,23 @@ class USBTransfer(object):
         """
         Setup transfer for isochronous use.
 
-        endpoint: endpoint to submit transfer to (implicitly sets transfer
-          direction).
-        buffer_or_len: either a string (when sending data), or expected data
-          length (when receiving data)
-        callback: function to call upon event. Called with transfer as
-          parameter, return value ignored.
-        user_data: to pass some data to/from callback
-        timeout: in milliseconds, how long to wait for devices acknowledgement
-          or data. Set to 0 to disable.
-        iso_transfer_length_list: list of individual transfer sizes. If not
-          provided, buffer_or_len's size will be divided evenly among the
-          number of ISO transfers given to receive current instance, rounded
-          down. Providing a list allows overriding this (both the number of
-          ISO transfers and their individual lengths).
+        endpoint
+            Endpoint to submit transfer to. Defines transfer direction (see
+            libusb1.LIBUSB_ENDPOINT_OUT and libusb1.LIBUSB_ENDPOINT_IN)).
+        buffer_or_len
+            Either a string (when sending data), or expected data length (when
+            receiving data)
+        callback
+            Callback function to be invoked on transfer completion.
+            Called with transfer as parameter, return value ignored.
+        user_data
+            User data to pass to callback function.
+        timeout
+            Transfer timeout in milliseconds. 0 to disable.
+        iso_transfer_length_list
+            List of individual transfer sizes. If not provided, buffer_or_len
+            will be divided evenly among available transfers if possible, and
+            raise ValueError otherwise.
         """
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
@@ -360,7 +377,11 @@ class USBTransfer(object):
         string_buffer = create_binary_buffer(buffer_or_len)
         buffer_length = sizeof(string_buffer)
         if iso_transfer_length_list is None:
-            iso_length = buffer_length // num_iso_packets
+            iso_length, remainder = divmod(buffer_length, num_iso_packets)
+            if remainder:
+                raise ValueError('Buffer size %i cannot be evenly '
+                    'distributed among %i transfers' % (buffer_length,
+                    num_iso_packets))
             iso_transfer_length_list = [iso_length] * num_iso_packets
         configured_iso_packets = len(iso_transfer_length_list)
         if configured_iso_packets > num_iso_packets:
