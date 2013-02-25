@@ -126,7 +126,10 @@ class USBTransferTests(unittest.TestCase):
         """
         context = usb1.USBContext()
         poll_detector = PollDetector()
-        poller = usb1.USBPollerThread(context, poll_detector)
+        try:
+            poller = usb1.USBPollerThread(context, poll_detector)
+        except OSError:
+            raise unittest.SkipTest('libusb without file descriptor events')
         poller.start()
         poll_detector.wait(1)
         context.exit()
@@ -150,8 +153,11 @@ class USBTransferTests(unittest.TestCase):
         def exceptionHandler(exc):
             exception_list.append(exc)
             exception_event.set()
-        poller = usb1.USBPollerThread(context, FakeEventPoll(),
-            exceptionHandler)
+        try:
+            poller = usb1.USBPollerThread(context, FakeEventPoll(),
+                exceptionHandler)
+        except OSError:
+            raise unittest.SkipTest('libusb without file descriptor events')
         poller.start()
         exception_event.wait(1)
         self.assertTrue(exception_list, exception_list)
