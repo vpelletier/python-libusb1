@@ -617,7 +617,7 @@ _libusb_transfer_fields = [
     ('num_iso_packets', c_int),
     ('iso_packet_desc', libusb_iso_packet_descriptor)
 ]
-if platform.system() == 'FreeBSD' and getattr(libusb,
+if 'FreeBSD' in platform.system() and getattr(libusb,
         'libusb_get_string_descriptor', None) is None:
     # Old FreeBSD version has a slight ABI incompatibility.
     # Work around it unless libusb_get_string_descriptor is available, as it
