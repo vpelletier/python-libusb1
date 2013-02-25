@@ -16,7 +16,11 @@ buff_len = 2
 
 class PollDetector(object):
     def __init__(self, *args, **kw):
-        self.__poll = select.poll(*args, **kw)
+        try:
+            poll = select.poll
+        except AttributeError:
+            raise unittest.SkipTest('select.poll missing')
+        self.__poll = poll(*args, **kw)
         self.__event = threading.Event()
 
     def poll(self, *args, **kw):
