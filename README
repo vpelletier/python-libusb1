@@ -23,6 +23,7 @@ expected to work on:
   *not* libusb-win32 (this is libusb0.1, the old API)
 - Cygwin
 - OSX (macports, fink, homebrew)
+  (beware of possible lack of select.poll support in python)
 - FreeBSD
   libusb reimplementation: http://svnweb.freebsd.org/base/head/lib/libusb/
   (including Debian GNU/kFreeBSD)
