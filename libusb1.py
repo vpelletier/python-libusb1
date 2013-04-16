@@ -102,8 +102,10 @@ class USBError(Exception):
 
 if sys.version_info[0] == 3:
     _string_item_to_int = lambda x: x
+    _empty_char_p = bytes()
 else:
     _string_item_to_int = ord
+    _empty_char_p = ''
 
 c_uchar = c_uint8
 c_int_p = POINTER(c_int)
@@ -649,7 +651,7 @@ libusb_set_debug.restype = None
 try:
     libusb_get_version = libusb.libusb_get_version
 except AttributeError:
-    _dummy_version = libusb_version(0, 0, 0, 0, '', '')
+    _dummy_version = libusb_version(0, 0, 0, 0, _empty_char_p, _empty_char_p)
     _dummy_version_p = pointer(_dummy_version)
     def libusb_get_version():
         return _dummy_version_p
