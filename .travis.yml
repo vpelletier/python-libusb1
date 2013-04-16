@@ -1,0 +1,10 @@
+language: python
+python:
+  - "2.7"
+  - "3.3"
+before_script:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libusb-1.0-0
+install:
+  pip install . --use-mirrors
+script: python testUSB1.py
