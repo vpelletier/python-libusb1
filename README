@@ -179,8 +179,6 @@ Other projects, different author
 
 .. _pypy: http://pypy.org/
 
-.. _bug: https://bugs.pypy.org/issue1242
-
 .. _ctypes: http://python.net/crew/theller/ctypes/
 
 .. _libusb-1.0: http://www.libusb.org/wiki/libusb-1.0
