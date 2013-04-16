@@ -47,8 +47,52 @@ expected to work on:
 
 - OpenBSD
 
-Contents
-========
+Installation
+============
+
+::
+
+  python setup.py install
+
+(you might need root access to do this)
+
+Documentation
+=============
+
+python-libusb1 follows libusb1.0 documentation as closely as possible, without
+taking decisions for you. Thanks to this, python-libusb1 does not need to
+duplicate the nice existing `libusb1.0 documentation`_.
+
+Some description is needed though on how to hump from libusb1.0 documentation
+to python-libusb1, and vice-versa.
+
+``libusb1`` module is a ctypes translation of ``libusb1.h`` file, including all
+macros, constants and enums. You should not need to call any function from
+this module, but will probably need to import it for the constants.
+
+``usb1`` module wraps libusb1 functions so caller does not need to worry about
+ctype. It regroup them as class methods, the first parameter (when it's a
+``libusb_...`` pointer) defining the class the fonction belongs to. Examples:
+
+- ``int libusb_init (libusb_context **context)`` becomes USBContext class
+  constructor
+
+- ``ssize_t libusb_get_device_list (libusb_context *ctx,
+  libusb_device ***list)`` becomes an USBContext method, returning a
+  list of USBDevice instances
+
+- ``uint8_t libusb_get_bus_number (libusb_device *dev)`` becomes an USBDevice
+  method
+
+Functions returning an error status instead raise ``libusb1.USBError``
+instances, with the status as ``value``.
+
+It wraps further some functions which are otherwise not so convenient to call
+from Python: the event handling API needed by async API. Those classes are
+docstring-documented, so using ``pydoc`` is recommended.
+
+Contents of source distribution
+===============================
 
 - libusb1.py
 
@@ -71,15 +115,6 @@ Contents
 
   Very limited regression test, only testing functions which do not require a
   USB device.
-
-Install
-=======
-
-::
-
-  python setup.py install
-
-(you might need root access to do this)
 
 History
 =======
@@ -184,3 +219,5 @@ Other projects, different author
 .. _libusb-1.0: http://www.libusb.org/wiki/libusb-1.0
 
 .. _pyusb: http://sourceforge.net/projects/pyusb/
+
+.. _libusb1.0 documentation: http://libusb.sourceforge.net/api-1.0/
