@@ -1,99 +1,188 @@
-python-libusb1 is a Python wrapper for libusb-1.0
+Pure-python wrapper for libusb-1.0
 
 Supports all transfer types, both in synchronous and asynchronous mode.
 
-URL:
-  http://github.com/vpelletier/python-libusb1
-  http://pypi.python.org/pypi/libusb1
+Home: http://github.com/vpelletier/python-libusb1
 
-Requirements:
-- Python [1] 2.4+ required, 2.6+ recommended
+PyPI: http://pypi.python.org/pypi/libusb1
+
+Requirements
+============
+
+- Python_ 2.4+ required, 2.6+ recommended
+
   Python 3.x somewhat tested
-  pypy[4] somewhat tested, 1.9 has one bug[5] affecting python-libusb which is
-  fixed in their HG
-- ctypes [2] (included in Python 2.5+)
-- libusb-1.0 [3]
+
+  pypy_ somewhat tested, 1.9 has a `bug <https://bugs.pypy.org/issue1242>`_
+  affecting python-libusb, which is fixed in their HG
+
+- ctypes_ (included in Python 2.5+)
+
+- libusb-1.0_
+
   libusbx should work, too
 
-Compatibility:
+Compatibility
+=============
+
 python-libusb1 is expected to work on any OS supported by libusb. It can be
 expected to work on:
+
 - GNU/Linux
+
 - Windows
+
   *not* libusb-win32 (this is libusb0.1, the old API)
+
 - Cygwin
+
 - OSX (macports, fink, homebrew)
+
   (beware of possible lack of select.poll support in python)
+
 - FreeBSD
+
   libusb reimplementation: http://svnweb.freebsd.org/base/head/lib/libusb/
   (including Debian GNU/kFreeBSD)
+
 - OpenBSD
 
-Contents:
+Contents
+========
+
 - libusb1.py
+
   Bare ctype wrapper, inspired from library C header file.
+
 - usb1.py
+
   Python-ish (classes, exceptions, ...) wrapper around libusb1.py .
   See docstrings (pydoc recommended) for usage.
+
 - setup.py
+
   To package as python egg.
+
 - stdeb.cfg
+
   To package as Debian package. See https://github.com/astraw/stdeb .
+
 - testUSB1.py
+
   Very limited regression test, only testing functions which do not require a
   USB device.
 
-Install:
-python setup.py install
+Install
+=======
+
+::
+
+  python setup.py install
+
 (you might need root access to do this)
 
-History:
+History
+=======
+
 0.0.1
-  Initial release
+-----
+
+Initial release
+
 0.1.1
-  Massive rework of usb1.py, making it more python-ish and fixing some
-  memory leaks.
+-----
+
+Massive rework of usb1.py, making it more python-ish and fixing some
+memory leaks.
+
 0.1.2
-  Deprecate "transfer" constructor parameter to allow instance reuse.
+-----
+
+Deprecate "transfer" constructor parameter to allow instance reuse.
+
 0.1.3
-  Some work on isochronous "in" transfers. They don't raise exceptions anymore,
-  but data validity and python-induced latency impact weren't properly checked.
+-----
+
+Some work on isochronous "in" transfers. They don't raise exceptions anymore,
+but data validity and python-induced latency impact weren't properly checked.
+
 0.2.0
-  Fix asynchronous configuration transfers.
-  Stand-alone polling thread for multi-threaded apps.
-  More libusb methods exposed on objects, including ones not yet part of
-  released libusb versions (up to their commit 4630fc2).
-  2to3 friendly.
-  Drop deprecated USBDevice.reprConfigurations method.
+-----
+
+Fix asynchronous configuration transfers.
+
+Stand-alone polling thread for multi-threaded apps.
+
+More libusb methods exposed on objects, including ones not yet part of
+released libusb versions (up to their commit 4630fc2).
+
+2to3 friendly.
+
+Drop deprecated USBDevice.reprConfigurations method.
+
 0.2.1
-  Add FreeBSD support.
+-----
+
+Add FreeBSD support.
+
 0.2.2
-  Add Cygwin support.
-  OpenBSD support checked (no change).
+-----
+
+Add Cygwin support.
+
+OpenBSD support checked (no change).
+
 0.2.3
-  Add fink and homebrew support on OSX.
-  Drop PATH_MAX definition.
-  Try harder when looking for libusb.
+-----
+
+Add fink and homebrew support on OSX.
+
+Drop PATH_MAX definition.
+
+Try harder when looking for libusb.
+
 1.0.0
-  Fix FreeBSD ABI compatibility.
-  Easier to list connected devices.
-  Easier to terminate all async transfers for clean exit.
-  Fix few segfault causes.
-  pypy support.
+-----
+
+Fix FreeBSD ABI compatibility.
+
+Easier to list connected devices.
+
+Easier to terminate all async transfers for clean exit.
+
+Fix few segfault causes.
+
+pypy support.
+
 1.1.0
-  Descriptor walk API documented.
-  Version and capability APIs exposed.
-  Better Python 3 support.
-  Better exception handling in enumeration.
-  Add examples.
+-----
 
-[1] http://www.python.org/
-[2] http://python.net/crew/theller/ctypes/
-[3] http://www.libusb.org/wiki/libusb-1.0
-[4] http://pypy.org/
-[5] https://bugs.pypy.org/issue1242
+Descriptor walk API documented.
 
-See also (other projects, different author):
-  pyusb: another python wrapper for (among others) libusb1
-    http://sourceforge.net/projects/pyusb/
+Version and capability APIs exposed.
 
+Better Python 3 support.
+
+Better exception handling in enumeration.
+
+Add examples.
+
+See also
+========
+
+Other projects, different author
+
+- pyusb_:  another python wrapper for (among others) libusb1.
+  Does not support asynchronous API, nor isochorous transfers.
+
+.. _Python: http://www.python.org/
+
+.. _pypy: http://pypy.org/
+
+.. _bug: https://bugs.pypy.org/issue1242
+
+.. _ctypes: http://python.net/crew/theller/ctypes/
+
+.. _libusb-1.0: http://www.libusb.org/wiki/libusb-1.0
+
+.. _pyusb: http://sourceforge.net/projects/pyusb/
