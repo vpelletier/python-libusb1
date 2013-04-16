@@ -1,7 +1,9 @@
 from distutils.core import setup
 import os
 
-long_description = open(os.path.join(os.path.dirname(__file__), 'README')).read()
+long_description = open(
+  os.path.join(os.path.dirname(__file__), 'README.rst')
+).read()
 
 setup(
     name='libusb1',
