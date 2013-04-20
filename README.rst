@@ -63,7 +63,7 @@ python-libusb1 follows libusb1.0 documentation as closely as possible, without
 taking decisions for you. Thanks to this, python-libusb1 does not need to
 duplicate the nice existing `libusb1.0 documentation`_.
 
-Some description is needed though on how to hump from libusb1.0 documentation
+Some description is needed though on how to jump from libusb1.0 documentation
 to python-libusb1, and vice-versa.
 
 ``libusb1`` module is a ctypes translation of ``libusb1.h`` file, including all
