@@ -7,6 +7,13 @@ python:
 before_script:
   - sudo apt-get update -qq
   - sudo apt-get install -qq libusb-1.0-0
+  - sudo apt-get build-dep -qq libusb-1.0-0
+#  - ./buildTestLibusb.sh git://git.libusb.org/libusb.git libusb.git master v1.0.6
+  - ./buildTestLibusb.sh git://repo.or.cz/libusb.git libusb.git master v1.0.6
 install:
   pip install . --use-mirrors
 script: python testUSB1.py
+env:
+  - LD_LIBRARY_PATH=
+  - LD_LIBRARY_PATH=test-libusb/build/libusb.git/master/lib
+  - LD_LIBRARY_PATH=test-libusb/build/libusb.git/v1.0.6/lib
