@@ -37,7 +37,7 @@ else:
         'describe'])
 
 if sys.version_info[0] == 3:
-    BYTE = b'\x00'
+    BYTE = bytes([0])
     xrange = range
     long = int
 else:

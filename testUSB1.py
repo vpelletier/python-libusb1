@@ -7,8 +7,8 @@ import libusb1
 from ctypes import pointer
 
 if sys.version_info[0] == 3:
-    buff = b'\x00\xff'
-    other_buff = b'foo'
+    buff = bytes([0, 0xff])
+    other_buff = bytes((ord(x) for x in 'foo'))
 else:
     buff = '\x00\xff'
     other_buff = 'foo'
