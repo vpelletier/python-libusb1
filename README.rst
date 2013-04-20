@@ -196,11 +196,15 @@ Descriptor walk API documented.
 
 Version and capability APIs exposed.
 
-Better Python 3 support.
+Some portability fixes (OSes, python versions).
+
+Isochronous transfer refuses to round transfer size.
 
 Better exception handling in enumeration.
 
 Add examples.
+
+Better documentation.
 
 See also
 ========
