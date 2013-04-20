@@ -14,6 +14,13 @@ else:
     other_buff = 'foo'
 buff_len = 2
 
+def USBContext():
+    try:
+        return usb1.USBContext()
+    except libusb1.USBError:
+        raise unittest.SkipTest('usb1.USBContext() fails - no USB bus on '
+            'system ?')
+
 class PollDetector(object):
     def __init__(self, *args, **kw):
         try:
@@ -128,7 +135,7 @@ class USBTransferTests(unittest.TestCase):
         """
         USBPollerThread must exit by itself when context is destroyed.
         """
-        context = usb1.USBContext()
+        context = USBContext()
         poll_detector = PollDetector()
         try:
             poller = usb1.USBPollerThread(context, poll_detector)
@@ -148,7 +155,7 @@ class USBTransferTests(unittest.TestCase):
             def poll(self, *args, **kw):
                 self.poll = super(FakeEventPoll, self).poll
                 return ['dummy']
-        context = usb1.USBContext()
+        context = USBContext()
         def fakeHandleEventsLocked():
             raise libusb1.USBError(0)
         context.handleEventsLocked = fakeHandleEventsLocked
@@ -172,7 +179,7 @@ class USBTransferTests(unittest.TestCase):
         Test descriptor walk.
         Needs any usb device, which won't be opened.
         """
-        context = usb1.USBContext()
+        context = USBContext()
         device_list = context.getDeviceList(skip_on_error=True)
         found = False
         for device in device_list:
