@@ -522,6 +522,17 @@ libusb_speed = Enum({
 'LIBUSB_SPEED_SUPER': 4,
 })
 
+libusb_supported_speed = Enum({
+# Low speed operation supported (1.5MBit/s).
+'LIBUSB_LOW_SPEED_OPERATION': 1,
+# Full speed operation supported (12MBit/s).
+'LIBUSB_FULL_SPEED_OPERATION': 2,
+# High speed operation supported (480MBit/s).
+'LIBUSB_HIGH_SPEED_OPERATION': 4,
+# Superspeed operation supported (5000MBit/s).
+'LIBUSB_5GBPS_OPERATION': 8,
+})
+
 # Error codes. Most libusb functions return 0 on success or one of these
 # codes on failure.
 libusb_error = Enum({
@@ -640,6 +651,14 @@ libusb_capability = Enum({
 'LIBUSB_CAP_HAS_HID_ACCESS': 0x0100,
 # The library supports detaching of the default USB driver.
 'LIBUSB_CAP_SUPPORTS_DETACH_KERNEL_DRIVER': 0x0101,
+})
+
+libusb_log_level = Enum({
+'LIBUSB_LOG_LEVEL_NONE': 0,
+'LIBUSB_LOG_LEVEL_ERROR': 1,
+'LIBUSB_LOG_LEVEL_WARNING': 2,
+'LIBUSB_LOG_LEVEL_INFO': 3,
+'LIBUSB_LOG_LEVEL_DEBUG': 4,
 })
 
 #int libusb_init(libusb_context **ctx);
