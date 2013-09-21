@@ -1222,6 +1222,8 @@ class USBConfiguration(object):
     def getNumInterfaces(self):
         return self.__config.bNumInterfaces
 
+    __len__ = getNumInterfaces
+
     def getConfigurationValue(self):
         return self.__config.bConfigurationValue
 
@@ -1280,6 +1282,8 @@ class USBInterface(object):
     def getNumSettings(self):
         return self.__interface.num_altsetting
 
+    __len__ = getNumSettings
+
     def __iter__(self):
         """
         Iterates over settings in this insterface, yielding
@@ -1320,6 +1324,8 @@ class USBInterfaceSetting(object):
 
     def getNumEndpoints(self):
         return self.__alt_setting.bNumEndpoints
+
+    __len__ = getNumEndpoints
 
     def getClass(self):
         return self.__alt_setting.bInterfaceClass
@@ -1448,6 +1454,9 @@ class USBDevice(object):
             self.getVendorID(),
             self.getProductID(),
         )
+
+    def __len__(self):
+        return len(self.__configuration_descriptor_list)
 
     def __getitem__(self, index):
         return USBConfiguration(self.__configuration_descriptor_list[index])
