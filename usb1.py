@@ -1020,6 +1020,17 @@ class USBDeviceHandle(object):
         if result:
             raise libusb1.USBError(result)
 
+    def setAutoDetachKernelDriver(self, enable):
+        """
+        Control automatic kernel driver detach.
+        enable (bool)
+            True to enable auto-detach, False to disable it.
+        """
+        result = libusb1.libusb_set_auto_detach_kernel_driver(self.__handle,
+            bool(enable))
+        if result:
+            libusb1.USBError(result)
+
     def getSupportedLanguageList(self):
         """
         Return a list of USB language identifiers (as integers) supported by

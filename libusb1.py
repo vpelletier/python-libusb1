@@ -869,6 +869,17 @@ libusb_detach_kernel_driver.argtypes = [libusb_device_handle_p, c_int]
 #int libusb_attach_kernel_driver(libusb_device_handle *dev, int interface);
 libusb_attach_kernel_driver = libusb.libusb_attach_kernel_driver
 libusb_attach_kernel_driver.argtypes = [libusb_device_handle_p, c_int]
+try:
+    #int libusb_set_auto_detach_kernel_driver(
+    #       libusb_device_handle *dev, int enable);
+    libusb_set_auto_detach_kernel_driver = \
+        libusb.libusb_set_auto_detach_kernel_driver
+except AttributeError:
+    pass
+else:
+    libusb_set_auto_detach_kernel_driver.argtypes = [libusb_device_handle_p,
+        c_int]
+    libusb_set_auto_detach_kernel_driver.restype = c_int
 
 # Get the data section of a control transfer. This convenience function is here
 # to remind you that the data does not start until 8 bytes into the actual
