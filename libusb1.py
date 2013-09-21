@@ -703,16 +703,16 @@ except AttributeError:
 else:
     libusb_error_name.argtypes = [c_int]
     libusb_error_name.restype = c_char_p
-try:
-    #char *libusb_strerror(enum libusb_error errcode);
-    libusb_strerror = libusb.libusb_strerror
-except AttributeError:
-    # Place holder
-    def libusb_strerror(errcode):
-        return None
-else:
-    libusb_strerror.argtypes = [c_int]
-    libusb_strerror.restype = c_char_p
+
+# Note on libusb_strerror, libusb_setlocale and future functions in the
+# same spirit:
+# I do not think end-user-facing messages belong to a technical library.
+# Such features bring a new, non essential set of problems, and is a luxury
+# I do not want to spend time supporting considering limited resources and
+# more important stuff to work on.
+# For backward compatibility, expose libusb_strerror placeholder.
+def libusb_strerror(errcode):
+    return None
 
 #ssize_t libusb_get_device_list(libusb_context *ctx,
 #        libusb_device ***list);
