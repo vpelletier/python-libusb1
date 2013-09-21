@@ -218,7 +218,7 @@ LIBUSB_CLASS_IMAGE = LIBUSB_CLASS_PTP
 
 # Descriptor types as defined by the USB specification.
 libusb_descriptor_type = Enum({
-# Device descriptor. See libusb_device_descriptor. 
+# Device descriptor. See libusb_device_descriptor.
 'LIBUSB_DT_DEVICE': 0x01,
 # Configuration descriptor. See libusb_config_descriptor.
 'LIBUSB_DT_CONFIG': 0x02,
@@ -578,17 +578,17 @@ libusb_transfer_status = Enum({
 # libusb_transfer.flags values
 libusb_transfer_flags = Enum({
 # Report short frames as errors
-'LIBUSB_TRANSFER_SHORT_NOT_OK': 1<<0,
+'LIBUSB_TRANSFER_SHORT_NOT_OK': 1 << 0,
 # Automatically free() transfer buffer during libusb_free_transfer()
-'LIBUSB_TRANSFER_FREE_BUFFER': 1<<1,
+'LIBUSB_TRANSFER_FREE_BUFFER': 1 << 1,
 # Automatically call libusb_free_transfer() after callback returns.
 # If this flag is set, it is illegal to call libusb_free_transfer()
 # from your transfer callback, as this will result in a double-free
 # when this flag is acted upon.
-'LIBUSB_TRANSFER_FREE_TRANSFER': 1<<2,
+'LIBUSB_TRANSFER_FREE_TRANSFER': 1 << 2,
 # Terminate transfers that are a multiple of the endpoint's
 # wMaxPacketSize with an extra zero length packet.
-'LIBUSB_TRANSFER_ADD_ZERO_PACKET': 1<<3,
+'LIBUSB_TRANSFER_ADD_ZERO_PACKET': 1 << 3,
 })
 
 # Isochronous packet descriptor.
@@ -983,7 +983,7 @@ def libusb_get_iso_packet_buffer_simple(transfer_p, packet):
         return None
     iso_length = transfer.iso_packet_desc.length
     return _get_iso_packet_buffer(transfer, iso_length * packet, iso_length)
- 
+
 # sync I/O
 
 #int libusb_control_transfer(libusb_device_handle *dev_handle,
@@ -1111,4 +1111,3 @@ libusb_set_pollfd_notifiers.argtypes = [libusb_context_p,
 libusb_set_pollfd_notifiers.restype = None
 
 # /libusb.h
-

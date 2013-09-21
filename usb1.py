@@ -261,7 +261,7 @@ class USBTransfer(object):
             raise DoomedTransferError('Cannot reuse a doomed transfer')
         if isinstance(buffer_or_len, (int, long)):
             length = buffer_or_len
-            string_buffer = create_binary_buffer(length + \
+            string_buffer = create_binary_buffer(length +
                 libusb1.LIBUSB_CONTROL_SETUP_SIZE)
         else:
             length = len(buffer_or_len)
@@ -337,7 +337,7 @@ class USBTransfer(object):
         self.__transfer_buffer = string_buffer
         self.__user_data = user_data
         libusb1.libusb_fill_interrupt_transfer(self.__transfer, self.__handle,
-            endpoint, string_buffer,  sizeof(string_buffer),
+            endpoint, string_buffer, sizeof(string_buffer),
             self.__ctypesCallbackWrapper, None, timeout)
         self.__callback = callback
         self.__initialized = True
@@ -1725,10 +1725,10 @@ class USBContext(object):
             for device_p in device_p_p[:device_list_len]:
                 try:
                     # Instanciate our own libusb_device_p object so we can free
-                    # libusb-provided device list. Is this a bug in ctypes that it
-                    # doesn't copy pointer value (=pointed memory address) ? At
-                    # least, it's not so convenient and forces using such weird
-                    # code.
+                    # libusb-provided device list. Is this a bug in ctypes that
+                    # it doesn't copy pointer value (=pointed memory address) ?
+                    # At least, it's not so convenient and forces using such
+                    # weird code.
                     device = USBDevice(self, libusb_device_p(device_p.contents))
                 except libusb1.USBError:
                     if not skip_on_error:
@@ -1989,4 +1989,3 @@ class LibUSBContext(USBContext):
         warnings.warn('LibUSBContext is being renamed to USBContext',
             DeprecationWarning)
         super(LibUSBContext, self).__init__()
-
