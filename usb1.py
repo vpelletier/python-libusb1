@@ -1460,8 +1460,8 @@ class USBDevice(object):
     iterConfiguations = iterConfigurations
 
     def iterSettings(self):
-        for config in self.__configuration_descriptor_list:
-            for interface in USBConfiguration(config):
+        for config in self.iterConfigurations():
+            for interface in config:
                 for setting in interface:
                     yield setting
 
