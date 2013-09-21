@@ -1225,7 +1225,7 @@ class USBDeviceHandle(object):
         return result
 
 class USBConfiguration(object):
-    def __init__(self, config):
+    def __init__(self, context, config):
         """
         You should not instanciate this class directly.
         Call USBDevice methods to get instances of this class.
@@ -1233,6 +1233,7 @@ class USBConfiguration(object):
         if not isinstance(config, libusb1.libusb_config_descriptor):
             raise TypeError('Unexpected descriptor type.')
         self.__config = config
+        self.__context = context
 
     def getNumInterfaces(self):
         return self.__config.bNumInterfaces
@@ -1267,9 +1268,10 @@ class USBConfiguration(object):
         Iterates over interfaces available in this configuration, yielding
         USBInterface instances.
         """
+        context = self.__context
         interface_list = self.__config.interface
         for interface_num in xrange(self.getNumInterfaces()):
-            yield USBInterface(interface_list[interface_num])
+            yield USBInterface(context, interface_list[interface_num])
 
     # BBB
     iterInterfaces = __iter__
@@ -1282,10 +1284,10 @@ class USBConfiguration(object):
             raise TypeError('interface parameter must be an integer')
         if not (0 <= interface < self.getNumInterfaces()):
             raise IndexError('No such interface: %r' % (interface, ))
-        return USBInterface(self.__config.interface[interface])
+        return USBInterface(self.__context, self.__config.interface[interface])
 
 class USBInterface(object):
-    def __init__(self, interface):
+    def __init__(self, context, interface):
         """
         You should not instanciate this class directly.
         Call USBConfiguration methods to get instances of this class.
@@ -1293,6 +1295,7 @@ class USBInterface(object):
         if not isinstance(interface, libusb1.libusb_interface):
             raise TypeError('Unexpected descriptor type.')
         self.__interface = interface
+        self.__context = context
 
     def getNumSettings(self):
         return self.__interface.num_altsetting
@@ -1304,9 +1307,11 @@ class USBInterface(object):
         Iterates over settings in this insterface, yielding
         USBInterfaceSetting instances.
         """
+        context = self.__context
         alt_setting_list = self.__interface.altsetting
         for alt_setting_num in xrange(self.getNumSettings()):
-            yield USBInterfaceSetting(alt_setting_list[alt_setting_num])
+            yield USBInterfaceSetting(context,
+                alt_setting_list[alt_setting_num])
 
     # BBB
     iterSettings = __iter__
@@ -1319,10 +1324,11 @@ class USBInterface(object):
             raise TypeError('alt_setting parameter must be an integer')
         if not (0 <= alt_setting < self.getNumSettings()):
             raise IndexError('No such setting: %r' % (alt_setting, ))
-        return USBInterfaceSetting(self.__interface.altsetting[alt_setting])
+        return USBInterfaceSetting(self.__context,
+            self.__interface.altsetting[alt_setting])
 
 class USBInterfaceSetting(object):
-    def __init__(self, alt_setting):
+    def __init__(self, context, alt_setting):
         """
         You should not instanciate this class directly.
         Call USBDevice or USBInterface methods to get instances of this class.
@@ -1330,6 +1336,7 @@ class USBInterfaceSetting(object):
         if not isinstance(alt_setting, libusb1.libusb_interface_descriptor):
             raise TypeError('Unexpected descriptor type.')
         self.__alt_setting = alt_setting
+        self.__context = context
 
     def getNumber(self):
         return self.__alt_setting.bInterfaceNumber
@@ -1370,9 +1377,10 @@ class USBInterfaceSetting(object):
         Iterates over endpoints in this interface setting , yielding
         USBEndpoint instances.
         """
+        context = self.__context
         endpoint_list = self.__alt_setting.endpoint
         for endpoint_num in xrange(self.getNumEndpoints()):
-            yield USBEndpoint(endpoint_list[endpoint_num])
+            yield USBEndpoint(context, endpoint_list[endpoint_num])
 
     # BBB
     iterEndpoints = __iter__
@@ -1385,13 +1393,14 @@ class USBInterfaceSetting(object):
             raise TypeError('endpoint parameter must be an integer')
         if not (0 <= endpoint < self.getNumEndpoints()):
             raise ValueError('No such endpoint: %r' % (endpoint, ))
-        return USBEndpoint(self.__alt_setting.endpoint[endpoint])
+        return USBEndpoint(self.__context, self.__alt_setting.endpoint[endpoint])
 
 class USBEndpoint(object):
-    def __init__(self, endpoint):
+    def __init__(self, context, endpoint):
         if not isinstance(endpoint, libusb1.libusb_endpoint_descriptor):
             raise TypeError('Unexpected descriptor type.')
         self.__endpoint = endpoint
+        self.__context = context
 
     def getAddress(self):
         return self.__endpoint.bEndpointAddress
@@ -1475,11 +1484,13 @@ class USBDevice(object):
         return len(self.__configuration_descriptor_list)
 
     def __getitem__(self, index):
-        return USBConfiguration(self.__configuration_descriptor_list[index])
+        return USBConfiguration(self.__context,
+            self.__configuration_descriptor_list[index])
 
     def iterConfigurations(self):
+        context = self.__context
         for config in self.__configuration_descriptor_list:
-            yield USBConfiguration(config)
+            yield USBConfiguration(context, config)
 
     # BBB
     iterConfiguations = iterConfigurations
