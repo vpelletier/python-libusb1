@@ -183,6 +183,10 @@ class USBTransferTests(unittest.TestCase):
         device_list = context.getDeviceList(skip_on_error=True)
         found = False
         for device in device_list:
+            device.getBusNumber()
+            device.getPortNumber()
+            device.getPortNumberList()
+            device.getDeviceAddress()
             for settings in device.iterSettings():
                 for endpoint in settings:
                     pass

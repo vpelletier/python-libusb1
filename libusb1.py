@@ -764,6 +764,33 @@ libusb_free_config_descriptor.restype = None
 libusb_get_bus_number = libusb.libusb_get_bus_number
 libusb_get_bus_number.argtypes = [libusb_device_p]
 libusb_get_bus_number.restype = c_uint8
+try:
+    #uint8_t libusb_get_port_number(libusb_device *dev);
+    libusb_get_port_number = libusb.libusb_get_port_number
+except AttributeError:
+    pass
+else:
+    libusb_get_port_number.argtypes = [libusb_device_p]
+    libusb_get_port_number.restype = c_uint8
+try:
+    #int libusb_get_port_numbers(libusb_device *dev,
+    #       uint8_t* port_numbers, int port_numbers_len);
+    libusb_get_port_numbers = libusb.libusb_get_port_numbers
+except AttributeError:
+    pass
+else:
+    libusb_get_port_numbers.argtypes = [libusb_device_p, POINTER(c_uint8),
+        c_int]
+    libusb_get_port_numbers.restype = c_int
+# Missing: libusb_get_port_path (deprecated since 1.0.16)
+try:
+    #libusb_device * LIBUSB_CALL libusb_get_parent(libusb_device *dev);
+    libusb_get_parent = libusb.libusb_get_parent
+except AttributeError:
+    pass
+else:
+    libusb_get_parent.argtypes = [libusb_device_p]
+    libusb_get_parent.restype = libusb_device_p
 #uint8_t libusb_get_device_address(libusb_device *dev);
 libusb_get_device_address = libusb.libusb_get_device_address
 libusb_get_device_address.argtypes = [libusb_device_p]

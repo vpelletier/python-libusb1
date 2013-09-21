@@ -21,7 +21,7 @@ Features:
 
 import libusb1
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
-    cast, c_uint16, c_ubyte, string_at, c_void_p, cdll, addressof
+    cast, c_uint8, c_uint16, c_ubyte, string_at, c_void_p, cdll, addressof
 import sys
 import threading
 from ctypes.util import find_library
@@ -86,6 +86,10 @@ except AttributeError:
 # Default string length
 # From a comment in libusb-1.0: "Some devices choke on size > 255"
 STRING_LENGTH = 255
+
+# As of v3 of USB specs, there cannot be more than 7 hubs from controler to
+# device.
+PATH_MAX_DEPTH = 7
 
 EVENT_CALLBACK_SET = frozenset((
     libusb1.LIBUSB_TRANSFER_COMPLETED,
@@ -1480,6 +1484,26 @@ class USBDevice(object):
         Get device's bus number.
         """
         return libusb1.libusb_get_bus_number(self.device_p)
+
+    def getPortNumber(self):
+        """
+        Get device's port number.
+        """
+        return libusb1.libusb_get_port_number(self.device_p)
+
+    def getPortNumberList(self):
+        """
+        Get the port number of each hub toward device.
+        """
+        port_list = (c_uint8 * PATH_MAX_DEPTH)()
+        result = libusb1.libusb_get_port_numbers(self.device_p, port_list,
+            len(port_list))
+        if result < 0:
+            raise libusb1.USBError(result)
+        return list(port_list[:result])
+
+    # TODO: wrap libusb_get_parent when/if libusb removes the need to be inside
+    # a libusb_(get|free)_device_list block.
 
     def getDeviceAddress(self):
         """
