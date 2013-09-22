@@ -5,7 +5,7 @@ python:
 #  - "pypy"
 before_script:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq libusb-1.0-0
+  - sudo apt-get install -qq libusb-1.0-0 libudev-dev
   - sudo apt-get build-dep -qq libusb-1.0-0
 #  - ./buildTestLibusb.sh git://git.libusb.org/libusb.git libusb.git master v1.0.6
   - ./buildTestLibusb.sh git://repo.or.cz/libusb.git libusb.git master v1.0.6
