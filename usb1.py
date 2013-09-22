@@ -21,7 +21,7 @@ Features:
 
 import libusb1
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
-    cast, c_uint16, c_ubyte, string_at, c_void_p, cdll
+    cast, c_uint16, c_ubyte, string_at, c_void_p, cdll, addressof
 import sys
 import threading
 from ctypes.util import find_library
@@ -1409,7 +1409,7 @@ class USBDevice(object):
     __libusb_free_config_descriptor = libusb1.libusb_free_config_descriptor
     __byref = byref
 
-    def __init__(self, context, device_p):
+    def __init__(self, context, device_p, can_load_configuration=True):
         """
         You should not instanciate this class directly.
         Call LibUSBContext methods to receive instances of this class.
@@ -1424,20 +1424,23 @@ class USBDevice(object):
         if result:
             raise libusb1.USBError(result)
         self.device_descriptor = device_descriptor
-        # Fetch all configuration descriptors
-        self.__configuration_descriptor_list = []
-        append = self.__configuration_descriptor_list.append
-        for configuration_id in xrange(device_descriptor.bNumConfigurations):
-            config = libusb1.libusb_config_descriptor_p()
-            result = libusb1.libusb_get_config_descriptor(device_p,
-                configuration_id, byref(config))
-            if result == libusb1.LIBUSB_ERROR_NOT_FOUND:
-                # Some devices (ex windows' root hubs) tell they have one
-                # configuration, but they have no configuration descriptor.
-                continue
-            if result:
-                raise libusb1.USBError(result)
-            append(config.contents)
+        if can_load_configuration:
+            self.__configuration_descriptor_list = descriptor_list = []
+            append = descriptor_list.append
+            device_p = self.device_p
+            for configuration_id in xrange(
+                    self.device_descriptor.bNumConfigurations):
+                config = libusb1.libusb_config_descriptor_p()
+                result = libusb1.libusb_get_config_descriptor(device_p,
+                    configuration_id, byref(config))
+                if result == libusb1.LIBUSB_ERROR_NOT_FOUND:
+                    # Some devices (ex windows' root hubs) tell they have
+                    # one configuration, but they have no configuration
+                    # descriptor.
+                    continue
+                if result:
+                    raise libusb1.USBError(result)
+                append(config.contents)
 
     def __del__(self):
         self.__libusb_unref_device(self.device_p)
@@ -1675,6 +1678,7 @@ class USBContext(object):
         if result:
             raise libusb1.USBError(result)
         self.__context_p = context_p
+        self.__hotplug_callback_dict = {}
 
     def __del__(self):
         # Avoid locking.
@@ -1969,6 +1973,60 @@ class USBContext(object):
         See libusb1.libusb_capability .
         """
         return libusb1.libusb_has_capability(capability)
+
+    @_validContext
+    def hotplugRegisterCallback(self, callback,
+                events=libusb1.LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | \
+                    libusb1.LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT,
+                flags=libusb1.LIBUSB_HOTPLUG_ENUMERATE,
+                vendor_id=libusb1.LIBUSB_HOTPLUG_MATCH_ANY,
+                product_id=libusb1.LIBUSB_HOTPLUG_MATCH_ANY,
+                dev_class=libusb1.LIBUSB_HOTPLUG_MATCH_ANY,
+            ):
+        """
+        Registers an hotplug callback.
+        On success, returns an opaque value which can be passed to
+        hotplugDeregisterCallback.
+        Callback must accept the following positional arguments:
+        - this USBContext instance
+        - an USBDevice instance
+          If device has left, configuration descriptors may not be
+          available. Its device descriptor will be available.
+        - event type (see libusb1.libusb_hotplug_event)
+        Callback must return whether it must be unregistered (any true value
+        to be unregistered, any false value to be kept registered).
+        """
+        def wrapped_callback(context_p, device_p, event, _):
+            assert addressof(context_p.contents) == addressof(
+                self.__context_p.contents), (context_p, self.__context_p)
+            unregister = bool(callback(self, USBDevice(self, device_p,
+                event != libusb1.LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), event))
+            if unregister:
+                del self.__hotplug_callback_dict[handle]
+            return unregister
+        handle = c_int()
+        callback_p = libusb1.libusb_hotplug_callback_fn_p(wrapped_callback)
+        result = libusb1.libusb_hotplug_register_callback(self.__context_p,
+            events, flags, vendor_id, product_id, dev_class, callback_p,
+            None, byref(handle))
+        if result:
+            raise libusb1.USBError(result)
+        handle = handle.value
+        # Keep strong references
+        assert handle not in self.__hotplug_callback_dict, (handle,
+            self.__hotplug_callback_dict)
+        self.__hotplug_callback_dict[handle] = (callback_p, wrapped_callback)
+        return handle
+
+    @_validContext
+    def hotplugDeregisterCallback(self, handle):
+        """
+        Deregisters an hotplug callback.
+        handle (opaque)
+            Return value of a former hotplugRegisterCallback call.
+        """
+        del self.__hotplug_callback_dict[handle]
+        libusb1.libusb_hotplug_deregister_callback(self.__context_p, handle)
 
 del USBContext._validContext
 
