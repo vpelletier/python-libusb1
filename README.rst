@@ -219,6 +219,23 @@ Drop wrapper for libusb_strerror, with compatibility place-holder.
 
 Add a few new upstream enum values.
 
+unreleased
+----------
+
+**Backward-incompatible change**: Enum class now affects caller's local scope,
+not its global scope. This should not be of much importance, as:
+
+- This class is probably verry little used outside libusb1.py
+
+- This class is probably mostly used at module level, where locals == globals.
+
+  It is possible to get former behaviour by providing the new ``scope_dict``
+  parameter to ``Enum`` constructor::
+
+    SOME_ENUM = libusb1.Enum({...}, scope_dict=globals())
+
+Improve start-up time on CPython by not importing standard ``inspect`` module.
+
 See also
 ========
 

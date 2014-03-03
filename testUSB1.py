@@ -199,5 +199,40 @@ class USBTransferTests(unittest.TestCase):
         if not found:
             raise unittest.SkipTest('descriptor walk test did not complete')
 
+    def testDefaultEnumScope(self):
+        """
+        Enum instances must only affect the scope they are created in.
+        """
+        ENUM_NAME = 'THE_ANSWER'
+        ENUM_VALUE = 42
+        local_dict = locals()
+        global_dict = globals()
+        self.assertEqual(local_dict.get(ENUM_NAME), None)
+        self.assertEqual(global_dict.get(ENUM_NAME), None)
+        self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
+        TEST_ENUM = libusb1.Enum({ENUM_NAME: ENUM_VALUE})
+        self.assertEqual(local_dict.get(ENUM_NAME), ENUM_VALUE)
+        self.assertEqual(global_dict.get(ENUM_NAME), None)
+        self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
+
+    def testExplicitEnumScope(self):
+        """
+        Enum instances must only affect the scope they are created in.
+        """
+        ENUM_NAME = 'THE_ANSWER'
+        ENUM_VALUE = 42
+        local_dict = locals()
+        global_dict = globals()
+        self.assertEqual(local_dict.get(ENUM_NAME), None)
+        self.assertEqual(global_dict.get(ENUM_NAME), None)
+        self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
+        TEST_ENUM = libusb1.Enum({ENUM_NAME: ENUM_VALUE}, global_dict)
+        try:
+            self.assertEqual(local_dict.get(ENUM_NAME), None)
+            self.assertEqual(global_dict.get(ENUM_NAME), ENUM_VALUE)
+            self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
+        finally:
+           del global_dict[ENUM_NAME]
+
 if __name__ == '__main__':
     unittest.main()
