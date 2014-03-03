@@ -206,6 +206,19 @@ Add examples.
 
 Better documentation.
 
+1.2.0
+-----
+
+Wrap hotplug API.
+
+Wrap port number API.
+
+Wrap kernel auto-detach API.
+
+Drop wrapper for libusb_strerror, with compatibility place-holder.
+
+Add a few new upstream enum values.
+
 See also
 ========
 
