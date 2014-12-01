@@ -219,13 +219,13 @@ Drop wrapper for libusb_strerror, with compatibility place-holder.
 
 Add a few new upstream enum values.
 
-unreleased
-----------
+1.3.0
+-----
 
 **Backward-incompatible change**: Enum class now affects caller's local scope,
 not its global scope. This should not be of much importance, as:
 
-- This class is probably verry little used outside libusb1.py
+- This class is probably very little used outside libusb1.py
 
 - This class is probably mostly used at module level, where locals == globals.
 
