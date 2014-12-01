@@ -473,6 +473,8 @@ class USBTransfer(object):
         individually-configured sizes.
         Returned list is consistent with getISOSetupList return value.
         Should not be called on a submitted transfer.
+
+        See also iterISO.
         """
         transfer_p = self.__transfer
         transfer = transfer_p.contents
@@ -504,6 +506,27 @@ class USBTransfer(object):
                 'actual_length': x.actual_length,
                 'status': x.status,
             } for x in libusb1.get_iso_packet_list(transfer_p)]
+
+    def iterISO(self):
+        """
+        Generator yielding (status, buffer) for each isochornous transfer.
+        buffer is truncated to actual_length.
+        This is more efficient than calling both getISOBufferList and
+        getISOSetupList when receiving data.
+        Should not be called on a submitted transfer.
+        """
+        transfer_p = self.__transfer
+        transfer = transfer_p.contents
+        if transfer.type != libusb1.LIBUSB_TRANSFER_TYPE_ISOCHRONOUS:
+            raise TypeError('This method cannot be called on non-iso '
+                'transfers.')
+        buffer_position = transfer.buffer
+        for iso_transfer in libusb1.get_iso_packet_list(transfer_p):
+            yield (
+                iso_transfer.status,
+                string_at(buffer_position, iso_transfer.actual_length),
+            )
+            buffer_position += iso_transfer.length
 
     def setBuffer(self, buffer_or_len):
         """

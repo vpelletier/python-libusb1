@@ -238,6 +238,8 @@ Improve start-up time on CPython by not importing standard ``inspect`` module.
 
 Fix some more USBTransfer memory leaks.
 
+Add Transfer.iterISO for more efficient isochronous reception.
+
 See also
 ========
 
