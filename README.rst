@@ -236,6 +236,8 @@ not its global scope. This should not be of much importance, as:
 
 Improve start-up time on CPython by not importing standard ``inspect`` module.
 
+Fix some more USBTransfer memory leaks.
+
 See also
 ========
 

@@ -172,8 +172,9 @@ class USBTransfer(object):
             raise ValueError('Cannot close a submitted transfer')
         self.doom()
         self.__initialized = False
-        # Break possible external reference cycle
+        # Break possible external reference cycles
         self.__callback = None
+        self.__user_data = None
         # Break libusb_transfer reference cycles
         self.__ctypesCallbackWrapper = None
         # For some reason, overwriting callback is not enough to remove this
@@ -184,6 +185,7 @@ class USBTransfer(object):
         if self.__transfer is not None:
             self.__libusb_free_transfer(self.__transfer)
             self.__transfer = None
+        self.__transfer_buffer = None
         # Break USBDeviceHandle reference cycle
         self.__before_submit = None
         self.__after_completion = None
