@@ -691,7 +691,7 @@ class USBPollerThread(threading.Thread):
     """
     Implements libusb1 documentation about threaded, asynchronous
     applications.
-    In short, instanciate this class once (...per LibUSBContext instance), call
+    In short, instanciate this class once (...per USBContext instance), call
     start() on the instance, and do whatever you need.
     This thread will be used to execute transfer completion callbacks, and you
     are free to use libusb1's synchronous API in another thread, and can forget
@@ -1461,7 +1461,7 @@ class USBDevice(object):
     def __init__(self, context, device_p, can_load_configuration=True):
         """
         You should not instanciate this class directly.
-        Call LibUSBContext methods to receive instances of this class.
+        Call USBContext methods to receive instances of this class.
         """
         self.__context = context
         libusb1.libusb_ref_device(device_p)
@@ -1720,7 +1720,7 @@ class USBContext(object):
     __libusb_set_pollfd_notifiers = libusb1.libusb_set_pollfd_notifiers
 
     def _validContext(func):
-        # Defined inside LibUSBContext so we can access "self.__*".
+        # Defined inside USBContext so we can access "self.__*".
         def wrapper(self, *args, **kw):
             self.__context_cond.acquire()
             self.__context_refcount += 1
