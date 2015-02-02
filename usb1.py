@@ -871,7 +871,11 @@ class USBDeviceHandle(object):
     __libusb_close = libusb1.libusb_close
     __USBError = libusb1.USBError
     __LIBUSB_ERROR_NOT_FOUND = libusb1.LIBUSB_ERROR_NOT_FOUND
+    __LIBUSB_ERROR_NO_DEVICE = libusb1.LIBUSB_ERROR_NO_DEVICE
+    __LIBUSB_ERROR_INTERRUPTED = libusb1.LIBUSB_ERROR_INTERRUPTED
     __set = set
+    __KeyError = KeyError
+    __sys = sys
 
     def __init__(self, context, handle, device):
         """
@@ -924,7 +928,7 @@ class USBDeviceHandle(object):
             while True:
                 try:
                     transfer = weak_transfer_set.pop()
-                except KeyError:
+                except self.__KeyError:
                     break
                 transfer_set.add(transfer)
                 transfer.doom()
@@ -933,11 +937,18 @@ class USBDeviceHandle(object):
                 try:
                     transfer.cancel()
                 except self.__USBError:
-                    if sys.exc_info()[1].value != \
-                            self.__LIBUSB_ERROR_NOT_FOUND:
+                    if self.__sys.exc_info()[1].value not in (\
+                                self.__LIBUSB_ERROR_NOT_FOUND,
+                                self.__LIBUSB_ERROR_NO_DEVICE,
+                            ):
                         raise
             while inflight:
-                self.__context.handleEvents()
+                try:
+                    self.__context.handleEvents()
+                except self.__USBError:
+                    if self.__sys.exc_info()[1].value != \
+                        self.__LIBUSB_ERROR_INTERRUPTED:
+                        raise
             for transfer in transfer_set:
                 transfer.close()
             self.__libusb_close(handle)
