@@ -1380,13 +1380,16 @@ class USBInterfaceSetting(object):
     def getSubClass(self):
         return self.__alt_setting.bInterfaceSubClass
 
-    def getClassTupple(self):
+    def getClassTuple(self):
         """
         For convenience: class and subclass are probably often matched
         simultaneously.
         """
         alt_setting = self.__alt_setting
         return (alt_setting.bInterfaceClass, alt_setting.bInterfaceSubClass)
+
+    # BBB
+    getClassTupple = getClassTuple
 
     def getProtocol(self):
         return self.__alt_setting.bInterfaceProtocol
