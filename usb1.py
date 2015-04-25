@@ -2007,11 +2007,15 @@ class USBContext(object):
         libusb1.libusb_lock_event_waiters(self.__context_p)
 
     @_validContext
-    def waitForEvent(self):
+    def waitForEvent(self, tv=0):
         """
         See libusb_wait_for_event doc.
         """
-        libusb1.libusb_wait_for_event(self.__context_p)
+        if tv is None:
+            tv = 0
+        tv_s = int(tv)
+        tv = libusb1.timeval(tv_s, int((tv - tv_s) * 1000000))
+        libusb1.libusb_wait_for_event(self.__context_p, byref(tv))
 
     @_validContext
     def unlockEventWaiters(self):
