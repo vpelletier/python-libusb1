@@ -240,6 +240,18 @@ Fix some more USBTransfer memory leaks.
 
 Add Transfer.iterISO for more efficient isochronous reception.
 
+1.3.1
+-----
+
+Fixed USBContext.waitForEvent.
+
+Fix typo in USBInterfaceSetting.getClassTuple method name. Backward
+compatibility preserved.
+
+Remove globals accesses from USBDeviceHandle destructor.
+
+Assorted documentation improvements.
+
 See also
 ========
 
