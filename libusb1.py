@@ -16,6 +16,8 @@
 """
 Python ctypes bindings for libusb-1.0.
 
+You should not need to import this if you use usb1 module.
+
 Declares all constants, data structures and exported symbols.
 Locates and loads libusb1 dynamic library.
 """

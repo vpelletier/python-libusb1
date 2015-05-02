@@ -263,6 +263,9 @@ libusb1.
 not released
 ------------
 
+Reduce (remove ?) the need to import libusb1 module by exposing USBError and
+constants in usb1 module.
+
 Fix libusb1.LIBUSB_ENDPOINT_ENDPOINT_MASK and
 libusb1.LIBUSB_ENDPOINT_DIR_MASK naming.
 
