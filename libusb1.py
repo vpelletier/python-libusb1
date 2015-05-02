@@ -267,8 +267,11 @@ LIBUSB_DT_ENDPOINT_SIZE       = 7
 LIBUSB_DT_ENDPOINT_AUDIO_SIZE = 9 # Audio extension
 LIBUSB_DT_HUB_NONVAR_SIZE     = 7
 
-USB_ENDPOINT_ADDRESS_MASK     = 0x0f # in bEndpointAddress
-USB_ENDPOINT_DIR_MASK         = 0x80
+LIBUSB_ENDPOINT_ADDRESS_MASK  = 0x0f # in bEndpointAddress
+LIBUSB_ENDPOINT_DIR_MASK      = 0x80
+# BBB
+USB_ENDPOINT_ADDRESS_MASK = LIBUSB_ENDPOINT_ADDRESS_MASK
+USB_ENDPOINT_DIR_MASK = LIBUSB_ENDPOINT_DIR_MASK
 
 # Endpoint direction. Values for bit 7 of the endpoint address scheme.
 libusb_endpoint_direction = Enum({
