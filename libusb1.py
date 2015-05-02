@@ -13,6 +13,9 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+# pylint: disable=invalid-name, too-few-public-methods, too-many-arguments
+# pylint: disable=missing-docstring
 """
 Python ctypes bindings for libusb-1.0.
 
@@ -102,8 +105,10 @@ def newStruct(field_name_list):
     # documentation:
     #   _pack_ must already be defined when _fields_ is assigned, otherwise it
     #   will have no effect.
+    # pylint: disable=protected-access
     result._pack_ = 1
     result._fields_ = field_list
+    # pylint: enable=protected-access
     return result
 
 def newDescriptor(field_name_list):
@@ -154,7 +159,9 @@ def _loadLibrary():
         loader_kw['use_errno'] = True
         loader_kw['use_last_error'] = True
     try:
+        # pylint: disable=star-args
         return dll_loader('libusb-1.0' + suffix, **loader_kw)
+        # pylint: enable=star-args
     except OSError:
         libusb_path = None
         base_name = 'usb-1.0'
@@ -178,7 +185,9 @@ def _loadLibrary():
             libusb_path = ctypes.util.find_library(base_name)
             if libusb_path is None:
                 raise
+        # pylint: disable=star-args
         return dll_loader(libusb_path, **loader_kw)
+        # pylint: enable=star-args
 
 libusb = _loadLibrary()
 
@@ -238,7 +247,9 @@ libusb_class_code = Enum({
     # Class is vendor-specific
     'LIBUSB_CLASS_VENDOR_SPEC': 0xff
 })
+# pylint: disable=undefined-variable
 LIBUSB_CLASS_IMAGE = LIBUSB_CLASS_PTP
+# pylint: enable=undefined-variable
 
 # Descriptor types as defined by the USB specification.
 libusb_descriptor_type = Enum({
@@ -673,7 +684,9 @@ if 'FreeBSD' in platform.system() and getattr(
     assert _libusb_transfer_fields[11][0] == 'num_iso_packets'
     _libusb_transfer_fields.insert(11, ('os_priv', c_void_p))
 
+# pylint: disable=protected-access
 libusb_transfer._fields_ = _libusb_transfer_fields
+# pylint: enable=protected-access
 
 libusb_capability = Enum({
     # The libusb_has_capability() API is available.
@@ -731,8 +744,10 @@ try:
     #char *libusb_error_name(int errcode);
     libusb_error_name = libusb.libusb_error_name
 except AttributeError:
+    # pylint: disable=unused-argument
     def libusb_error_name(errcode):
         return None
+    # pylint: enable=unused-argument
 else:
     libusb_error_name.argtypes = [c_int]
     libusb_error_name.restype = c_char_p
@@ -744,8 +759,10 @@ else:
 # I do not want to spend time supporting considering limited resources and
 # more important stuff to work on.
 # For backward compatibility, expose libusb_strerror placeholder.
+# pylint: disable=unused-argument
 def libusb_strerror(errcode):
     return None
+# pylint: enable=unused-argument
 
 #ssize_t libusb_get_device_list(libusb_context *ctx,
 #        libusb_device ***list);
@@ -834,7 +851,9 @@ try:
 except AttributeError:
     # Place holder
     def libusb_get_device_speed(_):
+        # pylint: disable=undefined-variable
         return LIBUSB_SPEED_UNKNOWN
+        # pylint: enable=undefined-variable
 else:
     libusb_get_device_speed.argtypes = [libusb_device_p]
 #int libusb_get_max_packet_size(libusb_device *dev, unsigned char endpoint);
@@ -847,8 +866,10 @@ except AttributeError:
     # FreeBSD's reimplementation of the API [used to ]lack[s] this function.
     # It has been added in r234193, but is lacking in default 9.x install as
     # of this change. Provide a fallback to error-out only if actually used.
+    # pylint: disable=unused-argument
     def libusb_get_max_iso_packet_size(_, __):
         raise NotImplementedError
+    # pylint: enable=unused-argument
 else:
     libusb_get_max_iso_packet_size.argtypes = [libusb_device_p, c_uchar]
 
@@ -957,60 +978,78 @@ libusb_free_transfer = libusb.libusb_free_transfer
 libusb_free_transfer.argtypes = [libusb_transfer_p]
 libusb_free_transfer.restype = None
 
+# pylint: disable=redefined-builtin
 def libusb_fill_control_transfer(
         transfer_p, dev_handle, buffer, callback, user_data, timeout):
     transfer = transfer_p.contents
     transfer.dev_handle = dev_handle
     transfer.endpoint = 0
+    # pylint: disable=undefined-variable
     transfer.type = LIBUSB_TRANSFER_TYPE_CONTROL
+    # pylint: enable=undefined-variable
     transfer.timeout = timeout
     transfer.buffer = cast(buffer, c_void_p)
     if buffer is not None:
         setup = cast(buffer, libusb_control_setup_p).contents
+        # pylint: disable=undefined-variable
         transfer.length = LIBUSB_CONTROL_SETUP_SIZE + \
             libusb_le16_to_cpu(setup.wLength)
+        # pylint: enable=undefined-variable
     transfer.user_data = user_data
     transfer.callback = callback
+# pylint: enable=redefined-builtin
 
+# pylint: disable=redefined-builtin
 def libusb_fill_bulk_transfer(
         transfer_p, dev_handle, endpoint, buffer, length,
         callback, user_data, timeout):
     transfer = transfer_p.contents
     transfer.dev_handle = dev_handle
     transfer.endpoint = endpoint
+    # pylint: disable=undefined-variable
     transfer.type = LIBUSB_TRANSFER_TYPE_BULK
+    # pylint: enable=undefined-variable
     transfer.timeout = timeout
     transfer.buffer = cast(buffer, c_void_p)
     transfer.length = length
     transfer.user_data = user_data
     transfer.callback = callback
+# pylint: enable=redefined-builtin
 
+# pylint: disable=redefined-builtin
 def libusb_fill_interrupt_transfer(
         transfer_p, dev_handle, endpoint, buffer,
         length, callback, user_data, timeout):
     transfer = transfer_p.contents
     transfer.dev_handle = dev_handle
     transfer.endpoint = endpoint
+    # pylint: disable=undefined-variable
     transfer.type = LIBUSB_TRANSFER_TYPE_INTERRUPT
+    # pylint: enable=undefined-variable
     transfer.timeout = timeout
     transfer.buffer = cast(buffer, c_void_p)
     transfer.length = length
     transfer.user_data = user_data
     transfer.callback = callback
+# pylint: enable=redefined-builtin
 
+# pylint: disable=redefined-builtin
 def libusb_fill_iso_transfer(
         transfer_p, dev_handle, endpoint, buffer, length,
         num_iso_packets, callback, user_data, timeout):
     transfer = transfer_p.contents
     transfer.dev_handle = dev_handle
     transfer.endpoint = endpoint
+    # pylint: disable=undefined-variable
     transfer.type = LIBUSB_TRANSFER_TYPE_ISOCHRONOUS
+    # pylint: enable=undefined-variable
     transfer.timeout = timeout
     transfer.buffer = cast(buffer, c_void_p)
     transfer.length = length
     transfer.num_iso_packets = num_iso_packets
     transfer.user_data = user_data
     transfer.callback = callback
+# pylint: enable=redefined-builtin
 
 def _get_iso_packet_list(transfer):
     list_type = libusb_iso_packet_descriptor * transfer.num_iso_packets
@@ -1110,17 +1149,21 @@ libusb_interrupt_transfer = libusb.libusb_interrupt_transfer
 libusb_interrupt_transfer.argtypes = [libusb_device_handle_p, c_uchar,
                                       c_void_p, c_int, c_int_p, c_uint]
 
+# pylint: disable=undefined-variable
 def libusb_get_descriptor(dev, desc_type, desc_index, data, length):
     return libusb_control_transfer(dev, LIBUSB_ENDPOINT_IN,
                                    LIBUSB_REQUEST_GET_DESCRIPTOR,
                                    (desc_type << 8) | desc_index, 0, data,
                                    length, 1000)
+# pylint: enable=undefined-variable
 
+# pylint: disable=undefined-variable
 def libusb_get_string_descriptor(dev, desc_index, langid, data, length):
     return libusb_control_transfer(dev, LIBUSB_ENDPOINT_IN,
                                    LIBUSB_REQUEST_GET_DESCRIPTOR,
                                    (LIBUSB_DT_STRING << 8) | desc_index,
                                    langid, data, length, 1000)
+# pylint: enable=undefined-variable
 
 #int libusb_get_string_descriptor_ascii(libusb_device_handle *dev,
 #        uint8_t index, unsigned char *data, int length);
