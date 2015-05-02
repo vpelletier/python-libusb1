@@ -252,6 +252,14 @@ Remove globals accesses from USBDeviceHandle destructor.
 
 Assorted documentation improvements.
 
+1.3.2
+-----
+
+Made USBDevice instances hashable.
+
+Relaxed licensing by moving from GPL v2+ to LGPL v2.1+, for consistency with
+libusb1.
+
 See also
 ========
 
