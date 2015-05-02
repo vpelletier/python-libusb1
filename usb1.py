@@ -1541,6 +1541,18 @@ class USBDevice(object):
         return USBConfiguration(self.__context,
             self.__configuration_descriptor_list[index])
 
+    def __key(self):
+        return (id(self.__context), self.getBusNumber(),
+                self.getDeviceAddress(), self.getVendorID(),
+                self.getProductID())
+
+    def __hash__(self):
+        return hash(self.__key())
+
+    def __eq__(x, y):
+        return type(x) == type(y) and (
+            x.device_p == y.device_p or x.__key() == y.__key())
+
     def iterConfigurations(self):
         context = self.__context
         for config in self.__configuration_descriptor_list:
