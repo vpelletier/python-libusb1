@@ -43,6 +43,12 @@ from ctypes.util import find_library
 import warnings
 import weakref
 import collections
+
+__all__ = ['USBContext', 'USBDeviceHandle', 'USBDevice',
+    'USBPoller', 'USBTransfer', 'USBTransferHelper', 'EVENT_CALLBACK_SET',
+    'USBPollerThread', 'USBEndpoint', 'USBInterfaceSetting', 'USBInterface',
+    'USBConfiguration', 'DoomedTransferError', 'getVersion',
+]
 try:
     namedtuple = collections.namedtuple
 except AttributeError:
@@ -58,12 +64,6 @@ if sys.version_info[0] == 3:
 else:
     BYTE = '\x00'
 CONTROL_SETUP = BYTE * libusb1.LIBUSB_CONTROL_SETUP_SIZE
-
-__all__ = ['USBContext', 'USBDeviceHandle', 'USBDevice',
-    'USBPoller', 'USBTransfer', 'USBTransferHelper', 'EVENT_CALLBACK_SET',
-    'USBPollerThread', 'USBEndpoint', 'USBInterfaceSetting', 'USBInterface',
-    'USBConfiguration', 'DoomedTransferError', 'getVersion',
-]
 
 if sys.version_info[:2] >= (2, 6):
     if sys.platform == 'win32':
