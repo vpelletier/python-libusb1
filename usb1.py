@@ -43,6 +43,7 @@ from ctypes.util import find_library
 import warnings
 import weakref
 import collections
+import functools
 
 __all__ = ['USBContext', 'USBDeviceHandle', 'USBDevice',
     'USBPoller', 'USBTransfer', 'USBTransferHelper', 'EVENT_CALLBACK_SET',
@@ -1762,6 +1763,7 @@ class USBContext(object):
 
     def _validContext(func):
         # Defined inside USBContext so we can access "self.__*".
+        @functools.wraps(func)
         def wrapper(self, *args, **kw):
             self.__context_cond.acquire()
             self.__context_refcount += 1
