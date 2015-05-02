@@ -844,7 +844,7 @@ libusb_get_max_packet_size.argtypes = [libusb_device_p, c_uchar]
 try:
     libusb_get_max_iso_packet_size = libusb.libusb_get_max_iso_packet_size
 except AttributeError:
-    # FreeBSD's reimplmentation of the API [used to ]lack[s] this function.
+    # FreeBSD's reimplementation of the API [used to ]lack[s] this function.
     # It has been added in r234193, but is lacking in default 9.x install as
     # of this change. Provide a fallback to error-out only if actually used.
     def libusb_get_max_iso_packet_size(_, __):
