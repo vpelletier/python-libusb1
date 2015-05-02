@@ -1,1 +1,5 @@
 test-libusb/
+MANIFEST
+dist/
+build/
+*.pyc
