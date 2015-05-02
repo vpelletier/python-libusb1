@@ -260,6 +260,14 @@ Made USBDevice instances hashable.
 Relaxed licensing by moving from GPL v2+ to LGPL v2.1+, for consistency with
 libusb1.
 
+not released
+------------
+
+Fix libusb1.LIBUSB_ENDPOINT_ENDPOINT_MASK and
+libusb1.LIBUSB_ENDPOINT_DIR_MASK naming.
+
+Fix pydoc appearance of several USBContext methods.
+
 See also
 ========
 
