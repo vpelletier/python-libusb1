@@ -1,9 +1,3 @@
-.. role:: c_code(code)
-  :language: c
-
-.. role:: python_code(code)
-  :language: python
-
 Pure-python wrapper for libusb-1.0
 
 Supports all transfer types, both in synchronous and asynchronous mode.
@@ -11,6 +5,12 @@ Supports all transfer types, both in synchronous and asynchronous mode.
 Home: http://github.com/vpelletier/python-libusb1
 
 PyPI: http://pypi.python.org/pypi/libusb1
+
+.. role:: c_code(code)
+  :language: c
+
+.. role:: python_code(code)
+  :language: python
 
 Dependencies
 ============
