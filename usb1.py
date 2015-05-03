@@ -54,7 +54,7 @@ import collections
 import functools
 
 __all__ = [
-    'USBContext', 'USBDeviceHandle', 'USBDevice',
+    'USBContext', 'USBDeviceHandle', 'USBDevice', 'hasCapability',
     'USBPoller', 'USBTransfer', 'USBTransferHelper', 'EVENT_CALLBACK_SET',
     'USBPollerThread', 'USBEndpoint', 'USBInterfaceSetting', 'USBInterface',
     'USBConfiguration', 'DoomedTransferError', 'getVersion', 'USBError',
