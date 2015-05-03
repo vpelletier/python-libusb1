@@ -65,7 +65,7 @@ USBError = libusb1.USBError
 def __bindConstants():
     global_dict = globals()
     PREFIX = 'LIBUSB_'
-    for name, value in libusb1.__dict__.iteritems():
+    for name, value in libusb1.__dict__.items():
         if name.startswith(PREFIX):
             name = name[len(PREFIX):]
             # Gah.
