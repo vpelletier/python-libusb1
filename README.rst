@@ -271,6 +271,8 @@ libusb1.LIBUSB_ENDPOINT_DIR_MASK naming.
 
 Fix pydoc appearance of several USBContext methods.
 
+Define exception classes for each error values.
+
 See also
 ========
 
