@@ -6,115 +6,144 @@ Home: http://github.com/vpelletier/python-libusb1
 
 PyPI: http://pypi.python.org/pypi/libusb1
 
-Requirements
+Dependencies
 ============
 
-- Python_ 2.4+ required, 2.6+ recommended
+- CPython_ 2.7+ or 3.4+, pypy_ 2.0+. Older versions may work, but are not
+  recommended as there is no automated regression testing set up for them.
 
-  Python 3.x somewhat tested
+- libusb-1.0_ or libusbx_
 
-  pypy_ somewhat tested, 1.9 has a `bug <https://bugs.pypy.org/issue1242>`_
-  affecting python-libusb, which is fixed in their HG
+Supported OSes
+==============
 
-- ctypes_ (included in Python 2.5+)
-
-- libusb-1.0_
-
-  libusbx should work, too
-
-Compatibility
-=============
-
-python-libusb1 is expected to work on any OS supported by libusb. It can be
-expected to work on:
+python-libusb1 can be expected to work on:
 
 - GNU/Linux
 
-- Windows
+- Windows [#]_ native dll or via Cygwin_
 
-  *not* libusb-win32 (this is libusb0.1, the old API)
+- OSX [#]_ via MacPorts_, Fink_ or Homebrew_
 
-- Cygwin
-
-- OSX (macports, fink, homebrew)
-
-  (beware of possible lack of select.poll support in python)
-
-- FreeBSD
-
-  libusb reimplementation: http://svnweb.freebsd.org/base/head/lib/libusb/
-  (including Debian GNU/kFreeBSD)
+- FreeBSD (including Debian GNU/kFreeBSD)
 
 - OpenBSD
+
+.. [#] Beware of libusb-win32, which implements 0.1 API, not 1.0 .
+
+.. [#] Beware of possible lack of select.poll if you want to use asynchronous
+       API.
 
 Installation
 ============
 
-::
+Releases from PyPI, with name *libusb1*. Installing from command line::
 
-  python setup.py install
+    $ pip libusb1
 
-(you might need root access to do this)
+or::
+
+    $ easy_install libusb1
+
+Latest version from source tree::
+
+    $ git clone https://github.com/vpelletier/python-libusb1.git
+    $ cd python-libusb1
+    $ python setup.py install
+
+Usage
+=====
+
+Finding a device and gaining exclusive access:
+
+.. code:: python
+
+    import usb1
+    context = usb1.USBContext()
+    handle = context.openByVendorIDAndProductID(
+        VENDOR_ID, PRODUCT_ID,
+        skip_on_error=True,
+    )
+    if handle is None:
+        # Device not present, or user is not allowed to access device.
+    handle.claimInterface(INTERFACE)
+
+Synchronous I/O:
+
+.. code:: python
+
+    while True:
+        data = handle.bulkRead(ENDPOINT, BUFFER_SIZE)
+        # Process data...
+
+Asynchronous I/O, with more error handling:
+
+.. code:: python
+
+    def processReceivedData(transfer):
+        if transfer.getStatus() != usb1.TRANSFER_COMPLETED:
+            # Transfer did not complete successfully, there is no data to read.
+            # This example does not resubmit transfers on errors. You may want
+            # to resubmit in some cases (timeout, ...).
+            return
+        data = handle.getBuffer()[:transfer.getActualLength()]
+        # Process data...
+        # Resubmit transfer once data is processed.
+        transfer.submit()
+
+    # Build a list of transfer objects and submit them to prime the pump.
+    transfer_list = []
+    for _ in xrange(TRANSFER_COUNT):
+        transfer = handle.getTransfer()
+        transfer.setBulk(
+            usb1.ENDPOINT_IN | ENDPOINT,
+            BUFFER_SIZE,
+            callback=processReceivedData,
+        )
+        transfer.submit()
+        transfer_list.append(transfer)
+    # Loop as long as there is at least one submitted transfer.
+    while any(x.isSubmitted() for x in reader_list):
+        try:
+            context.handleEvents()
+        except usb1.USBErrorInterrupted:
+            pass
+
+For more, see the ``example`` directory.
 
 Documentation
 =============
 
-python-libusb1 follows libusb1.0 documentation as closely as possible, without
+python-libusb1 main documentation is accessible with python's standard
+``pydoc`` command.
+
+python-libusb1 follows libusb-1.0 documentation as closely as possible, without
 taking decisions for you. Thanks to this, python-libusb1 does not need to
 duplicate the nice existing `libusb1.0 documentation`_.
 
-Some description is needed though on how to jump from libusb1.0 documentation
-to python-libusb1, and vice-versa.
+Some description is needed though on how to jump from libusb-1.0 documentation
+to python-libusb1, and vice-versa:
 
-``libusb1`` module is a ctypes translation of ``libusb1.h`` file, including all
-macros, constants and enums. You should not need to call any function from
-this module, but will probably need to import it for the constants.
-
-``usb1`` module wraps libusb1 functions so caller does not need to worry about
-ctype. It regroup them as class methods, the first parameter (when it's a
-``libusb_...`` pointer) defining the class the fonction belongs to. Examples:
+``usb1`` module groups libusb-1.0 functions as class methods. The first
+parameter (when it's a ``libusb_...`` pointer) defined the class the fonction
+belongs to. For example:
 
 - ``int libusb_init (libusb_context **context)`` becomes USBContext class
-  constructor
+  constructor, ``USBContext.__init__(self)``
 
 - ``ssize_t libusb_get_device_list (libusb_context *ctx,
   libusb_device ***list)`` becomes an USBContext method, returning a
-  list of USBDevice instances
+  list of USBDevice instances, ``USBDevice.getDeviceList(self)``
 
 - ``uint8_t libusb_get_bus_number (libusb_device *dev)`` becomes an USBDevice
-  method
+  method, ``USBDevice.getBusNumber(self)``
 
-Functions returning an error status instead raise ``libusb1.USBError``
-instances, with the status as ``value``.
+Error statuses are converted into ``usb1.USBError`` exceptions, with status as
+``value`` instance property.
 
-It wraps further some functions which are otherwise not so convenient to call
-from Python: the event handling API needed by async API. Those classes are
-docstring-documented, so using ``pydoc`` is recommended.
-
-Contents of source distribution
-===============================
-
-- libusb1.py
-
-  Bare ctype wrapper, inspired from library C header file.
-
-- usb1.py
-
-  Python-ish (classes, exceptions, ...) wrapper around libusb1.py .
-  See docstrings (pydoc recommended) for usage.
-
-- setup.py
-
-  To package as python egg.
-
-- stdeb.cfg
-
-  To package as Debian package. See https://github.com/astraw/stdeb .
-
-- testUSB1.py
-
-  Very limited regression test, only testing functions which do not require a
-  USB device.
+``usb1`` module also defines a few more functions and classes, which are
+otherwise not so convenient to call from Python: the event handling API needed
+by async API.
 
 History
 =======
@@ -273,22 +302,20 @@ Fix pydoc appearance of several USBContext methods.
 
 Define exception classes for each error values.
 
-See also
-========
-
-Other projects, different author
-
-- pyusb_:  another python wrapper for (among others) libusb1.
-  Does not support asynchronous API, nor isochorous transfers.
-
-.. _Python: http://www.python.org/
+.. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
 
-.. _ctypes: http://python.net/crew/theller/ctypes/
+.. _Cygwin: https://www.cygwin.com/
+
+.. _MacPorts: https://www.macports.org/
+
+.. _Fink: http://www.finkproject.org/
+
+.. _Homebrew: http://brew.sh/
 
 .. _libusb-1.0: http://www.libusb.org/wiki/libusb-1.0
 
-.. _pyusb: http://sourceforge.net/projects/pyusb/
+.. _libusbx: http://libusb.info/
 
 .. _libusb1.0 documentation: http://libusb.sourceforge.net/api-1.0/
