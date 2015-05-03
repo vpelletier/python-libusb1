@@ -295,8 +295,8 @@ Made USBDevice instances hashable.
 Relaxed licensing by moving from GPL v2+ to LGPL v2.1+, for consistency with
 libusb1.
 
-not released
-------------
+1.4.0
+-----
 
 Reduce (remove ?) the need to import libusb1 module by exposing USBError and
 constants in usb1 module.
