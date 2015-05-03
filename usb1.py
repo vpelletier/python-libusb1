@@ -2042,11 +2042,7 @@ class USBContext(object):
                 skip_on_error=skip_on_error):
             if device.getVendorID() == vendor_id and \
                     device.getProductID() == product_id:
-                result = device
-                break
-        else:
-            result = None
-        return result
+                return device
 
     def openByVendorIDAndProductID(
             self, vendor_id, product_id,
@@ -2065,8 +2061,7 @@ class USBContext(object):
             skip_on_access_error=skip_on_access_error,
             skip_on_error=skip_on_error)
         if result is not None:
-            result = result.open()
-        return result
+            return result.open()
 
     @_validContext
     def getPollFDList(self):
