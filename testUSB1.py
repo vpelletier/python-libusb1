@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+# pylint: disable=invalid-name, missing-docstring, too-many-public-methods
 import unittest
 import sys
 import select
@@ -33,9 +35,10 @@ buff_len = 2
 def USBContext():
     try:
         return usb1.USBContext()
-    except libusb1.USBError:
-        raise unittest.SkipTest('usb1.USBContext() fails - no USB bus on '
-            'system ?')
+    except usb1.USBError:
+        raise unittest.SkipTest(
+            'usb1.USBContext() fails - no USB bus on system ?'
+        )
 
 class PollDetector(object):
     def __init__(self, *args, **kw):
@@ -57,24 +60,34 @@ class PollDetector(object):
         return getattr(self.__poll, name)
 
 class USBTransferTests(unittest.TestCase):
-    def getTransfer(self, iso_packets=0):
+    @staticmethod
+    def getTransfer(iso_packets=0):
         # Dummy handle
-        return usb1.USBTransfer(pointer(libusb1.libusb_device_handle()),
+        return usb1.USBTransfer(
+            pointer(libusb1.libusb_device_handle()),
             iso_packets, lambda x: None, lambda x: None)
 
-    def testGetVersion(self):
+    @staticmethod
+    def testGetVersion():
         """
         Just testing getVersion doesn't raise...
         """
         usb1.getVersion()
+
+    @staticmethod
+    def testHasCapability():
+        """
+        Just testing hasCapability doesn't raise...
+        """
+        usb1.hasCapability(usb1.CAP_HAS_CAPABILITY)
 
     def testSetControl(self):
         """
         Simplest test: feed some data, must not raise.
         """
         transfer = self.getTransfer()
-        request_type = libusb1.LIBUSB_TYPE_STANDARD
-        request = libusb1.LIBUSB_REQUEST_GET_STATUS
+        request_type = usb1.TYPE_STANDARD
+        request = usb1.REQUEST_GET_STATUS
         value = 0
         index = 0
         def callback(transfer):
@@ -83,19 +96,22 @@ class USBTransferTests(unittest.TestCase):
         timeout = 1000
 
         # All provided, buffer variant
-        transfer.setControl(request_type, request, value, index, buff,
+        transfer.setControl(
+            request_type, request, value, index, buff,
             callback=callback, user_data=user_data, timeout=timeout)
         self.assertEqual(buff, transfer.getBuffer())
         self.assertRaises(ValueError, transfer.setBuffer, buff)
         # All provided, buffer length variant
-        transfer.setControl(request_type, request, value, index, buff_len,
+        transfer.setControl(
+            request_type, request, value, index, buff_len,
             callback=callback, user_data=user_data, timeout=timeout)
         # No timeout
-        transfer.setControl(request_type, request, value, index, buff,
+        transfer.setControl(
+            request_type, request, value, index, buff,
             callback=callback, user_data=user_data)
         # No user data
-        transfer.setControl(request_type, request, value, index, buff,
-            callback=callback)
+        transfer.setControl(
+            request_type, request, value, index, buff, callback=callback)
         # No callback
         transfer.setControl(request_type, request, value, index, buff)
 
@@ -108,7 +124,8 @@ class USBTransferTests(unittest.TestCase):
         timeout = 1000
         setter = getattr(transfer, setter_id)
         # All provided, buffer variant
-        setter(endpoint, buff, callback=callback, user_data=user_data,
+        setter(
+            endpoint, buff, callback=callback, user_data=user_data,
             timeout=timeout)
         self.assertEqual(buff, transfer.getBuffer())
         transfer.setBuffer(other_buff)
@@ -116,7 +133,8 @@ class USBTransferTests(unittest.TestCase):
         transfer.setBuffer(buff_len)
         self.assertEqual(buff_len, len(transfer.getBuffer()))
         # All provided, buffer length variant
-        setter(endpoint, buff_len, callback=callback, user_data=user_data,
+        setter(
+            endpoint, buff_len, callback=callback, user_data=user_data,
             timeout=timeout)
         # No timeout
         setter(endpoint, buff, callback=callback, user_data=user_data)
@@ -168,12 +186,14 @@ class USBTransferTests(unittest.TestCase):
         USBPollerThread exception handling.
         """
         class FakeEventPoll(PollDetector):
+            # pylint: disable=method-hidden
             def poll(self, *args, **kw):
                 self.poll = super(FakeEventPoll, self).poll
                 return ['dummy']
+            # pylint: enable=method-hidden
         context = USBContext()
         def fakeHandleEventsLocked():
-            raise libusb1.USBError(0)
+            raise usb1.USBError(0)
         context.handleEventsLocked = fakeHandleEventsLocked
         exception_event = threading.Event()
         exception_list = []
@@ -181,8 +201,8 @@ class USBTransferTests(unittest.TestCase):
             exception_list.append(exc)
             exception_event.set()
         try:
-            poller = usb1.USBPollerThread(context, FakeEventPoll(),
-                exceptionHandler)
+            poller = usb1.USBPollerThread(
+                context, FakeEventPoll(), exceptionHandler)
         except OSError:
             raise unittest.SkipTest('libusb without file descriptor events')
         poller.start()
@@ -190,7 +210,8 @@ class USBTransferTests(unittest.TestCase):
         self.assertTrue(exception_list, exception_list)
         self.assertTrue(poller.is_alive())
 
-    def testDescriptors(self):
+    @staticmethod
+    def testDescriptors():
         """
         Test descriptor walk.
         Needs any usb device, which won't be opened.
@@ -225,7 +246,9 @@ class USBTransferTests(unittest.TestCase):
         self.assertEqual(local_dict.get(ENUM_NAME), None)
         self.assertEqual(global_dict.get(ENUM_NAME), None)
         self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
+        # pylint: disable=unused-variable
         TEST_ENUM = libusb1.Enum({ENUM_NAME: ENUM_VALUE})
+        # pylint: enable=unused-variable
         self.assertEqual(local_dict.get(ENUM_NAME), ENUM_VALUE)
         self.assertEqual(global_dict.get(ENUM_NAME), None)
         self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
@@ -241,13 +264,15 @@ class USBTransferTests(unittest.TestCase):
         self.assertEqual(local_dict.get(ENUM_NAME), None)
         self.assertEqual(global_dict.get(ENUM_NAME), None)
         self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
+        # pylint: disable=unused-variable
         TEST_ENUM = libusb1.Enum({ENUM_NAME: ENUM_VALUE}, global_dict)
+        # pylint: enable=unused-variable
         try:
             self.assertEqual(local_dict.get(ENUM_NAME), None)
             self.assertEqual(global_dict.get(ENUM_NAME), ENUM_VALUE)
             self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
         finally:
-           del global_dict[ENUM_NAME]
+            del global_dict[ENUM_NAME]
 
 if __name__ == '__main__':
     unittest.main()
