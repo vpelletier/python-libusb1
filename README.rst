@@ -1,3 +1,9 @@
+.. role:: c_code(code)
+  :language: c
+
+.. role:: python_code(code)
+  :language: python
+
 Pure-python wrapper for libusb-1.0
 
 Supports all transfer types, both in synchronous and asynchronous mode.
@@ -128,18 +134,18 @@ to python-libusb1, and vice-versa:
 parameter (when it's a ``libusb_...`` pointer) defined the class the fonction
 belongs to. For example:
 
-- ``int libusb_init (libusb_context **context)`` becomes USBContext class
-  constructor, ``USBContext.__init__(self)``
+- :c_code:`int libusb_init (libusb_context **context)` becomes USBContext class
+  constructor, :python_code:`USBContext.__init__(self)`
 
-- ``ssize_t libusb_get_device_list (libusb_context *ctx,
-  libusb_device ***list)`` becomes an USBContext method, returning a
-  list of USBDevice instances, ``USBDevice.getDeviceList(self)``
+- :c_code:`ssize_t libusb_get_device_list (libusb_context *ctx,
+  libusb_device ***list)` becomes an USBContext method, returning a
+  list of USBDevice instances, :python_code:`USBDevice.getDeviceList(self)`
 
-- ``uint8_t libusb_get_bus_number (libusb_device *dev)`` becomes an USBDevice
-  method, ``USBDevice.getBusNumber(self)``
+- :c_code:`uint8_t libusb_get_bus_number (libusb_device *dev)` becomes an
+  USBDevice method, :python_code:`USBDevice.getBusNumber(self)`
 
-Error statuses are converted into ``usb1.USBError`` exceptions, with status as
-``value`` instance property.
+Error statuses are converted into :python_code:`usb1.USBError` exceptions, with
+status as ``value`` instance property.
 
 ``usb1`` module also defines a few more functions and classes, which are
 otherwise not so convenient to call from Python: the event handling API needed
