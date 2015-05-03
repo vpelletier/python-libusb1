@@ -121,9 +121,12 @@ def newDescriptor(field_name_list):
     return newStruct(['bLength', 'bDescriptorType'] + list(field_name_list))
 
 class USBError(Exception):
-    def __init__(self, value):
+    value = None
+
+    def __init__(self, value=None):
         Exception.__init__(self)
-        self.value = value
+        if value is not None:
+            self.value = value
 
     def __str__(self):
         return '%s [%s]' % (libusb_error.get(self.value, 'Unknown error'),

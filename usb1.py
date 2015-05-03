@@ -241,7 +241,9 @@ class USBTransfer(object):
         self.__num_iso_packets = iso_packets
         result = libusb1.libusb_alloc_transfer(iso_packets)
         if not result:
-            raise USBError('Unable to get a transfer object')
+            # pylint: disable=undefined-variable
+            raise USBErrorNoMem
+            # pylint: enable=undefined-variable
         self.__transfer = result
         self.__ctypesCallbackWrapper = libusb1.libusb_transfer_cb_fn_p(
             self.__callbackWrapper)
