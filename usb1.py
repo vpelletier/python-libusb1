@@ -1917,7 +1917,7 @@ class USBContext(object):
     __removed_cb = None
     __libusb_set_pollfd_notifiers = libusb1.libusb_set_pollfd_notifiers
 
-    @staticmethod
+    #pylint: disable=no-self-argument
     def _validContext(func):
         # Defined inside USBContext so we can access "self.__*".
         @functools.wraps(func)
@@ -1928,7 +1928,9 @@ class USBContext(object):
             self.__context_cond.release()
             try:
                 if self.__context_p is not None:
+                    #pylint: disable=not-callable
                     return func(self, *args, **kw)
+                    #pylint: enable=not-callable
             finally:
                 self.__context_cond.acquire()
                 self.__context_refcount -= 1
@@ -1937,6 +1939,7 @@ class USBContext(object):
                 self.__context_cond.release()
             # pylint: enable=protected-access
         return wrapper
+    #pylint: enable=no-self-argument
 
     def __init__(self):
         """
