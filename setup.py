@@ -13,7 +13,10 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-from distutils.core import setup
+
+from setuptools import setup, find_packages  # Always prefer setuptools over distutils
+from codecs import open  # To use a consistent encoding
+#from distutils.core import setup
 import os
 
 long_description = open(
@@ -29,9 +32,9 @@ except NameError:
 setup(
     name='libusb1',
     description=next(x for x in long_description.splitlines() if x.strip()),
-    long_description='.. contents::\n\n' + long_description,
+    long_description='.. contents::\n\n' + str(long_description, encoding='utf-8'),
     keywords='usb libusb',
-    version='1.4.0',
+    version='1.4.1',
     author='Vincent Pelletier',
     author_email='plr.vincent@gmail.com',
     url='http://github.com/vpelletier/python-libusb1',
