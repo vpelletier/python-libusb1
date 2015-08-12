@@ -188,7 +188,8 @@ def create_binary_buffer(string_or_len):
     if isinstance(string_or_len, (int, long)):
         result = create_string_buffer(string_or_len)
     else:
-        result = create_string_buffer(string_or_len, len(string_or_len))
+        sol = bytearray(string_or_len, encoding='utf-8')
+        result = create_string_buffer(sol, len(sol))
     return result
 
 class DoomedTransferError(Exception):
