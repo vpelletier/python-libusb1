@@ -13,12 +13,13 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-from distutils.core import setup
+
+from setuptools import setup, find_packages  
+from codecs import open
 import os
 
-long_description = open(
-    os.path.join(os.path.dirname(__file__), 'README.rst')
-).read()
+long_description = open( os.path.join(os.path.dirname(__file__), 'README.rst'),
+                         'r','utf8' ).read()
 
 try:
     next
