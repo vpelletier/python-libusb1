@@ -31,7 +31,7 @@ except NameError:
 setup(
     name='libusb1',
     description=next(x for x in long_description.splitlines() if x.strip()),
-    long_description='.. contents::\n\n' + str(long_description, encoding='utf-8'),
+    long_description='.. contents::\n\n' + str(long_description),
     keywords='usb libusb',
     version='1.4.0',
     author='Vincent Pelletier',
