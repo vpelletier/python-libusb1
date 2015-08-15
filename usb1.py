@@ -183,12 +183,12 @@ EVENT_CALLBACK_SET = frozenset((
 
 DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK = lambda x: False
 
-def create_binary_buffer(bytes_or_len):
+def create_binary_buffer(string_or_len):
     # Prevent ctypes from adding a trailing null char.
-    if isinstance(bytes_or_len, (int, long)):
-        result = create_string_buffer(bytes_or_len)
+    if isinstance(string_or_len, (int, long)):
+        result = create_string_buffer(string_or_len)
     else:
-        result = create_string_buffer(bytes_or_len, len(bytes_or_len))
+        result = create_string_buffer(string_or_len, len(string_or_len))
     return result
 
 class DoomedTransferError(Exception):

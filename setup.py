@@ -14,9 +14,8 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
-from setuptools import setup, find_packages  # Always prefer setuptools over distutils
-from codecs import open  # To use a consistent encoding
-#from distutils.core import setup
+from setuptools import setup, find_packages  
+from codecs import open
 import os
 
 long_description = open(
