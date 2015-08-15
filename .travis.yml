@@ -1,18 +1,23 @@
 language: python
+sudo: false
 python:
-  - "2.7"
-  - "3.4"
-  - "pypy"
+- "2.7"
+- "3.4"
+- "pypy"
+addons:
+  apt:
+    packages:
+    - libusb-1.0-0
+    - libudev-dev
+    - doxygen
+# Note: "doxygen" actually comes from "apt-get build-deps libusb-1.0-0", but
+# there is no direct travis equivalent.
 before_script:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq libusb-1.0-0 libudev-dev
-  - sudo apt-get build-dep -qq libusb-1.0-0
-  - ./buildTestLibusb.sh https://github.com/libusb/libusb.git libusb.git master v1.0.6 v1.0.19
-install:
-  pip install . --use-mirrors
+- ./buildTestLibusb.sh https://github.com/libusb/libusb.git libusb.git master v1.0.6 v1.0.19
+install: pip install . --use-mirrors
 script: python testUSB1.py
 env:
-  - LD_LIBRARY_PATH=
-  - LD_LIBRARY_PATH=test-libusb/build/libusb.git/master/lib
-  - LD_LIBRARY_PATH=test-libusb/build/libusb.git/v1.0.6/lib
-  - LD_LIBRARY_PATH=test-libusb/build/libusb.git/v1.0.19/lib
+- LD_LIBRARY_PATH=
+- LD_LIBRARY_PATH=test-libusb/build/libusb.git/master/lib
+- LD_LIBRARY_PATH=test-libusb/build/libusb.git/v1.0.6/lib
+- LD_LIBRARY_PATH=test-libusb/build/libusb.git/v1.0.19/lib
