@@ -18,9 +18,8 @@ from setuptools import setup, find_packages
 from codecs import open
 import os
 
-long_description = open(
-    os.path.join(os.path.dirname(__file__), 'README.rst')
-).read()
+long_description = open( os.path.join(os.path.dirname(__file__), 'README.rst'),
+                         'r','utf8' ).read()
 
 try:
     next
@@ -31,7 +30,7 @@ except NameError:
 setup(
     name='libusb1',
     description=next(x for x in long_description.splitlines() if x.strip()),
-    long_description='.. contents::\n\n' + str(long_description),
+    long_description='.. contents::\n\n' + long_description,
     keywords='usb libusb',
     version='1.4.0',
     author='Vincent Pelletier',
