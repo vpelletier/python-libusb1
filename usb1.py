@@ -1293,6 +1293,9 @@ class USBDeviceHandle(object):
 
         Returns the number of bytes actually sent.
         """
+        if isinstance(data, int):
+            raise TypeError('Integer data is not allowed for write calls. ' + \
+                  'Pass a string instead.')
         # pylint: disable=undefined-variable
         request_type = (request_type & ~ENDPOINT_DIR_MASK) | ENDPOINT_OUT
         # pylint: enable=undefined-variable
@@ -1337,6 +1340,9 @@ class USBDeviceHandle(object):
 
         Returns the number of bytes actually sent.
         """
+        if isinstance(data, int):
+            raise TypeError('Integer data is not allowed for write calls. ' + \
+                  'Pass a string instead.')
         # pylint: disable=undefined-variable
         endpoint = (endpoint & ~ENDPOINT_DIR_MASK) | ENDPOINT_OUT
         # pylint: enable=undefined-variable
@@ -1379,6 +1385,9 @@ class USBDeviceHandle(object):
 
         Returns the number of bytes actually sent.
         """
+        if isinstance(data, int):
+            raise TypeError('Integer data is not allowed for write calls. ' + \
+                  'Pass a string instead.')
         # pylint: disable=undefined-variable
         endpoint = (endpoint & ~ENDPOINT_DIR_MASK) | ENDPOINT_OUT
         # pylint: enable=undefined-variable
