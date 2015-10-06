@@ -47,7 +47,8 @@ subclassing USBError.
 
 import libusb1
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
-    cast, c_uint8, c_uint16, c_ubyte, string_at, c_void_p, cdll, addressof
+    cast, c_uint8, c_uint16, c_ubyte, string_at, c_void_p, cdll, addressof, \
+    c_char
 import sys
 import threading
 from ctypes.util import find_library
@@ -1300,13 +1301,10 @@ class USBDeviceHandle(object):
 
         Returns the number of bytes actually sent.
         """
-        if isinstance(data, int):
-            raise TypeError('Integer data is not allowed for write calls. ' + \
-                  'Pass a string instead.')
         # pylint: disable=undefined-variable
         request_type = (request_type & ~ENDPOINT_DIR_MASK) | ENDPOINT_OUT
         # pylint: enable=undefined-variable
-        data = create_binary_buffer(data)
+        data = (c_char * len(data))(*data)
         return self._controlTransfer(request_type, request, value, index, data,
                                      sizeof(data), timeout)
 
@@ -1347,13 +1345,10 @@ class USBDeviceHandle(object):
 
         Returns the number of bytes actually sent.
         """
-        if isinstance(data, int):
-            raise TypeError('Integer data is not allowed for write calls. ' + \
-                  'Pass a string instead.')
         # pylint: disable=undefined-variable
         endpoint = (endpoint & ~ENDPOINT_DIR_MASK) | ENDPOINT_OUT
         # pylint: enable=undefined-variable
-        data = create_binary_buffer(data)
+        data = (c_char * len(data))(*data)
         return self._bulkTransfer(endpoint, data, sizeof(data), timeout)
 
     def bulkRead(self, endpoint, length, timeout=0):
@@ -1392,13 +1387,10 @@ class USBDeviceHandle(object):
 
         Returns the number of bytes actually sent.
         """
-        if isinstance(data, int):
-            raise TypeError('Integer data is not allowed for write calls. ' + \
-                  'Pass a string instead.')
         # pylint: disable=undefined-variable
         endpoint = (endpoint & ~ENDPOINT_DIR_MASK) | ENDPOINT_OUT
         # pylint: enable=undefined-variable
-        data = create_binary_buffer(data)
+        data = (c_char * len(data))(*data)
         return self._interruptTransfer(endpoint, data, sizeof(data), timeout)
 
     def interruptRead(self, endpoint, length, timeout=0):
