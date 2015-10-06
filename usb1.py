@@ -184,7 +184,14 @@ EVENT_CALLBACK_SET = frozenset((
 DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK = lambda x: False
 
 def create_binary_buffer(init_or_size):
-    # Prevent ctypes from adding a trailing null char.
+    """
+    ctypes.create_string_buffer variant which does not add a trailing null
+    when init_or_size is not a size.
+    """
+    # As per ctypes.create_string_buffer, as of python 2.7.10 at least:
+    # - int or long is a length
+    # - str or unicode is an initialiser
+    # Testing the latter confuses 2to3, so test the former.
     if isinstance(init_or_size, (int, long)):
         result = create_string_buffer(init_or_size)
     else:
