@@ -308,6 +308,12 @@ Fix pydoc appearance of several USBContext methods.
 
 Define exception classes for each error values.
 
+Unreleased
+----------
+
+controlWrite, bulkWrite and interruptWrite now reject (with TypeError) numeric
+values for ``data`` parameter.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
