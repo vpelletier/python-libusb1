@@ -330,4 +330,4 @@ values for ``data`` parameter.
 
 .. _libusbx: http://libusb.info/
 
-.. _libusb1.0 documentation: http://libusb.sourceforge.net/api-1.0/
+.. _libusb1.0 documentation: http://libusb.org/static/api-1.0/
