@@ -308,6 +308,11 @@ Fix pydoc appearance of several USBContext methods.
 
 Define exception classes for each error values.
 
+1.4.1
+-----
+
+Fix wheel generation (``python3 setup.py bdist_wheel``).
+
 Unreleased
 ----------
 
