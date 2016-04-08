@@ -343,14 +343,20 @@ libusb_standard_request = Enum({
 # Request type bits of the bmRequestType field in control transfers.
 libusb_request_type = Enum({
     # Standard
-    'LIBUSB_TYPE_STANDARD': (0x00 << 5),
+    'LIBUSB_REQUEST_TYPE_STANDARD': (0x00 << 5),
     # Class
-    'LIBUSB_TYPE_CLASS': (0x01 << 5),
+    'LIBUSB_REQUEST_TYPE_CLASS': (0x01 << 5),
     # Vendor
-    'LIBUSB_TYPE_VENDOR': (0x02 << 5),
+    'LIBUSB_REQUEST_TYPE_VENDOR': (0x02 << 5),
     # Reserved
-    'LIBUSB_TYPE_RESERVED': (0x03 << 5),
+    'LIBUSB_REQUEST_TYPE_RESERVED': (0x03 << 5),
 })
+
+# BBB
+LIBUSB_TYPE_STANDARD = LIBUSB_REQUEST_TYPE_STANDARD
+LIBUSB_TYPE_CLASS    = LIBUSB_REQUEST_TYPE_CLASS
+LIBUSB_TYPE_VENDOR   = LIBUSB_REQUEST_TYPE_VENDOR
+LIBUSB_TYPE_RESERVED = LIBUSB_REQUEST_TYPE_RESERVED
 
 # Recipient bits of the bmRequestType field in control transfers. Values 4
 # through 31 are reserved.

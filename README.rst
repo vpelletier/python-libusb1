@@ -319,6 +319,9 @@ Unreleased
 controlWrite, bulkWrite and interruptWrite now reject (with TypeError) numeric
 values for ``data`` parameter.
 
+Fix libusb1.REQUEST_TYPE_* names (were TYPE_*). Preserve backward
+compatibility.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
