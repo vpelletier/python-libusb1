@@ -315,8 +315,8 @@ Define exception classes for each error values.
 
 Fix wheel generation (``python3 setup.py bdist_wheel``).
 
-Unreleased
-----------
+1.5.0
+-----
 
 controlWrite, bulkWrite and interruptWrite now reject (with TypeError) numeric
 values for ``data`` parameter.
