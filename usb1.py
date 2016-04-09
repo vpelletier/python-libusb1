@@ -1932,9 +1932,6 @@ class USBContext(object):
     __removed_cb = None
     __poll_cb_user_data = None
     __libusb_set_pollfd_notifiers = libusb1.libusb_set_pollfd_notifiers
-    # pylint: disable=no-member
-    __null_context = libusb1.libusb_context.from_address(0)
-    # pylint: enable=no-member
     __null_pointer = POINTER(None)
 
     # pylint: disable=no-self-argument,protected-access
@@ -2011,7 +2008,7 @@ class USBContext(object):
         context_p = self.__context_p
         if context_p:
             self.__libusb_exit(context_p)
-            self.__context_p.contents = self.__null_context
+            self.__context_p = libusb1.libusb_context_p()
             self.__added_cb = self.__null_pointer
             self.__removed_cb = self.__null_pointer
 
