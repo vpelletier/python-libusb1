@@ -1,5 +1,6 @@
+sudo: required
+dist: trusty
 language: python
-sudo: false
 python:
 - "2.7"
 - "3.4"
@@ -10,11 +11,13 @@ addons:
     - libusb-1.0-0
     - libudev-dev
     - doxygen
+    sources:
+    - ubuntu-toolchain-r-test
 # Note: "doxygen" actually comes from "apt-get build-deps libusb-1.0-0", but
 # there is no direct travis equivalent.
 before_script:
-- ./buildTestLibusb.sh https://github.com/libusb/libusb.git libusb.git master v1.0.6 v1.0.19
-install: pip install . --use-mirrors
+- ./buildTestLibusb.sh https://github.com/libusb/libusb.git libusb.git master v1.0.6 v1.0.20
+install: pip install .
 script: python testUSB1.py
 env:
 - LD_LIBRARY_PATH=
