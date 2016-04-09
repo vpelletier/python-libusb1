@@ -1970,12 +1970,14 @@ class USBContext(object):
         # reference to their instance).
         self._exit()
 
-    def exit(self):
+    def close(self):
         """
         Close (destroy) this USB context.
 
         When this method has been called, methods on its instance will
         become mosty no-ops, returning None.
+
+        Note: "exit" is a deprecated alias of "close".
         """
         self.__context_cond.acquire()
         try:
@@ -1993,6 +1995,9 @@ class USBContext(object):
             self.__context_p.contents = self.__null_context
             self.__added_cb = self.__null_pointer
             self.__removed_cb = self.__null_pointer
+
+    # BBB
+    exit = close
 
     @_validContext
     def getDeviceIterator(self, skip_on_error=False):

@@ -177,7 +177,7 @@ class USBTransferTests(unittest.TestCase):
             raise unittest.SkipTest('libusb without file descriptor events')
         poller.start()
         poll_detector.wait(1)
-        context.exit()
+        context.close()
         poller.join(1)
         self.assertFalse(poller.is_alive())
 
