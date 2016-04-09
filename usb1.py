@@ -55,6 +55,8 @@ import warnings
 import weakref
 import collections
 import functools
+import contextlib
+import inspect
 import libusb1
 if sys.version_info[:2] >= (2, 6):
 # pylint: disable=wrong-import-order,ungrouped-imports
@@ -1919,20 +1921,33 @@ class USBContext(object):
     # pylint: disable=no-self-argument,protected-access
     def _validContext(func):
         # Defined inside USBContext so we can access "self.__*".
-        @functools.wraps(func)
-        def wrapper(self, *args, **kw):
+        @contextlib.contextmanager
+        def refcount(self):
             with self.__context_cond:
                 self.__context_refcount += 1
             try:
-                if self.__context_p:
-                    # pylint: disable=not-callable
-                    return func(self, *args, **kw)
-                    # pylint: enable=not-callable
+                yield
             finally:
                 with self.__context_cond:
                     self.__context_refcount -= 1
                     if not self.__context_refcount:
                         self.__context_cond.notifyAll()
+        if inspect.isgeneratorfunction(func):
+            def wrapper(self, *args, **kw):
+                with refcount(self):
+                    if self.__context_p:
+                        # pylint: disable=not-callable
+                        for value in func(self, *args, **kw):
+                            # pylint: enable=not-callable
+                            yield value
+        else:
+            def wrapper(self, *args, **kw):
+                with refcount(self):
+                    if self.__context_p:
+                        # pylint: disable=not-callable
+                        return func(self, *args, **kw)
+                        # pylint: enable=not-callable
+        functools.update_wrapper(wrapper, func)
         return wrapper
     # pylint: enable=no-self-argument,protected-access
 
@@ -1980,26 +1995,20 @@ class USBContext(object):
             self.__removed_cb = self.__null_pointer
 
     @_validContext
-    def getDeviceList(self, skip_on_access_error=False, skip_on_error=False):
+    def getDeviceIterator(self, skip_on_error=False):
         """
-        Return a list of all USB devices currently plugged in, as USBDevice
+        Return an iterator over all USB devices currently plugged in, as USBDevice
         instances.
 
         skip_on_error (bool)
             If True, ignore devices which raise USBError.
-
-        skip_on_access_error (bool)
-            DEPRECATED. Alias for skip_on_error.
         """
-        skip_on_error = skip_on_error or skip_on_access_error
         device_p_p = libusb1.libusb_device_p_p()
         libusb_device_p = libusb1.libusb_device_p
         device_list_len = libusb1.libusb_get_device_list(self.__context_p,
                                                          byref(device_p_p))
         mayRaiseUSBError(device_list_len)
         try:
-            result = []
-            append = result.append
             for device_p in device_p_p[:device_list_len]:
                 try:
                     # Instanciate our own libusb_device_p object so we can free
@@ -2012,10 +2021,26 @@ class USBContext(object):
                     if not skip_on_error:
                         raise
                 else:
-                    append(device)
+                    yield device
         finally:
             libusb1.libusb_free_device_list(device_p_p, 1)
-        return result
+
+    def getDeviceList(self, skip_on_access_error=False, skip_on_error=False):
+        """
+        Return a list of all USB devices currently plugged in, as USBDevice
+        instances.
+
+        skip_on_error (bool)
+            If True, ignore devices which raise USBError.
+
+        skip_on_access_error (bool)
+            DEPRECATED. Alias for skip_on_error.
+        """
+        return list(
+            self.getDeviceIterator(
+                skip_on_error=skip_on_access_error or skip_on_error,
+            ),
+        )
 
     def getByVendorIDAndProductID(
             self, vendor_id, product_id,
@@ -2028,9 +2053,9 @@ class USBContext(object):
         skip_on_access_error (bool)
             (see getDeviceList)
         """
-        for device in self.getDeviceList(
-                skip_on_access_error=skip_on_access_error,
-                skip_on_error=skip_on_error):
+        for device in self.getDeviceIterator(
+                skip_on_error=skip_on_access_error or skip_on_error,
+            ):
             if device.getVendorID() == vendor_id and \
                     device.getProductID() == product_id:
                 return device

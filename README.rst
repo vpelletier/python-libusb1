@@ -322,6 +322,8 @@ values for ``data`` parameter.
 Fix libusb1.REQUEST_TYPE_* names (were TYPE_*). Preserve backward
 compatibility.
 
+Add USBContext.getDeviceIterator method.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
