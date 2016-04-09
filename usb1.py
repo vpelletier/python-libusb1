@@ -1656,6 +1656,7 @@ class USBDevice(object):
     __libusb_unref_device = libusb1.libusb_unref_device
     __libusb_free_config_descriptor = libusb1.libusb_free_config_descriptor
     __byref = byref
+    __KeyError = KeyError
 
     def __init__(self, context, device_p, can_load_configuration=True):
         """
@@ -1663,6 +1664,7 @@ class USBDevice(object):
         Call USBContext methods to receive instances of this class.
         """
         self.__context = context
+        self.__close_set = WeakSet()
         libusb1.libusb_ref_device(device_p)
         self.device_p = device_p
         # Fetch device descriptor
@@ -1691,12 +1693,28 @@ class USBDevice(object):
                 append(config.contents)
 
     def __del__(self):
+        self.close()
+
+    def close(self):
+        pop = self.__close_set.pop
+        while True:
+            try:
+                closable = pop()
+            except self.__KeyError:
+                break
+            closable.close()
+        if not self.device_p:
+            return
         self.__libusb_unref_device(self.device_p)
         # pylint: disable=redefined-outer-name
         byref = self.__byref
         # pylint: enable=redefined-outer-name
-        for config in self.__configuration_descriptor_list:
-            self.__libusb_free_config_descriptor(byref(config))
+        descriptor_list = self.__configuration_descriptor_list
+        while descriptor_list:
+            self.__libusb_free_config_descriptor(
+                byref(descriptor_list.pop()),
+            )
+        self.device_p = None
 
     def __str__(self):
         return 'Bus %03i Device %03i: ID %04x:%04x' % (
@@ -1914,7 +1932,9 @@ class USBDevice(object):
         """
         handle = libusb1.libusb_device_handle_p()
         mayRaiseUSBError(libusb1.libusb_open(self.device_p, byref(handle)))
-        return USBDeviceHandle(self.__context, handle, self)
+        result = USBDeviceHandle(self.__context, handle, self)
+        self.__close_set.add(result)
+        return result
 
 _zero_tv = libusb1.timeval(0, 0)
 _zero_tv_p = byref(_zero_tv)
@@ -1933,6 +1953,8 @@ class USBContext(object):
     __poll_cb_user_data = None
     __libusb_set_pollfd_notifiers = libusb1.libusb_set_pollfd_notifiers
     __null_pointer = POINTER(None)
+    __KeyError = KeyError
+    __auto_open = True
 
     # pylint: disable=no-self-argument,protected-access
     def _validContext(func):
@@ -1940,6 +1962,14 @@ class USBContext(object):
         @contextlib.contextmanager
         def refcount(self):
             with self.__context_cond:
+                if not self.__context_p and self.__auto_open:
+                    # BBB
+                    warnings.warn(
+                        'Use "with USBContext() as context:" for safer cleanup'
+                        ' on interpreter shutdown. See also USBContext.open().',
+                        DeprecationWarning,
+                    )
+                    self.open()
                 self.__context_refcount += 1
             try:
                 yield
@@ -1975,9 +2005,9 @@ class USBContext(object):
         # is still in libusb.
         self.__context_refcount = 0
         self.__context_cond = threading.Condition()
-        self.__context_p = context_p = libusb1.libusb_context_p()
-        mayRaiseUSBError(libusb1.libusb_init(byref(context_p)))
+        self.__context_p = libusb1.libusb_context_p()
         self.__hotplug_callback_dict = {}
+        self.__close_set = WeakSet()
 
     def __del__(self):
         # Avoid locking.
@@ -1986,15 +2016,39 @@ class USBContext(object):
         # reference to their instance).
         self._exit()
 
+    def __enter__(self):
+        return self.open()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def open(self):
+        """
+        Finish context initialisation, as is normally done in __enter__ .
+
+        This happens automatically on the first method call needing access to
+        the uninitialised properties, but with a warning.
+        Call this method ONLY if your usage pattern prevents you from using the
+            with USBContext() as contewt:
+        form: this means there are ways to avoid calling close(), which can
+        cause issues particularly hard to debug (ex: interpreter hangs on
+        exit).
+        """
+        assert self.__context_refcount == 0
+        mayRaiseUSBError(libusb1.libusb_init(byref(self.__context_p)))
+        return self
+
     def close(self):
         """
-        Close (destroy) this USB context.
+        Close (destroy) this USB context, and all related instances.
 
         When this method has been called, methods on its instance will
-        become mosty no-ops, returning None.
+        become mosty no-ops, returning None until explicitly re-opened
+        (by calling open() or __enter__()).
 
         Note: "exit" is a deprecated alias of "close".
         """
+        self.__auto_open = False
         self.__context_cond.acquire()
         try:
             while self.__context_refcount and self.__context_p:
@@ -2007,6 +2061,13 @@ class USBContext(object):
     def _exit(self):
         context_p = self.__context_p
         if context_p:
+            pop = self.__close_set.pop
+            while True:
+                try:
+                    closable = pop()
+                except self.__KeyError:
+                    break
+                closable.close()
             self.__libusb_exit(context_p)
             self.__context_p = libusb1.libusb_context_p()
             self.__added_cb = self.__null_pointer
@@ -2042,6 +2103,7 @@ class USBContext(object):
                     if not skip_on_error:
                         raise
                 else:
+                    self.__close_set.add(device)
                     yield device
         finally:
             libusb1.libusb_free_device_list(device_p_p, 1)
@@ -2321,15 +2383,17 @@ class USBContext(object):
         def wrapped_callback(context_p, device_p, event, _):
             assert addressof(context_p.contents) == addressof(
                 self.__context_p.contents), (context_p, self.__context_p)
+            device = USBDevice(
+                self,
+                device_p,
+                # pylint: disable=undefined-variable
+                event != HOTPLUG_EVENT_DEVICE_LEFT,
+                # pylint: enable=undefined-variable
+            )
+            self.__close_set.add(device)
             unregister = bool(callback(
                 self,
-                USBDevice(
-                    self,
-                    device_p,
-                    # pylint: disable=undefined-variable
-                    event != HOTPLUG_EVENT_DEVICE_LEFT,
-                    # pylint: enable=undefined-variable
-                ),
+                device,
                 event,
             ))
             if unregister:

@@ -26,16 +26,16 @@ def hotplug_callback(context, device, event):
     )
 
 def main():
-    context = usb1.USBContext()
-    if not context.hasCapability(usb1.CAP_HAS_HOTPLUG):
-        print 'Hotplug support is missing. Please update your libusb version.'
-        return
-    opaque = context.hotplugRegisterCallback(hotplug_callback)
-    try:
-        while True:
-            context.handleEvents()
-    except (KeyboardInterrupt, SystemExit):
-        pass
+    with usb1.USBContext() as context:
+        if not context.hasCapability(usb1.CAP_HAS_HOTPLUG):
+            print 'Hotplug support is missing. Please update your libusb version.'
+            return
+        opaque = context.hotplugRegisterCallback(hotplug_callback)
+        try:
+            while True:
+                context.handleEvents()
+        except (KeyboardInterrupt, SystemExit):
+            pass
 
 if __name__ == '__main__':
     main()

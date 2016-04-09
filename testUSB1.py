@@ -32,13 +32,14 @@ else:
     other_buff = 'foo'
 buff_len = 2
 
-def USBContext():
-    try:
-        return usb1.USBContext()
-    except usb1.USBError:
-        raise unittest.SkipTest(
-            'usb1.USBContext() fails - no USB bus on system ?'
-        )
+class USBContext(usb1.USBContext):
+    def open(self):
+        try:
+            return super(USBContext, self).open()
+        except usb1.USBError:
+            raise unittest.SkipTest(
+                'usb1.USBContext() fails - no USB bus on system ?'
+            )
 
 class PollDetector(object):
     def __init__(self, *args, **kw):
@@ -169,15 +170,14 @@ class USBTransferTests(unittest.TestCase):
         """
         USBPollerThread must exit by itself when context is destroyed.
         """
-        context = USBContext()
-        poll_detector = PollDetector()
-        try:
-            poller = usb1.USBPollerThread(context, poll_detector)
-        except OSError:
-            raise unittest.SkipTest('libusb without file descriptor events')
-        poller.start()
-        poll_detector.wait(1)
-        context.close()
+        with USBContext() as context:
+            poll_detector = PollDetector()
+            try:
+                poller = usb1.USBPollerThread(context, poll_detector)
+            except OSError:
+                raise unittest.SkipTest('libusb without file descriptor events')
+            poller.start()
+            poll_detector.wait(1)
         poller.join(1)
         self.assertFalse(poller.is_alive())
 
@@ -191,24 +191,24 @@ class USBTransferTests(unittest.TestCase):
                 self.poll = super(FakeEventPoll, self).poll
                 return ['dummy']
             # pylint: enable=method-hidden
-        context = USBContext()
-        def fakeHandleEventsLocked():
-            raise usb1.USBError(0)
-        context.handleEventsLocked = fakeHandleEventsLocked
-        exception_event = threading.Event()
-        exception_list = []
-        def exceptionHandler(exc):
-            exception_list.append(exc)
-            exception_event.set()
-        try:
-            poller = usb1.USBPollerThread(
-                context, FakeEventPoll(), exceptionHandler)
-        except OSError:
-            raise unittest.SkipTest('libusb without file descriptor events')
-        poller.start()
-        exception_event.wait(1)
-        self.assertTrue(exception_list, exception_list)
-        self.assertTrue(poller.is_alive())
+        with USBContext() as context:
+            def fakeHandleEventsLocked():
+                raise usb1.USBError(0)
+            context.handleEventsLocked = fakeHandleEventsLocked
+            exception_event = threading.Event()
+            exception_list = []
+            def exceptionHandler(exc):
+                exception_list.append(exc)
+                exception_event.set()
+            try:
+                poller = usb1.USBPollerThread(
+                    context, FakeEventPoll(), exceptionHandler)
+            except OSError:
+                raise unittest.SkipTest('libusb without file descriptor events')
+            poller.start()
+            exception_event.wait(1)
+            self.assertTrue(exception_list, exception_list)
+            self.assertTrue(poller.is_alive())
 
     @staticmethod
     def testDescriptors():
@@ -216,24 +216,24 @@ class USBTransferTests(unittest.TestCase):
         Test descriptor walk.
         Needs any usb device, which won't be opened.
         """
-        context = USBContext()
-        device_list = context.getDeviceList(skip_on_error=True)
-        found = False
-        for device in device_list:
-            device.getBusNumber()
-            device.getPortNumber()
-            device.getPortNumberList()
-            device.getDeviceAddress()
-            for settings in device.iterSettings():
-                for endpoint in settings:
-                    pass
-            for configuration in device.iterConfigurations():
-                for interface in configuration:
-                    for settings in interface:
-                        for endpoint in settings:
-                            found = True
-        if not found:
-            raise unittest.SkipTest('descriptor walk test did not complete')
+        with USBContext() as context:
+            device_list = context.getDeviceList(skip_on_error=True)
+            found = False
+            for device in device_list:
+                device.getBusNumber()
+                device.getPortNumber()
+                device.getPortNumberList()
+                device.getDeviceAddress()
+                for settings in device.iterSettings():
+                    for endpoint in settings:
+                        pass
+                for configuration in device.iterConfigurations():
+                    for interface in configuration:
+                        for settings in interface:
+                            for endpoint in settings:
+                                found = True
+            if not found:
+                raise unittest.SkipTest('descriptor walk test did not complete')
 
     def testDefaultEnumScope(self):
         """
@@ -273,6 +273,21 @@ class USBTransferTests(unittest.TestCase):
             self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
         finally:
             del global_dict[ENUM_NAME]
+
+    def testImplicitUSBContextOpening(self):
+        """
+        Test pre-1.5 API backward compatibility.
+        First method call which needs a context succeeds.
+        Further calls return None.
+        """
+        context = USBContext() # Deprecated
+        try:
+            fd_list = context.getPollFDList()
+        except NotImplementedError:
+            raise unittest.SkipTest('libusb without file descriptor events')
+        self.assertNotEqual(fd_list, None)
+        context.exit() # Deprecated
+        self.assertEqual(context.getPollFDList(), None)
 
 if __name__ == '__main__':
     unittest.main()

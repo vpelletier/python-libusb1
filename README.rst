@@ -65,14 +65,16 @@ Finding a device and gaining exclusive access:
 .. code:: python
 
     import usb1
-    context = usb1.USBContext()
-    handle = context.openByVendorIDAndProductID(
-        VENDOR_ID, PRODUCT_ID,
-        skip_on_error=True,
-    )
-    if handle is None:
-        # Device not present, or user is not allowed to access device.
-    handle.claimInterface(INTERFACE)
+    with usb1.USBContext() as context:
+        handle = context.openByVendorIDAndProductID(
+            VENDOR_ID,
+            PRODUCT_ID,
+            skip_on_error=True,
+        )
+        if handle is None:
+            # Device not present, or user is not allowed to access device.
+        with handle.claimInterface(INTERFACE):
+            # Do stuff with endpoints on claimed interface.
 
 Synchronous I/O:
 
