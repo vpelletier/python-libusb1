@@ -47,7 +47,7 @@ subclassing USBError.
 
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
     cast, c_uint8, c_uint16, c_ubyte, string_at, c_void_p, cdll, addressof, \
-    c_char
+    c_char, py_object
 from ctypes.util import find_library
 import sys
 import threading
@@ -1930,6 +1930,7 @@ class USBContext(object):
     __context_p = None
     __added_cb = None
     __removed_cb = None
+    __poll_cb_user_data = None
     __libusb_set_pollfd_notifiers = libusb1.libusb_set_pollfd_notifiers
     # pylint: disable=no-member
     __null_context = libusb1.libusb_context.from_address(0)
@@ -2183,8 +2184,11 @@ class USBContext(object):
             removed_cb = self.__null_pointer
         else:
             removed_cb = libusb1.libusb_pollfd_removed_cb_p(removed_cb)
+        if user_data is None:
+            user_data = self.__null_pointer
         self.__added_cb = added_cb
         self.__removed_cb = removed_cb
+        self.__poll_cb_user_data = user_data
         self.__libusb_set_pollfd_notifiers(
             self.__context_p, added_cb, removed_cb, user_data)
 
