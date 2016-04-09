@@ -327,6 +327,9 @@ Add USBContext.getDeviceIterator method.
 Rename USBContext.exit as USBContext.close for consistency with other USB*
 classes. Preserve backward compatibility.
 
+Make USBDeviceHandle.claimInterface a context manager, for easier interface
+releasing.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/

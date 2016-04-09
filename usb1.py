@@ -1023,6 +1023,18 @@ class USBPoller(object):
         self.unregister(fd)
     # pylint: enable=unused-argument
 
+class _ReleaseInterface(object):
+    def __init__(self, handle, interface):
+        self._handle = handle
+        self._interface = interface
+
+    def __enter__(self):
+        # USBDeviceHandle.claimInterface already claimed the interface.
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._handle.releaseInterface(self._interface)
+
 class USBDeviceHandle(object):
     """
     Represents an opened USB device.
@@ -1140,10 +1152,16 @@ class USBDeviceHandle(object):
         """
         Claim (= get exclusive access to) given interface number. Required to
         receive/send data.
+
+        Can be used as a context manager:
+            with handle.claimInterface(0):
+                # do stuff
+            # handle.releaseInterface(0) gets automatically called
         """
         mayRaiseUSBError(
             libusb1.libusb_claim_interface(self.__handle, interface),
         )
+        return _ReleaseInterface(self, interface)
 
     def releaseInterface(self, interface):
         """
