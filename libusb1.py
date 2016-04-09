@@ -52,7 +52,9 @@ class Enum(object):
     def __init__(self, member_dict, scope_dict=None):
         if scope_dict is None:
             # Affect caller's locals, not this module's.
+            # pylint: disable=protected-access
             scope_dict = sys._getframe(1).f_locals
+            # pylint: enable=protected-access
         forward_dict = {}
         reverse_dict = {}
         next_value = 0
@@ -162,9 +164,7 @@ def _loadLibrary():
         loader_kw['use_errno'] = True
         loader_kw['use_last_error'] = True
     try:
-        # pylint: disable=star-args
         return dll_loader('libusb-1.0' + suffix, **loader_kw)
-        # pylint: enable=star-args
     except OSError:
         libusb_path = None
         base_name = 'usb-1.0'
@@ -188,9 +188,7 @@ def _loadLibrary():
             libusb_path = ctypes.util.find_library(base_name)
             if libusb_path is None:
                 raise
-        # pylint: disable=star-args
         return dll_loader(libusb_path, **loader_kw)
-        # pylint: enable=star-args
 
 libusb = _loadLibrary()
 
@@ -353,10 +351,12 @@ libusb_request_type = Enum({
 })
 
 # BBB
+# pylint: disable=bad-whitespace,undefined-variable
 LIBUSB_TYPE_STANDARD = LIBUSB_REQUEST_TYPE_STANDARD
 LIBUSB_TYPE_CLASS    = LIBUSB_REQUEST_TYPE_CLASS
 LIBUSB_TYPE_VENDOR   = LIBUSB_REQUEST_TYPE_VENDOR
 LIBUSB_TYPE_RESERVED = LIBUSB_REQUEST_TYPE_RESERVED
+# pylint: enable=bad-whitespace,undefined-variable
 
 # Recipient bits of the bmRequestType field in control transfers. Values 4
 # through 31 are reserved.

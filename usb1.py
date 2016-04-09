@@ -45,17 +45,29 @@ All LIBUSB_ERROR_* constants are available in this module as exception classes,
 subclassing USBError.
 """
 
-import libusb1
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
     cast, c_uint8, c_uint16, c_ubyte, string_at, c_void_p, cdll, addressof, \
     c_char
+from ctypes.util import find_library
 import sys
 import threading
-from ctypes.util import find_library
 import warnings
 import weakref
 import collections
 import functools
+import libusb1
+if sys.version_info[:2] >= (2, 6):
+# pylint: disable=wrong-import-order,ungrouped-imports
+    if sys.platform == 'win32':
+        from ctypes import get_last_error as get_errno
+    else:
+        from ctypes import get_errno
+#pylint: enable=wrong-import-order,ungrouped-imports
+else:
+    def get_errno():
+        raise NotImplementedError(
+            'Your python version does not support errno/last_error'
+        )
 
 __all__ = [
     'USBContext', 'USBDeviceHandle', 'USBDevice', 'hasCapability',
@@ -109,7 +121,7 @@ def mayRaiseUSBError(value):
 try:
     namedtuple = collections.namedtuple
 except AttributeError:
-    Version = lambda *x: x
+    Version = tuple
 else:
     Version = namedtuple(
         'Version',
@@ -127,17 +139,6 @@ else:
 # pylint: disable=undefined-variable
 CONTROL_SETUP = BYTE * CONTROL_SETUP_SIZE
 # pylint: enable=undefined-variable
-
-if sys.version_info[:2] >= (2, 6):
-    if sys.platform == 'win32':
-        from ctypes import get_last_error as get_errno
-    else:
-        from ctypes import get_errno
-else:
-    def get_errno():
-        raise NotImplementedError(
-            'Your python version does not support errno/last_error'
-        )
 
 __libc_name = find_library('c')
 if __libc_name is None:
@@ -1486,7 +1487,6 @@ class USBConfiguration(object):
             raise IndexError('No such interface: %r' % (interface, ))
         return USBInterface(self.__context, self.__config.interface[interface])
 
-# pylint: disable=interface-not-implemented
 class USBInterface(object):
     def __init__(self, context, interface):
         """
@@ -1527,7 +1527,6 @@ class USBInterface(object):
             raise IndexError('No such setting: %r' % (alt_setting, ))
         return USBInterfaceSetting(
             self.__context, self.__interface.altsetting[alt_setting])
-# pylint: enable=interface-not-implemented
 
 class USBInterfaceSetting(object):
     def __init__(self, context, alt_setting):
@@ -1706,7 +1705,9 @@ class USBDevice(object):
         return hash(self.__key())
 
     def __eq__(self, other):
+        # pylint: disable=unidiomatic-typecheck
         return type(self) == type(other) and (
+            # pylint: enable=unidiomatic-typecheck
             self.device_p == other.device_p or
             # pylint: disable=protected-access
             self.__key() == other.__key()
@@ -2120,9 +2121,10 @@ class USBContext(object):
         if tv is None:
             tv = 0
         tv_s = int(tv)
-        tv = libusb1.timeval(tv_s, int((tv - tv_s) * 1000000))
+        real_tv = libusb1.timeval(tv_s, int((tv - tv_s) * 1000000))
         result = libusb1.libusb_handle_events_timeout(
-            self.__context_p, byref(tv))
+            self.__context_p, byref(real_tv),
+        )
         mayRaiseUSBError(result)
 
     # TODO: handleEventsTimeoutCompleted
@@ -2204,8 +2206,8 @@ class USBContext(object):
         if tv is None:
             tv = 0
         tv_s = int(tv)
-        tv = libusb1.timeval(tv_s, int((tv - tv_s) * 1000000))
-        libusb1.libusb_wait_for_event(self.__context_p, byref(tv))
+        real_tv = libusb1.timeval(tv_s, int((tv - tv_s) * 1000000))
+        libusb1.libusb_wait_for_event(self.__context_p, byref(real_tv))
 
     @_validContext
     def unlockEventWaiters(self):
