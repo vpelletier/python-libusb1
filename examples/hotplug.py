@@ -30,12 +30,14 @@ def main():
         if not context.hasCapability(usb1.CAP_HAS_HOTPLUG):
             print 'Hotplug support is missing. Please update your libusb version.'
             return
+        print 'Registering hotplug callback...'
         opaque = context.hotplugRegisterCallback(hotplug_callback)
+        print 'Callback registered. Monitoring events, ^C to exit'
         try:
             while True:
                 context.handleEvents()
         except (KeyboardInterrupt, SystemExit):
-            pass
+            print 'Exiting'
 
 if __name__ == '__main__':
     main()
