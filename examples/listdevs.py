@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2013-2015  Vincent Pelletier <plr.vincent@gmail.com>
+# Copyright (C) 2013-2016  Vincent Pelletier <plr.vincent@gmail.com>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
