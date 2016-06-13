@@ -870,14 +870,9 @@ class USBPollerThread(threading.Thread):
         self.__context = context
         self.__poller = poller
         self.__fd_set = set()
-        context.setPollFDNotifiers(self._registerFD, self._unregisterFD)
-        for fd, events in context.getPollFDList():
-            self._registerFD(fd, events, None)
         if exc_callback is not None:
             self.exceptionHandler = exc_callback
 
-    def __del__(self):
-        self.__context.setPollFDNotifiers(None, None)
 
     # pylint: disable=method-hidden
     @staticmethod
@@ -901,22 +896,28 @@ class USBPollerThread(threading.Thread):
         getNextTimeout = context.getNextTimeout
         exceptionHandler = self.exceptionHandler
         fd_set = self.__fd_set
-        while fd_set:
-            if try_lock_events():
-                lock_event_waiters()
-                while event_handler_active():
-                    wait_for_event()
-                unlock_event_waiters()
-            else:
-                try:
-                    while event_handling_ok():
-                        if poll(getNextTimeout()):
-                            try:
-                                handle_events_locked()
-                            except USBError:
-                                exceptionHandler(sys.exc_info()[1])
-                finally:
-                    unlock_events()
+        context.setPollFDNotifiers(self._registerFD, self._unregisterFD)
+        for fd, events in context.getPollFDList():
+            self._registerFD(fd, events, None)
+        try:
+            while fd_set:
+                if try_lock_events():
+                    lock_event_waiters()
+                    while event_handler_active():
+                        wait_for_event()
+                    unlock_event_waiters()
+                else:
+                    try:
+                        while event_handling_ok():
+                            if poll(getNextTimeout()):
+                                try:
+                                    handle_events_locked()
+                                except USBError:
+                                    exceptionHandler(sys.exc_info()[1])
+                    finally:
+                        unlock_events()
+        finally:
+            context.setPollFDNotifiers(None, None)
 
     def _registerFD(self, fd, events, _):
         self.__poller.register(fd, events)
