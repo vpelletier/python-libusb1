@@ -851,6 +851,8 @@ class USBPollerThread(threading.Thread):
 
     See http://libusb.sourceforge.net/api-1.0/mtasync.html .
     """
+    _can_run = True
+
     def __init__(self, context, poller, exc_callback=None):
         """
         Create a poller thread for given context.
@@ -873,6 +875,14 @@ class USBPollerThread(threading.Thread):
         if exc_callback is not None:
             self.exceptionHandler = exc_callback
 
+    def stop(self):
+        """
+        Stop & join thread.
+
+        Allows stopping even thread before context gets closed.
+        """
+        self._can_run = False
+        self.join()
 
     # pylint: disable=method-hidden
     @staticmethod
@@ -900,7 +910,7 @@ class USBPollerThread(threading.Thread):
         for fd, events in context.getPollFDList():
             self._registerFD(fd, events, None)
         try:
-            while fd_set:
+            while fd_set and self._can_run:
                 if try_lock_events():
                     lock_event_waiters()
                     while event_handler_active():
