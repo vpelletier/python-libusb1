@@ -45,6 +45,7 @@ All LIBUSB_ERROR_* constants are available in this module as exception classes,
 subclassing USBError.
 """
 
+from __future__ import division
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
     cast, c_uint8, c_uint16, c_ubyte, string_at, c_void_p, cdll, addressof, \
     c_char, py_object
@@ -1268,7 +1269,7 @@ class USBDeviceHandle(object):
         langid_list = cast(descriptor_string, POINTER(c_uint16))
         result = []
         append = result.append
-        for offset in xrange(1, length / 2):
+        for offset in xrange(1, length // 2):
             append(libusb1.libusb_le16_to_cpu(langid_list[offset]))
         return result
 
