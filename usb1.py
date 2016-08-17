@@ -880,7 +880,7 @@ class USBPollerThread(threading.Thread):
         """
         Stop & join thread.
 
-        Allows stopping even thread before context gets closed.
+        Allows stopping event thread before context gets closed.
         """
         self._can_run = False
         self.join()
