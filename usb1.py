@@ -48,7 +48,7 @@ subclassing USBError.
 from __future__ import division
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
     cast, c_uint8, c_uint16, c_ubyte, string_at, c_void_p, cdll, addressof, \
-    c_char, py_object
+    c_char
 from ctypes.util import find_library
 import sys
 import threading

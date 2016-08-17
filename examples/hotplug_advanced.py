@@ -18,6 +18,7 @@
 Advanced hotplug examples.
 Presents ways of integrating hotplug into your userland USB driver.
 """
+from __future__ import print_function
 import select
 import sys
 import usb1
@@ -29,11 +30,11 @@ class NoHotplugSupport(Exception):
     pass
 
 def onAwesomeDeviceLeft(awesome_device):
-    print 'Device left:', str(awesome_device)
+    print('Device left:', str(awesome_device))
 
 def onAwesomeDeviceArrived(awesome_device):
     awesome_device.onClose = onAwesomeDeviceLeft
-    print 'Device arrived:', str(awesome_device)
+    print('Device arrived:', str(awesome_device))
 
 class SelectPoller(object):
     """
@@ -58,7 +59,7 @@ class SelectPoller(object):
                 select.select(*([[
                     fd
                     for fd, events in self._fd_dict.iteritems() if events & flag
-                ] for flag in flag_list ] + [timeout])),
+                ] for flag in flag_list] + [timeout])),
                 flag_list,
             ):
             result[fd] = result.get(fd, 0) | happened_flag
@@ -169,9 +170,9 @@ class AwesomeDeviceHoarderSimple(AwesomeDeviceHoarderBase):
     """
     def run(self):
         with self.context:
-            print 'Registering hotplug callback...'
+            print('Registering hotplug callback...')
             self._registerCallback()
-            print 'Callback registered. Monitoring events, ^C to exit'
+            print('Callback registered. Monitoring events, ^C to exit')
             while True:
                 self.context.handleEvents()
 
@@ -188,9 +189,9 @@ class AwesomeDeviceHoarderEventLoop(AwesomeDeviceHoarderBase):
     """
     def __enter__(self):
         self.context.open()
-        print 'Registering hotplug callback...'
+        print('Registering hotplug callback...')
         self._registerCallback()
-        print 'Callback registered.'
+        print('Callback registered.')
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -203,7 +204,7 @@ def eventloop():
         # to base_poller.
         # The event loop would be something like:
         poller = usb1.USBPoller(awesome_device_hoarder.context, base_poller)
-        print 'Monitoring events, ^C to exit'
+        print('Monitoring events, ^C to exit')
         while True:
             poller.poll()
 mode_dict['eventloop'] = eventloop
@@ -212,22 +213,24 @@ def main():
     try:
         mode = mode_dict[sys.argv[1]]
     except (KeyError, IndexError):
-        print 'Usage: %s [%s]' % (
+        print('Usage: %s [%s]' % (
             sys.argv[0],
             '|'.join(mode_dict),
-        )
+        ))
         sys.exit(1)
-    print ('NOTE: this example needs sufficient permissions to be able to '
+    print(
+        'NOTE: this example needs sufficient permissions to be able to '
         'open USB devices to produce any interesting output. If you see '
         'nothing below, check you have USB devices plugged *and* that you '
-        'have sufficient permissions to open them.')
+        'have sufficient permissions to open them.'
+    )
     try:
         mode()
     except NoHotplugSupport, exc:
-        print exc.value
+        print(exc.value)
         sys.exit(1)
     except (KeyboardInterrupt, SystemExit):
-        print 'Exiting'
+        print('Exiting')
 
 if __name__ == '__main__':
     main()
