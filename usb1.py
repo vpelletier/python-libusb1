@@ -1265,13 +1265,11 @@ class USBDeviceHandle(object):
             # control request not supported by the device
             return []
         mayRaiseUSBError(result)
-        length = cast(descriptor_string, POINTER(c_ubyte))[0]
         langid_list = cast(descriptor_string, POINTER(c_uint16))
-        result = []
-        append = result.append
-        for offset in xrange(1, length // 2):
-            append(libusb1.libusb_le16_to_cpu(langid_list[offset].value))
-        return result
+        return [
+            libusb1.libusb_le16_to_cpu(langid_list[offset].value)
+            for offset in xrange(1, cast(descriptor_string, POINTER(c_ubyte))[0] // 2)
+        ]
 
     def getStringDescriptor(self, descriptor, lang_id):
         """
