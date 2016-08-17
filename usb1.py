@@ -1270,7 +1270,7 @@ class USBDeviceHandle(object):
         result = []
         append = result.append
         for offset in xrange(1, length // 2):
-            append(libusb1.libusb_le16_to_cpu(langid_list[offset]))
+            append(libusb1.libusb_le16_to_cpu(langid_list[offset].value))
         return result
 
     def getStringDescriptor(self, descriptor, lang_id):
