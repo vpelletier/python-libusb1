@@ -332,6 +332,15 @@ classes. Preserve backward compatibility.
 Make USBDeviceHandle.claimInterface a context manager, for easier interface
 releasing.
 
+1.5.1
+-----
+
+Introduce USBPollerThread.stop .
+
+Fix USBDeviceHandle.getSupportedLanguageList bug when running under python 3.
+While fixing this bug it was realised that this method returned ctypes objects.
+This was not intended, and it now returns regular integers.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
