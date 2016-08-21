@@ -114,12 +114,23 @@ def __bindConstants():
 __bindConstants()
 del __bindConstants
 
-def raiseUSBError(value):
-    raise STATUS_TO_EXCEPTION_DICT.get(value, USBError)(value)
+def raiseUSBError(
+        value,
+        # Avoid globals lookup on call to work during interpreter shutdown.
+        # pylint: disable=dangerous-default-value
+        __STATUS_TO_EXCEPTION_DICT=STATUS_TO_EXCEPTION_DICT,
+        # pylint: enable=dangerous-default-value
+        __USBError=USBError,
+    ):
+    raise __STATUS_TO_EXCEPTION_DICT.get(value, __USBError)(value)
 
-def mayRaiseUSBError(value):
+def mayRaiseUSBError(
+        value,
+        # Avoid globals lookup on call to work during interpreter shutdown.
+        __raiseUSBError=raiseUSBError,
+    ):
     if value < 0:
-        raiseUSBError(value)
+        __raiseUSBError(value)
 
 try:
     namedtuple = collections.namedtuple
@@ -227,6 +238,7 @@ class USBTransfer(object):
     __USBError = USBError
     # pylint: disable=undefined-variable
     __USBErrorNotFound = USBErrorNotFound
+    __mayRaiseUSBError = mayRaiseUSBError
     # pylint: enable=undefined-variable
     __transfer = None
     __initialized = False
@@ -733,9 +745,7 @@ class USBTransfer(object):
             # libusb_cancel_transfer on a non-submitted transfer might
             # trigger a segfault.
             raise self.__USBErrorNotFound
-        result = self.__libusb_cancel_transfer(self.__transfer)
-        if result:
-            raise self.__USBError(result)
+        self.__mayRaiseUSBError(self.__libusb_cancel_transfer(self.__transfer))
 
 class USBTransferHelper(object):
     """
