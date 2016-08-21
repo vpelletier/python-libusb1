@@ -1063,7 +1063,6 @@ class USBDeviceHandle(object):
     """
     __handle = None
     __libusb_close = libusb1.libusb_close
-    __USBError = USBError
     # pylint: disable=undefined-variable
     __USBErrorNoDevice = USBErrorNoDevice
     __USBErrorNotFound = USBErrorNotFound
