@@ -33,7 +33,7 @@ setup(
     description=next(x for x in long_description.splitlines() if x.strip()),
     long_description='.. contents::\n\n' + long_description,
     keywords='usb libusb',
-    version='1.5.1',
+    version='1.5.2',
     author='Vincent Pelletier',
     author_email='plr.vincent@gmail.com',
     url='http://github.com/vpelletier/python-libusb1',
