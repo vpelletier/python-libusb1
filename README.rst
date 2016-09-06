@@ -45,7 +45,7 @@ Installation
 
 Releases from PyPI, with name *libusb1*. Installing from command line::
 
-    $ pip libusb1
+    $ pip install libusb1
 
 or::
 
