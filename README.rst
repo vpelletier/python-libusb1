@@ -341,6 +341,19 @@ Fix USBDeviceHandle.getSupportedLanguageList bug when running under python 3.
 While fixing this bug it was realised that this method returned ctypes objects.
 This was not intended, and it now returns regular integers.
 
+1.5.2
+-----
+
+Make USBTransfer.cancel raise specific error instances.
+
+1.5.3
+-----
+
+Fix USBTransfer.cancel exception raising introduced in 1.5.2: it was
+accidentally becomming a bound method, preventing the raise to actually
+happen (in at least CPython 2.x) or raising type conversion errors (in at least
+CPython 3.5.2).
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
