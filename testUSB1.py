@@ -289,5 +289,23 @@ class USBTransferTests(unittest.TestCase):
         context.exit() # Deprecated
         self.assertEqual(context.getPollFDList(), None)
 
+    def testUSBTransferMayRaiseUSBError(self):
+        """
+        mayRaiseUSBError needs to be a class property to be reliably able
+        to call it during interpreter shutdown. But setting a function as
+        property makes it bound to the instance when accessed. This is not
+        obviously visible because mayRaiseUSBError has a should-never-be-used
+        second argument for exactly the same purpose, but which accidentally
+        receives the value intended as the first parameter (the first parameter
+        being replaced by "self" as for any bound method).
+        So this test verifies that USBTranfer.__mayRaiseUSBError behaves the
+        intended way.
+        And to make this test work when there is no USB device around, directly
+        instanciate USBTransfer and access tested private property.
+        """
+        transfer = usb1.USBTransfer(None, 0, None, None)
+        transfer._USBTransfer__mayRaiseUSBError(0)
+        self.assertRaises(usb1.USBErrorIO, transfer._USBTransfer__mayRaiseUSBError, usb1.ERROR_IO)
+
 if __name__ == '__main__':
     unittest.main()

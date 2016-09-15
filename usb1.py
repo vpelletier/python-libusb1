@@ -238,7 +238,7 @@ class USBTransfer(object):
     __USBError = USBError
     # pylint: disable=undefined-variable
     __USBErrorNotFound = USBErrorNotFound
-    __mayRaiseUSBError = mayRaiseUSBError
+    __mayRaiseUSBError = staticmethod(mayRaiseUSBError)
     # pylint: enable=undefined-variable
     __transfer = None
     __initialized = False
