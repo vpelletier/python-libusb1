@@ -28,7 +28,7 @@ from ctypes import Structure, LittleEndianStructure, \
     CFUNCTYPE, POINTER, addressof, sizeof, cast, \
     c_short, c_int, c_uint, c_size_t, c_long, \
     c_uint8, c_uint16, c_uint32, \
-    c_void_p, c_char_p, py_object, string_at, pointer
+    c_void_p, c_char_p, py_object, pointer, c_char
 try:
     from ctypes import c_ssize_t
 except ImportError:
@@ -77,6 +77,12 @@ class Enum(object):
 
     def get(self, value, default=None):
         return self.reverse_dict.get(value, default)
+
+def buffer_at(address, length):
+    """
+    Simular to ctypes.string_at, but zero-copy and requires an integer address.
+    """
+    return bytearray((c_char * length).from_address(address))
 
 _desc_type_dict = {
     'b': c_uint8,
@@ -957,7 +963,7 @@ else:
 
 def libusb_control_transfer_get_data(transfer_p):
     transfer = transfer_p.contents
-    return string_at(transfer.buffer, transfer.length)[
+    return buffer_at(transfer.buffer.value, transfer.length)[
         LIBUSB_CONTROL_SETUP_SIZE:]
 
 def libusb_control_transfer_get_setup(transfer_p):
@@ -1072,7 +1078,7 @@ def get_iso_packet_list(transfer_p):
     return _get_iso_packet_list(transfer_p.contents)
 
 def _get_iso_packet_buffer(transfer, offset, length):
-    return string_at(transfer.buffer + offset, length)
+    return buffer_at(transfer.buffer.value + offset, length)
 
 def get_iso_packet_buffer_list(transfer_p):
     """
@@ -1097,7 +1103,7 @@ def get_extra(descriptor):
     result = []
     extra_length = descriptor.extra_length
     if extra_length:
-        extra = string_at(descriptor.extra, extra_length)
+        extra = buffer_at(descriptor.extra.value, extra_length)
         append = result.append
         while extra:
             length = _string_item_to_int(extra[0])

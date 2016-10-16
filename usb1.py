@@ -46,8 +46,8 @@ subclassing USBError.
 """
 
 from __future__ import division
-from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
-    cast, c_uint8, c_uint16, c_ubyte, string_at, c_void_p, cdll, addressof, \
+from ctypes import byref, c_int, sizeof, POINTER, \
+    cast, c_uint8, c_uint16, c_ubyte, c_void_p, cdll, addressof, \
     c_char
 from ctypes.util import find_library
 import sys
@@ -209,10 +209,20 @@ def create_binary_buffer(init_or_size):
     # - str or unicode is an initialiser
     # Testing the latter confuses 2to3, so test the former.
     if isinstance(init_or_size, (int, long)):
-        result = create_string_buffer(init_or_size)
-    else:
-        result = create_string_buffer(init_or_size, len(init_or_size))
-    return result
+        init_or_size = bytearray(init_or_size)
+    return create_initialised_buffer(init_or_size)
+
+def create_initialised_buffer(init):
+    # raises if init is an integer - this is intentional
+    string_type = c_char * len(init)
+    try:
+        # zero-copy if init is a writable buffer
+        return string_type.from_buffer(init), init
+    # XXX: cpython (2.7 and 3.5) raises TypeError, pypy 5.4.1 raises ValueError
+    except (TypeError, ValueError):
+        # create our own writable buffer
+        init = bytearray(init)
+        return string_type.from_buffer(init), init
 
 class DoomedTransferError(Exception):
     """Exception raised when altering/submitting a doomed transfer."""
@@ -248,6 +258,7 @@ class USBTransfer(object):
     __doomed = False
     __user_data = None
     __transfer_buffer = None
+    __transfer_py_buffer = None
 
     def __init__(self, handle, iso_packets, before_submit, after_completion):
         """
@@ -377,13 +388,20 @@ class USBTransfer(object):
         if isinstance(buffer_or_len, (int, long)):
             length = buffer_or_len
             # pylint: disable=undefined-variable
-            string_buffer = create_binary_buffer(length + CONTROL_SETUP_SIZE)
+            string_buffer, transfer_py_buffer = create_binary_buffer(
+                length + CONTROL_SETUP_SIZE,
+            )
             # pylint: enable=undefined-variable
         else:
             length = len(buffer_or_len)
-            string_buffer = create_binary_buffer(CONTROL_SETUP + buffer_or_len)
+            string_buffer, transfer_py_buffer = create_binary_buffer(
+                CONTROL_SETUP + buffer_or_len,
+            )
         self.__initialized = False
         self.__transfer_buffer = string_buffer
+        # pylint: disable=undefined-variable
+        self.__transfer_py_buffer = transfer_py_buffer[CONTROL_SETUP_SIZE:]
+        # pylint: enable=undefined-variable
         self.__user_data = user_data
         libusb1.libusb_fill_control_setup(
             string_buffer, request_type, request, value, index, length)
@@ -405,6 +423,8 @@ class USBTransfer(object):
         buffer_or_len
             Either a string (when sending data), or expected data length (when
             receiving data)
+            To avoid memory copies, use an object implementing the writeable
+            buffer interface (ex: bytearray).
         callback
             Callback function to be invoked on transfer completion.
             Called with transfer as parameter, return value ignored.
@@ -417,7 +437,9 @@ class USBTransfer(object):
             raise ValueError('Cannot alter a submitted transfer')
         if self.__doomed:
             raise DoomedTransferError('Cannot reuse a doomed transfer')
-        string_buffer = create_binary_buffer(buffer_or_len)
+        string_buffer, self.__transfer_py_buffer = create_binary_buffer(
+            buffer_or_len
+        )
         self.__initialized = False
         self.__transfer_buffer = string_buffer
         self.__user_data = user_data
@@ -439,6 +461,8 @@ class USBTransfer(object):
         buffer_or_len
             Either a string (when sending data), or expected data length (when
             receiving data)
+            To avoid memory copies, use an object implementing the writeable
+            buffer interface (ex: bytearray).
         callback
             Callback function to be invoked on transfer completion.
             Called with transfer as parameter, return value ignored.
@@ -451,7 +475,9 @@ class USBTransfer(object):
             raise ValueError('Cannot alter a submitted transfer')
         if self.__doomed:
             raise DoomedTransferError('Cannot reuse a doomed transfer')
-        string_buffer = create_binary_buffer(buffer_or_len)
+        string_buffer, self.__transfer_py_buffer = create_binary_buffer(
+            buffer_or_len
+        )
         self.__initialized = False
         self.__transfer_buffer = string_buffer
         self.__user_data = user_data
@@ -473,6 +499,8 @@ class USBTransfer(object):
         buffer_or_len
             Either a string (when sending data), or expected data length (when
             receiving data)
+            To avoid memory copies, use an object implementing the writeable
+            buffer interface (ex: bytearray).
         callback
             Callback function to be invoked on transfer completion.
             Called with transfer as parameter, return value ignored.
@@ -496,7 +524,7 @@ class USBTransfer(object):
             )
         if self.__doomed:
             raise DoomedTransferError('Cannot reuse a doomed transfer')
-        string_buffer = create_binary_buffer(buffer_or_len)
+        string_buffer, transfer_py_buffer = create_binary_buffer(buffer_or_len)
         buffer_length = sizeof(string_buffer)
         if iso_transfer_length_list is None:
             iso_length, remainder = divmod(buffer_length, num_iso_packets)
@@ -529,6 +557,7 @@ class USBTransfer(object):
         transfer_p = self.__transfer
         self.__initialized = False
         self.__transfer_buffer = string_buffer
+        self.__transfer_py_buffer = transfer_py_buffer
         self.__user_data = user_data
         libusb1.libusb_fill_iso_transfer(
             transfer_p, self.__handle, endpoint, string_buffer, buffer_length,
@@ -582,15 +611,7 @@ class USBTransfer(object):
         Get data buffer content.
         Should not be called on a submitted transfer.
         """
-        transfer_p = self.__transfer
-        transfer = transfer_p.contents
-        # pylint: disable=undefined-variable
-        if transfer.type == TRANSFER_TYPE_CONTROL:
-            # pylint: enable=undefined-variable
-            result = libusb1.libusb_control_transfer_get_data(transfer_p)
-        else:
-            result = string_at(transfer.buffer, transfer.length)
-        return result
+        return self.__transfer_py_buffer
 
     def getUserData(self):
         """
@@ -670,11 +691,11 @@ class USBTransfer(object):
             raise TypeError(
                 'This method cannot be called on non-iso transfers.'
             )
-        buffer_position = transfer.buffer
+        buffer_position = transfer.buffer.value
         for iso_transfer in libusb1.get_iso_packet_list(transfer_p):
             yield (
                 iso_transfer.status,
-                string_at(buffer_position, iso_transfer.actual_length),
+                libusb1.buffer_at(buffer_position, iso_transfer.actual_length),
             )
             buffer_position += iso_transfer.length
 
@@ -695,7 +716,7 @@ class USBTransfer(object):
             raise ValueError(
                 'To alter control transfer buffer, use setControl'
             )
-        buff = create_binary_buffer(buffer_or_len)
+        buff, transfer_py_buffer = create_binary_buffer(buffer_or_len)
         # pylint: disable=undefined-variable
         if transfer.type == TRANSFER_TYPE_ISOCHRONOUS and \
                 sizeof(buff) != transfer.length:
@@ -705,6 +726,7 @@ class USBTransfer(object):
                 'setIsochronous'
             )
         self.__transfer_buffer = buff
+        self.__transfer_py_buffer = transfer_py_buffer
         transfer.buffer = cast(buff, c_void_p)
         transfer.length = sizeof(buff)
 
@@ -1263,7 +1285,7 @@ class USBDeviceHandle(object):
         locales.windows_locale to get an rfc3066 representation. The 5 standard
         HID language codes are missing though.
         """
-        descriptor_string = create_binary_buffer(STRING_LENGTH)
+        descriptor_string, _ = create_binary_buffer(STRING_LENGTH)
         result = libusb1.libusb_get_string_descriptor(
             self.__handle, 0, 0, descriptor_string, sizeof(descriptor_string),
         )
@@ -1287,7 +1309,7 @@ class USBDeviceHandle(object):
         Return value is an unicode string.
         Return None if there is no such descriptor on device.
         """
-        descriptor_string = create_binary_buffer(STRING_LENGTH)
+        descriptor_string, _ = create_binary_buffer(STRING_LENGTH)
         try:
             mayRaiseUSBError(libusb1.libusb_get_string_descriptor(
                 self.__handle, descriptor, lang_id, descriptor_string,
@@ -1306,7 +1328,7 @@ class USBDeviceHandle(object):
         Return value is an ASCII string.
         Return None if there is no such descriptor on device.
         """
-        descriptor_string = create_binary_buffer(STRING_LENGTH)
+        descriptor_string, _ = create_binary_buffer(STRING_LENGTH)
         try:
             mayRaiseUSBError(libusb1.libusb_get_string_descriptor_ascii(
                 self.__handle, descriptor, descriptor_string,
@@ -1340,12 +1362,15 @@ class USBDeviceHandle(object):
         timeout: in milliseconds, how long to wait for device acknowledgement.
           Set to 0 to disable.
 
+        To avoid memory copies, use an object implementing the writeable buffer
+        interface (ex: bytearray) for the "data" parameter.
+
         Returns the number of bytes actually sent.
         """
         # pylint: disable=undefined-variable
         request_type = (request_type & ~ENDPOINT_DIR_MASK) | ENDPOINT_OUT
         # pylint: enable=undefined-variable
-        data = (c_char * len(data))(*data)
+        data, _ = create_initialised_buffer(data)
         return self._controlTransfer(request_type, request, value, index, data,
                                      sizeof(data), timeout)
 
@@ -1357,16 +1382,19 @@ class USBDeviceHandle(object):
           disable.
         See controlWrite for other parameters description.
 
+        To avoid memory copies, use an object implementing the writeable buffer
+        interface (ex: bytearray) for the "data" parameter.
+
         Returns received data.
         """
         # pylint: disable=undefined-variable
         request_type = (request_type & ~ENDPOINT_DIR_MASK) | ENDPOINT_IN
         # pylint: enable=undefined-variable
-        data = create_binary_buffer(length)
+        data, data_buffer = create_binary_buffer(length)
         transferred = self._controlTransfer(
             request_type, request, value, index, data, length, timeout,
         )
-        return data.raw[:transferred]
+        return data_buffer[:transferred]
 
     def _bulkTransfer(self, endpoint, data, length, timeout):
         transferred = c_int()
@@ -1383,12 +1411,15 @@ class USBDeviceHandle(object):
         timeout: in milliseconds, how long to wait for device acknowledgement.
           Set to 0 to disable.
 
+        To avoid memory copies, use an object implementing the writeable buffer
+        interface (ex: bytearray) for the "data" parameter.
+
         Returns the number of bytes actually sent.
         """
         # pylint: disable=undefined-variable
         endpoint = (endpoint & ~ENDPOINT_DIR_MASK) | ENDPOINT_OUT
         # pylint: enable=undefined-variable
-        data = (c_char * len(data))(*data)
+        data, _ = create_initialised_buffer(data)
         return self._bulkTransfer(endpoint, data, sizeof(data), timeout)
 
     def bulkRead(self, endpoint, length, timeout=0):
@@ -1398,16 +1429,17 @@ class USBDeviceHandle(object):
           disable.
         See bulkWrite for other parameters description.
 
+        To avoid memory copies, use an object implementing the writeable buffer
+        interface (ex: bytearray) for the "data" parameter.
+
         Returns received data.
         """
         # pylint: disable=undefined-variable
         endpoint = (endpoint & ~ENDPOINT_DIR_MASK) | ENDPOINT_IN
         # pylint: enable=undefined-variable
-        data = create_binary_buffer(length)
+        data, data_buffer = create_binary_buffer(length)
         transferred = self._bulkTransfer(endpoint, data, length, timeout)
-        # pylint: disable=invalid-slice-index
-        return data.raw[:transferred]
-        # pylint: enable=invalid-slice-index
+        return data_buffer[:transferred]
 
     def _interruptTransfer(self, endpoint, data, length, timeout):
         transferred = c_int()
@@ -1424,12 +1456,15 @@ class USBDeviceHandle(object):
         timeout: in milliseconds, how long to wait for device acknowledgement.
           Set to 0 to disable.
 
+        To avoid memory copies, use an object implementing the writeable buffer
+        interface (ex: bytearray) for the "data" parameter.
+
         Returns the number of bytes actually sent.
         """
         # pylint: disable=undefined-variable
         endpoint = (endpoint & ~ENDPOINT_DIR_MASK) | ENDPOINT_OUT
         # pylint: enable=undefined-variable
-        data = (c_char * len(data))(*data)
+        data, _ = create_initialised_buffer(data)
         return self._interruptTransfer(endpoint, data, sizeof(data), timeout)
 
     def interruptRead(self, endpoint, length, timeout=0):
@@ -1439,16 +1474,17 @@ class USBDeviceHandle(object):
           disable.
         See interruptRead for other parameters description.
 
+        To avoid memory copies, use an object implementing the writeable buffer
+        interface (ex: bytearray) for the "data" parameter.
+
         Returns received data.
         """
         # pylint: disable=undefined-variable
         endpoint = (endpoint & ~ENDPOINT_DIR_MASK) | ENDPOINT_IN
         # pylint: enable=undefined-variable
-        data = create_binary_buffer(length)
+        data, data_buffer = create_binary_buffer(length)
         transferred = self._interruptTransfer(endpoint, data, length, timeout)
-        # pylint: disable=invalid-slice-index
-        return data.raw[:transferred]
-        # pylint: enable=invalid-slice-index
+        return data_buffer[:transferred]
 
     def getTransfer(self, iso_packets=0):
         """
