@@ -354,8 +354,8 @@ accidentally becomming a bound method, preventing the raise to actually
 happen (in at least CPython 2.x) or raising type conversion errors (in at least
 CPython 3.5.2).
 
-Unreleased
-----------
+1.6
+---
 
 Improve asynchronous transfer performance: (very) suboptimal code was used to
 initialise asynchronous transfer buffer. As a consequence, usb1 now exposes
