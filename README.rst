@@ -361,6 +361,9 @@ Improve asynchronous transfer performance: (very) suboptimal code was used to
 initialise asynchronous transfer buffer. As a consequence, usb1 now exposes
 ``bytearrays`` where it used to expose ``bytes`` or ``str`` objects.
 
+Deprecate libusb1 module import, which should not be needed since all (?)
+needed constants were re-bound to usb1 module.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/

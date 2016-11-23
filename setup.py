@@ -39,7 +39,8 @@ setup(
     url='http://github.com/vpelletier/python-libusb1',
     license='LGPLv2.1+',
     platforms=['any'],
-    py_modules=['libusb1', 'usb1'],
+    py_modules=['libusb1'],
+    packages=['usb1'],
     classifiers=[
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',

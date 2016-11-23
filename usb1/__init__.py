@@ -45,7 +45,7 @@ All LIBUSB_ERROR_* constants are available in this module as exception classes,
 subclassing USBError.
 """
 
-from __future__ import division
+from __future__ import division, absolute_import
 from ctypes import byref, c_int, sizeof, POINTER, \
     cast, c_uint8, c_uint16, c_ubyte, c_void_p, cdll, addressof, \
     c_char
@@ -58,7 +58,7 @@ import collections
 import functools
 import contextlib
 import inspect
-import libusb1
+from . import libusb1
 if sys.version_info[:2] >= (2, 6):
 # pylint: disable=wrong-import-order,ungrouped-imports
     if sys.platform == 'win32':
@@ -218,7 +218,7 @@ def create_initialised_buffer(init):
     try:
         # zero-copy if init is a writable buffer
         return string_type.from_buffer(init), init
-    # XXX: cpython (2.7 and 3.5) raises TypeError, pypy 5.4.1 raises ValueError
+    # cpython (2.7 and 3.5) raises TypeError, pypy 5.4.1 raises ValueError
     except (TypeError, ValueError):
         # create our own writable buffer
         init = bytearray(init)
