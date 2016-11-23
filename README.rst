@@ -364,6 +364,9 @@ initialise asynchronous transfer buffer. As a consequence, usb1 now exposes
 Deprecate libusb1 module import, which should not be needed since all (?)
 needed constants were re-bound to usb1 module.
 
+Move testUSB1 module inside usb1, to eventually only expose usb1 as top-level
+module.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/

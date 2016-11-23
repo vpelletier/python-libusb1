@@ -18,7 +18,7 @@ addons:
 before_script:
 - ./buildTestLibusb.sh https://github.com/libusb/libusb.git libusb.git master v1.0.6 v1.0.20
 install: pip install .
-script: python testUSB1.py
+script: python -m usb1.testUSB1
 env:
 - LD_LIBRARY_PATH=
 - LD_LIBRARY_PATH=test-libusb/build/libusb.git/master/lib

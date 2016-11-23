@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (C) 2010-2016  Vincent Pelletier <plr.vincent@gmail.com>
 #
 # This library is free software; you can redistribute it and/or
