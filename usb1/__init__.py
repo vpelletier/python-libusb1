@@ -1302,11 +1302,11 @@ class USBDeviceHandle(object):
             for offset in xrange(1, cast(descriptor_string, POINTER(c_ubyte))[0] // 2)
         ]
 
-    def getStringDescriptor(self, descriptor, lang_id):
+    def getStringDescriptor(self, descriptor, lang_id, errors='strict'):
         """
         Fetch description string for given descriptor and in given language.
         Use getSupportedLanguageList to know which languages are available.
-        Return value is an unicode string.
+        Return value is a unicode string.
         Return None if there is no such descriptor on device.
         """
         descriptor_string, _ = create_binary_buffer(STRING_LENGTH)
@@ -1319,13 +1319,13 @@ class USBDeviceHandle(object):
         except USBErrorNotFound:
             # pylint: enable=undefined-variable
             return None
-        return descriptor_string.value.decode('UTF-16-LE')
+        return descriptor_string.value.decode('UTF-16-LE', errors=errors)
 
-    def getASCIIStringDescriptor(self, descriptor):
+    def getASCIIStringDescriptor(self, descriptor, errors='strict'):
         """
         Fetch description string for given descriptor in first available
         language.
-        Return value is an ASCII string.
+        Return value is a unicode string.
         Return None if there is no such descriptor on device.
         """
         descriptor_string, _ = create_binary_buffer(STRING_LENGTH)
@@ -1338,7 +1338,7 @@ class USBDeviceHandle(object):
         except USBErrorNotFound:
             # pylint: enable=undefined-variable
             return None
-        return descriptor_string.value.decode('ASCII')
+        return descriptor_string.value.decode('ASCII', errors=errors)
 
     # Sync I/O
 
