@@ -1298,7 +1298,7 @@ class USBDeviceHandle(object):
         mayRaiseUSBError(result)
         langid_list = cast(descriptor_string, POINTER(c_uint16))
         return [
-            libusb1.libusb_le16_to_cpu(langid_list[offset].value)
+            libusb1.libusb_le16_to_cpu(langid_list[offset])
             for offset in xrange(1, cast(descriptor_string, POINTER(c_ubyte))[0] // 2)
         ]
 
