@@ -1321,7 +1321,12 @@ class USBDeviceHandle(object):
         except USBErrorNotFound:
             # pylint: enable=undefined-variable
             return None
-        return descriptor_string[:received].decode('UTF-16-LE', errors=errors)
+        if received < 2 or descriptor_string[1] != DT_STRING:
+            raise ValueError('Invalid string descriptor')
+        return descriptor_string[2:min(
+            received,
+            descriptor_string[0],
+        )].decode('UTF-16-LE', errors=errors)
 
     def getASCIIStringDescriptor(self, descriptor, errors='strict'):
         """
@@ -1341,7 +1346,12 @@ class USBDeviceHandle(object):
         except USBErrorNotFound:
             # pylint: enable=undefined-variable
             return None
-        return descriptor_string[:received].decode('ASCII', errors=errors)
+        if received < 2 or descriptor_string[1] != DT_STRING:
+            raise ValueError('Invalid string descriptor')
+        return descriptor_string[2:min(
+            received,
+            descriptor_string[0],
+        )].decode('ASCII', errors=errors)
 
     # Sync I/O
 
