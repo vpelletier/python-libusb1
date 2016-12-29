@@ -131,6 +131,7 @@ def mayRaiseUSBError(
     ):
     if value < 0:
         __raiseUSBError(value)
+    return value
 
 try:
     namedtuple = collections.namedtuple
@@ -1309,17 +1310,18 @@ class USBDeviceHandle(object):
         Return value is a unicode string.
         Return None if there is no such descriptor on device.
         """
-        descriptor_string, _ = create_binary_buffer(STRING_LENGTH)
+        descriptor_string = bytearray(STRING_LENGTH)
         try:
-            mayRaiseUSBError(libusb1.libusb_get_string_descriptor(
-                self.__handle, descriptor, lang_id, descriptor_string,
-                sizeof(descriptor_string),
+            received = mayRaiseUSBError(libusb1.libusb_get_string_descriptor(
+                self.__handle, descriptor, lang_id,
+                create_binary_buffer(descriptor_string)[0],
+                STRING_LENGTH,
             ))
         # pylint: disable=undefined-variable
         except USBErrorNotFound:
             # pylint: enable=undefined-variable
             return None
-        return descriptor_string.value.decode('UTF-16-LE', errors=errors)
+        return descriptor_string[:received].decode('UTF-16-LE', errors=errors)
 
     def getASCIIStringDescriptor(self, descriptor, errors='strict'):
         """
@@ -1328,17 +1330,18 @@ class USBDeviceHandle(object):
         Return value is a unicode string.
         Return None if there is no such descriptor on device.
         """
-        descriptor_string, _ = create_binary_buffer(STRING_LENGTH)
+        descriptor_string = bytearray(STRING_LENGTH)
         try:
-            mayRaiseUSBError(libusb1.libusb_get_string_descriptor_ascii(
-                self.__handle, descriptor, descriptor_string,
-                sizeof(descriptor_string),
+            received = mayRaiseUSBError(libusb1.libusb_get_string_descriptor_ascii(
+                self.__handle, descriptor,
+                create_binary_buffer(descriptor_string)[0],
+                STRING_LENGTH,
             ))
         # pylint: disable=undefined-variable
         except USBErrorNotFound:
             # pylint: enable=undefined-variable
             return None
-        return descriptor_string.value.decode('ASCII', errors=errors)
+        return descriptor_string[:received].decode('ASCII', errors=errors)
 
     # Sync I/O
 
