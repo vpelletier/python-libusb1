@@ -692,7 +692,7 @@ class USBTransfer(object):
             raise TypeError(
                 'This method cannot be called on non-iso transfers.'
             )
-        buffer_position = transfer.buffer.value
+        buffer_position = transfer.buffer
         for iso_transfer in libusb1.get_iso_packet_list(transfer_p):
             yield (
                 iso_transfer.status,

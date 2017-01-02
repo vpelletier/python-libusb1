@@ -1078,7 +1078,7 @@ def get_iso_packet_list(transfer_p):
     return _get_iso_packet_list(transfer_p.contents)
 
 def _get_iso_packet_buffer(transfer, offset, length):
-    return buffer_at(transfer.buffer.value + offset, length)
+    return buffer_at(transfer.buffer + offset, length)
 
 def get_iso_packet_buffer_list(transfer_p):
     """

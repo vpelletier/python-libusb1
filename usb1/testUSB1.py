@@ -17,6 +17,7 @@
 # pylint: disable=invalid-name, missing-docstring, too-many-public-methods
 import unittest
 import sys
+import itertools
 import select
 import threading
 import usb1
@@ -159,6 +160,37 @@ class USBTransferTests(unittest.TestCase):
         Also, test setBuffer/getBuffer.
         """
         self._testTransferSetter(self.getTransfer(), 'setInterrupt')
+
+    def testSetIsochronous(self):
+        """
+        Simplest test: feed some data, must not raise.
+        Also, test setBuffer/getBuffer/getISOBufferList/iterISO.
+        """
+        iso_transfer_count = 16
+        transfer = self.getTransfer(iso_transfer_count)
+        self._testTransferSetter(transfer, 'setIsochronous')
+        # Returns whole buffers
+        self.assertEqual(
+            bytearray(itertools.chain(*transfer.getISOBufferList())),
+            buff,
+        )
+        # Returns actually transfered data, so here nothing
+        self.assertEqual(bytearray(
+            itertools.chain(*[x for _, x in transfer.iterISO()])),
+            bytearray(),
+        )
+        # Fake reception of whole transfers
+        c_transfer = getattr(
+          transfer,
+          '_' + transfer.__class__.__name__ + '__transfer'
+        )
+        for iso_metadata in libusb1.get_iso_packet_list(c_transfer):
+            iso_metadata.actual_length = iso_metadata.length
+        # Now iterISO returns everythig
+        self.assertEqual(bytearray(
+            itertools.chain(*[x for _, x in transfer.iterISO()])),
+            buff,
+        )
 
     def testSetGetCallback(self):
         transfer = self.getTransfer()

@@ -367,6 +367,15 @@ needed constants were re-bound to usb1 module.
 Move testUSB1 module inside usb1, to eventually only expose usb1 as top-level
 module.
 
+Not released
+------------
+
+Fix getSupportedLanguageList.
+
+Fix and extend get{,ASCII}StringDescriptor .
+
+Fix iterISO and getISOBufferList.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
