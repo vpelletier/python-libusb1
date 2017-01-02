@@ -367,8 +367,8 @@ needed constants were re-bound to usb1 module.
 Move testUSB1 module inside usb1, to eventually only expose usb1 as top-level
 module.
 
-Not released
-------------
+1.6.1
+-----
 
 Fix getSupportedLanguageList.
 
