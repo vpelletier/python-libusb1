@@ -115,8 +115,7 @@ class USBTransferTests(unittest.TestCase):
         # No callback
         transfer.setControl(request_type, request, value, index, buff)
 
-    def _testSetBulkOrInterrupt(self, setter_id):
-        transfer = self.getTransfer()
+    def _testTransferSetter(self, transfer, setter_id):
         endpoint = 0x81
         def callback(transfer):
             pass
@@ -148,14 +147,14 @@ class USBTransferTests(unittest.TestCase):
         Simplest test: feed some data, must not raise.
         Also, test setBuffer/getBuffer.
         """
-        self._testSetBulkOrInterrupt('setBulk')
+        self._testTransferSetter(self.getTransfer(), 'setBulk')
 
     def testSetInterrupt(self):
         """
         Simplest test: feed some data, must not raise.
         Also, test setBuffer/getBuffer.
         """
-        self._testSetBulkOrInterrupt('setInterrupt')
+        self._testTransferSetter(self.getTransfer(), 'setInterrupt')
 
     def testSetGetCallback(self):
         transfer = self.getTransfer()
