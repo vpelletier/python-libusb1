@@ -25,7 +25,7 @@ import libusb1
 from ctypes import pointer
 
 buff_len = 1024
-buffer_base = [x % 256 for x in xrange(buff_len)]
+buffer_base = [x % 256 for x in range(buff_len)]
 if sys.version_info[0] == 3:
     buff = bytes(buffer_base)
     other_buff = bytes(reversed(buffer_base))
