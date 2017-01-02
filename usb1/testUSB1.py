@@ -23,13 +23,15 @@ import usb1
 import libusb1
 from ctypes import pointer
 
+buff_len = 1024
+buffer_base = [x % 256 for x in xrange(buff_len)]
 if sys.version_info[0] == 3:
-    buff = bytes([0, 0xff])
-    other_buff = bytes((ord(x) for x in 'foo'))
+    buff = bytes(buffer_base)
+    other_buff = bytes(reversed(buffer_base))
 else:
-    buff = '\x00\xff'
-    other_buff = 'foo'
-buff_len = 2
+    buff = ''.join(chr(x) for x in buffer_base)
+    other_buff = ''.join(chr(x) for x in reversed(buffer_base))
+bytearray_buff = bytearray(buffer_base)
 
 class USBContext(usb1.USBContext):
     def open(self):
@@ -129,6 +131,8 @@ class USBTransferTests(unittest.TestCase):
         self.assertEqual(buff, transfer.getBuffer())
         transfer.setBuffer(other_buff)
         self.assertEqual(other_buff, transfer.getBuffer())
+        transfer.setBuffer(bytearray_buff)
+        self.assertEqual(bytearray_buff, transfer.getBuffer())
         transfer.setBuffer(buff_len)
         self.assertEqual(buff_len, len(transfer.getBuffer()))
         # All provided, buffer length variant
