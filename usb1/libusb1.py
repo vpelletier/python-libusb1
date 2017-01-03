@@ -190,6 +190,13 @@ def _loadLibrary():
                     break
             else:
                 libusb_path = None
+        elif system == 'Windows':
+            for libusb_path in [os.path.join(path, 'libusb-1.0' + suffix)
+                                for path in sys.path]:
+                if os.path.exists(libusb_path):
+                    break
+            else:
+                libusb_path = None
         if libusb_path is None:
             libusb_path = ctypes.util.find_library(base_name)
             if libusb_path is None:
