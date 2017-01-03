@@ -1346,12 +1346,7 @@ class USBDeviceHandle(object):
         except USBErrorNotFound:
             # pylint: enable=undefined-variable
             return None
-        if received < 2 or descriptor_string[1] != DT_STRING:
-            raise ValueError('Invalid string descriptor')
-        return descriptor_string[2:min(
-            received,
-            descriptor_string[0],
-        )].decode('ASCII', errors=errors)
+        return descriptor_string[:received].decode('ASCII', errors=errors)
 
     # Sync I/O
 

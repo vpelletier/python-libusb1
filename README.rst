@@ -376,6 +376,12 @@ Fix and extend get{,ASCII}StringDescriptor .
 
 Fix iterISO and getISOBufferList.
 
+1.6.2
+-----
+
+Fix getASCIIStringDescriptor: unlike getStringDescriptor, this returns only the
+payload of the string descriptor, without its header.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
