@@ -2336,7 +2336,7 @@ class USBContext(object):
     @_validContext
     def setDebug(self, level):
         """
-        Set debugging level.
+        Set debugging level. See LOG_LEVEL_* constants.
         Note: depending on libusb compilation settings, this might have no
         effect.
         """
