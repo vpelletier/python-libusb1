@@ -75,7 +75,7 @@ else:
 __all__ = [
     'USBContext', 'USBDeviceHandle', 'USBDevice', 'hasCapability',
     'USBPoller', 'USBTransfer', 'USBTransferHelper', 'EVENT_CALLBACK_SET',
-    'USBPollerThread', 'USBEndpoint', 'USBInterfaceSetting', 'USBInterface',
+    'USBEndpoint', 'USBInterfaceSetting', 'USBInterface',
     'USBConfiguration', 'DoomedTransferError', 'getVersion', 'USBError',
 ]
 # Bind libusb1 constants and libusb1.USBError to this module, so user does not
@@ -873,6 +873,7 @@ class USBTransferHelper(object):
         # Deprecated: to drop
         return self.__transfer.isSubmitted()
 
+# BBB
 class USBPollerThread(threading.Thread):
     """
     Implements libusb1 documentation about threaded, asynchronous
@@ -902,6 +903,12 @@ class USBPollerThread(threading.Thread):
           If not given, an USBError will be raised, interrupting the thread.
         """
         super(USBPollerThread, self).__init__()
+        warnings.warn(
+            'USBPollerThread causes long stalls when used with poll (it was '
+            'intended for epoll), and is generally misleading. Consider '
+            'calling looping over context.handleEvents() in a thread instead.',
+            DeprecationWarning,
+        )
         self.daemon = True
         self.__context = context
         self.__poller = poller

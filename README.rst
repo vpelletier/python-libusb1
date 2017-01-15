@@ -382,6 +382,11 @@ Fix iterISO and getISOBufferList.
 Fix getASCIIStringDescriptor: unlike getStringDescriptor, this returns only the
 payload of the string descriptor, without its header.
 
+Unreleased
+----------
+
+Deprecate USBPollerThread .
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
