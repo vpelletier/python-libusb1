@@ -382,10 +382,17 @@ Fix iterISO and getISOBufferList.
 Fix getASCIIStringDescriptor: unlike getStringDescriptor, this returns only the
 payload of the string descriptor, without its header.
 
-Unreleased
-----------
+1.6.3
+-----
 
-Deprecate USBPollerThread .
+Deprecate USBPollerThread . It is mileading users for which the simple version
+(a thread calling ``USBContext.handleEvents``) would be enough. And for more
+advanced uses (ie, actually needing to poll non-libusb file descriptors), this
+class only works reliably with epoll: kqueue (which should tehcnically work)
+has a different API on python level, and poll (which has the same API as epoll
+on python level) lacks the critical ability to change the set of monitored file
+descriptors while a poll is already running, causing long pauses - if not
+deadlocks.
 
 .. _CPython: http://www.python.org/
 
