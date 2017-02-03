@@ -149,8 +149,69 @@ if sys.version_info[0] == 3:
     xrange = range
     long = int
     # pylint: enable=redefined-builtin
+    integer_memoryview = memoryview
 else:
     BYTE = '\x00'
+    # Work around python2's memoryview, which only accepts & generates strings.
+    # For consistency between async control and other async transfers.
+    # Python 2.7 will not be fixed, so wrap its memoryview.
+    # Breaks the no-copy promise, but control transfer performance should
+    # matter less than other types.
+    class integer_memoryview(object):
+        def __init__(self, view):
+            if not isinstance(view, memoryview):
+                view = memoryview(view)
+            self.__view = view
+
+        # Many boring magic methods, just to mimic memoryview
+        def __eq__(self, other):
+            return self.__view == other
+
+        def __ge__(self, other):
+            return self.__view >= other
+
+        def __gt__(self, other):
+            return self.__view > other
+
+        def __le__(self, other):
+            return self.__view <= other
+
+        def __lt__(self, other):
+            return self.__view < other
+
+        def __ne__(self, other):
+            return self.__view != other
+
+        def __hash__(self):
+            # raises
+            return hash(self.__view)
+
+        def __delitem__(self, key):
+            # raises
+            del self.__view[key]
+
+        def __len__(self):
+            return len(self.__view)
+
+        # To access format, itemsize, ndim, readonly, shape, strides,
+        # suboffsets, tobytes, tolist.
+        def __getattr__(self, name):
+            return getattr(self.__view, name)
+
+        # Actual payload of this class.
+        def __getitem__(self, key):
+            value = self.__view[key]
+            if isinstance(value, memoryview):
+                return self.__class__(value)
+            return ord(value)
+
+        def __setitem__(self, key, value):
+            if isinstance(value, (int, long)):
+                value = chr(value)
+            else:
+                value = ''.join(chr(x) for x in value)
+            self.__view[key] = value
+
 # pylint: disable=undefined-variable
 CONTROL_SETUP = BYTE * CONTROL_SETUP_SIZE
 # pylint: enable=undefined-variable
@@ -401,7 +462,9 @@ class USBTransfer(object):
         self.__initialized = False
         self.__transfer_buffer = string_buffer
         # pylint: disable=undefined-variable
-        self.__transfer_py_buffer = transfer_py_buffer[CONTROL_SETUP_SIZE:]
+        self.__transfer_py_buffer = integer_memoryview(
+            transfer_py_buffer,
+        )[CONTROL_SETUP_SIZE:]
         # pylint: enable=undefined-variable
         self.__user_data = user_data
         libusb1.libusb_fill_control_setup(
