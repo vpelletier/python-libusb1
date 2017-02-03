@@ -394,6 +394,11 @@ on python level) lacks the critical ability to change the set of monitored file
 descriptors while a poll is already running, causing long pauses - if not
 deadlocks.
 
+1.6.4
+-----
+
+Fix asynchronous control transfers.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
