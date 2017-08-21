@@ -105,6 +105,7 @@ class AwesomeDeviceHoarderBase(object):
             different key events when the same button is pressed on different
             devices).
             Returns whether this device should be ignored.
+            Cannot call synchronous API.
         """
         self.context = usb1.USBContext()
         if not self.context.hasCapability(usb1.CAP_HAS_HOTPLUG):

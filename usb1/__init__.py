@@ -2005,6 +2005,7 @@ class USBDevice(object):
     def getSupportedLanguageList(self):
         """
         Get the list of language ids device has string descriptors for.
+        Note: opens the device temporarily and uses synchronous API.
         """
         return self.open().getSupportedLanguageList()
 
@@ -2019,7 +2020,7 @@ class USBDevice(object):
     def getManufacturer(self):
         """
         Get device's manufaturer name.
-        Note: opens the device temporarily.
+        Note: opens the device temporarily and uses synchronous API.
         """
         return self._getASCIIStringDescriptor(
             self.device_descriptor.iManufacturer)
@@ -2027,14 +2028,14 @@ class USBDevice(object):
     def getProduct(self):
         """
         Get device's product name.
-        Note: opens the device temporarily.
+        Note: opens the device temporarily and uses synchronous API.
         """
         return self._getASCIIStringDescriptor(self.device_descriptor.iProduct)
 
     def getSerialNumber(self):
         """
         Get device's serial number.
-        Note: opens the device temporarily.
+        Note: opens the device temporarily and uses synchronous API.
         """
         return self._getASCIIStringDescriptor(
             self.device_descriptor.iSerialNumber)
@@ -2514,6 +2515,9 @@ class USBContext(object):
             HOTPLUG_EVENT_DEVICE_LEFT
         Callback must return whether it must be unregistered (any true value
         to be unregistered, any false value to be kept registered).
+
+        Note: given callback will be invoked during event handling, meaning
+        it cannot call any synchronous libusb function.
         """
         def wrapped_callback(context_p, device_p, event, _):
             assert addressof(context_p.contents) == addressof(

@@ -24,6 +24,7 @@ def hotplug_callback(context, device, event):
         }[event],
         device,
     )
+    # Note: cannot call synchronous API in this function.
 
 def main():
     with usb1.USBContext() as context:
