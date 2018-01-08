@@ -16,6 +16,11 @@
 from setuptools import setup
 from codecs import open
 import os
+import sys
+
+extra = {}
+if sys.version_info >= (3, ):
+    extra['use_2to3'] = True
 
 long_description = open(
     os.path.join(os.path.dirname(__file__), 'README.rst'),
@@ -54,4 +59,5 @@ setup(
         'Topic :: Software Development :: Libraries',
         'Topic :: System :: Hardware :: Hardware Drivers',
     ],
+    **extra
 )
