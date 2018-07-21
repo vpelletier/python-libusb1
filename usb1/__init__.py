@@ -2086,7 +2086,7 @@ class USBContext(object):
     __removed_cb = None
     __poll_cb_user_data = None
     __libusb_set_pollfd_notifiers = libusb1.libusb_set_pollfd_notifiers
-    __null_pointer = POINTER(None)
+    __null_pointer = c_void_p()
     __KeyError = KeyError
     __auto_open = True
 
@@ -2385,7 +2385,9 @@ class USBContext(object):
         self.__removed_cb = removed_cb
         self.__poll_cb_user_data = user_data
         self.__libusb_set_pollfd_notifiers(
-            self.__context_p, added_cb, removed_cb, user_data)
+            self.__context_p,
+            cast(added_cb, libusb1.libusb_pollfd_added_cb_p),
+            cast(removed_cb, libusb1.libusb_pollfd_removed_cb_p), user_data)
 
     @_validContext
     def getNextTimeout(self):
