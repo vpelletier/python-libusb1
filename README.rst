@@ -399,6 +399,19 @@ deadlocks.
 
 Fix asynchronous control transfers.
 
+1.6.5
+-----
+
+Document hotplug handler limitations.
+
+Run 2to3 when running setup.py with python3, and reduce differences with
+python3.
+
+Properly cast libusb_set_pollfd_notifiers arguments.
+Fix null pointer value: POINTER(None) is the type of a pointer which may be a
+null pointer, which falls back to c_void_p. But c_void_p() is an actual null
+pointer.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
