@@ -2025,12 +2025,28 @@ class USBDevice(object):
         return self._getASCIIStringDescriptor(
             self.device_descriptor.iManufacturer)
 
+    def getManufacturerDescriptor(self):
+        """
+        Get the string index of device's manufacturer.
+        You can pass this value to USBHandle.getASCIIStringDescriptor to get
+        the actual manufacturer string.
+        """
+        return self.device_descriptor.iManufacturer
+
     def getProduct(self):
         """
         Get device's product name.
         Note: opens the device temporarily and uses synchronous API.
         """
         return self._getASCIIStringDescriptor(self.device_descriptor.iProduct)
+
+    def getProductDescriptor(self):
+        """
+        Get the string index of device's product name.
+        You can pass this value to USBHandle.getASCIIStringDescriptor to get
+        the actual product name string.
+        """
+        return self.device_descriptor.iProduct
 
     def getSerialNumber(self):
         """
@@ -2039,6 +2055,14 @@ class USBDevice(object):
         """
         return self._getASCIIStringDescriptor(
             self.device_descriptor.iSerialNumber)
+
+    def getSerialNumberDescriptor(self):
+        """
+        Get the string index of device's serial number.
+        You can pass this value to USBHandle.getASCIIStringDescriptor to get
+        the actual serial number string.
+        """
+        return self.device_descriptor.iSerialNumber
 
     def getNumConfigurations(self):
         """
