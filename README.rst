@@ -412,6 +412,11 @@ Fix null pointer value: POINTER(None) is the type of a pointer which may be a
 null pointer, which falls back to c_void_p. But c_void_p() is an actual null
 pointer.
 
+1.6.6
+-----
+
+Expose bare string descriptors (aka string indexes) on USBDevice.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
