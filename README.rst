@@ -18,7 +18,7 @@ Dependencies
 - CPython_ 2.7+ or 3.4+, pypy_ 2.0+. Older versions may work, but are not
   recommended as there is no automated regression testing set up for them.
 
-- libusb-1.0_ or libusbx_
+- libusb-1.0_
 
 Supported OSes
 ==============
@@ -437,8 +437,6 @@ shortcuts for these on USBDevice.
 
 .. _Homebrew: http://brew.sh/
 
-.. _libusb-1.0: http://www.libusb.org/wiki/libusb-1.0
+.. _libusb-1.0: https://github.com/libusb/libusb/wiki/
 
-.. _libusbx: http://libusb.info/
-
-.. _libusb1.0 documentation: http://libusb.org/static/api-1.0/
+.. _libusb1.0 documentation: http://libusb.sourceforge.net/api-1.0/
