@@ -1380,6 +1380,8 @@ class USBDeviceHandle(object):
         Return value is a unicode string.
         Return None if there is no such descriptor on device.
         """
+        if descriptor == 0:
+            return None
         descriptor_string = bytearray(STRING_LENGTH)
         try:
             received = mayRaiseUSBError(libusb1.libusb_get_string_descriptor(
@@ -1405,6 +1407,8 @@ class USBDeviceHandle(object):
         Return value is a unicode string.
         Return None if there is no such descriptor on device.
         """
+        if descriptor == 0:
+            return None
         descriptor_string = bytearray(STRING_LENGTH)
         try:
             received = mayRaiseUSBError(libusb1.libusb_get_string_descriptor_ascii(

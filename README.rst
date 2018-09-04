@@ -417,6 +417,11 @@ pointer.
 
 Expose bare string descriptors (aka string indexes) on USBDevice.
 
+1.6.7
+-----
+
+get{,ASCII}StringDescriptor now return None for descriptor 0 instead of raising
+UnicodeDecodeError. Use getSupportedLanguageList to access it.
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
