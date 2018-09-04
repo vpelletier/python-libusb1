@@ -422,6 +422,9 @@ Expose bare string descriptors (aka string indexes) on USBDevice.
 
 get{,ASCII}StringDescriptor now return None for descriptor 0 instead of raising
 UnicodeDecodeError. Use getSupportedLanguageList to access it.
+Moved getManufacturer, getProduct and getSerialNumber to USBDeviceHandle. Kept
+shortcuts for these on USBDevice.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/

@@ -1239,8 +1239,8 @@ class USBDeviceHandle(object):
 
     def getDevice(self):
         """
-        Get an USBDevice instance for the device accessed through this handle.
-        Useful for example to query its configurations.
+        Get an USBDevice instance for the device accessed through this handle,
+        to access to the descriptors available in OS cache.
         """
         return self.__device
 
@@ -1260,6 +1260,30 @@ class USBDeviceHandle(object):
         """
         mayRaiseUSBError(
             libusb1.libusb_set_configuration(self.__handle, configuration),
+        )
+
+    def getManufacturer(self):
+        """
+        Get device's manufaturer name.
+        """
+        return self.getASCIIStringDescriptor(
+            self.__device.device_descriptor.iManufacturer,
+        )
+
+    def getProduct(self):
+        """
+        Get device's product name.
+        """
+        return self.getASCIIStringDescriptor(
+            self.__device.device_descriptor.iProduct,
+        )
+
+    def getSerialNumber(self):
+        """
+        Get device's serial number.
+        """
+        return self.getASCIIStringDescriptor(
+            self.__device.device_descriptor.iSerialNumber,
         )
 
     def claimInterface(self, interface):
@@ -1787,6 +1811,10 @@ class USBEndpoint(object):
 class USBDevice(object):
     """
     Represents a USB device.
+
+    Exposes USB descriptors which are available from OS without needing to get
+    a USBDeviceHandle: device descriptor, configuration descriptors, interface
+    descriptors, setting descritptors, endpoint descriptors.
     """
 
     __configuration_descriptor_list = ()
@@ -2013,21 +2041,13 @@ class USBDevice(object):
         """
         return self.open().getSupportedLanguageList()
 
-    def _getStringDescriptor(self, descriptor, lang_id):
-        if descriptor:
-            return self.open().getStringDescriptor(descriptor, lang_id)
-
-    def _getASCIIStringDescriptor(self, descriptor):
-        if descriptor:
-            return self.open().getASCIIStringDescriptor(descriptor)
-
     def getManufacturer(self):
         """
         Get device's manufaturer name.
-        Note: opens the device temporarily and uses synchronous API.
+
+        Shortcut for .open().getManufacturer() .
         """
-        return self._getASCIIStringDescriptor(
-            self.device_descriptor.iManufacturer)
+        return self.open().getManufacturer()
 
     def getManufacturerDescriptor(self):
         """
@@ -2040,9 +2060,10 @@ class USBDevice(object):
     def getProduct(self):
         """
         Get device's product name.
-        Note: opens the device temporarily and uses synchronous API.
+
+        Shortcut for .open().getProduct() .
         """
-        return self._getASCIIStringDescriptor(self.device_descriptor.iProduct)
+        return self.open().getProduct()
 
     def getProductDescriptor(self):
         """
@@ -2055,10 +2076,10 @@ class USBDevice(object):
     def getSerialNumber(self):
         """
         Get device's serial number.
-        Note: opens the device temporarily and uses synchronous API.
+
+        Shortcut for .open().getSerialNumber() .
         """
-        return self._getASCIIStringDescriptor(
-            self.device_descriptor.iSerialNumber)
+        return self.open().getSerialNumber()
 
     def getSerialNumberDescriptor(self):
         """
