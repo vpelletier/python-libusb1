@@ -1578,7 +1578,7 @@ class USBDeviceHandle(object):
         Synchronous interrupt write.
         timeout: in milliseconds, how long to wait for data. Set to 0 to
           disable.
-        See interruptRead for other parameters description.
+        See interruptWrite for other parameters description.
 
         To avoid memory copies, use an object implementing the writeable buffer
         interface (ex: bytearray) for the "data" parameter.
