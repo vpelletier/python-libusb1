@@ -425,6 +425,16 @@ UnicodeDecodeError. Use getSupportedLanguageList to access it.
 Moved getManufacturer, getProduct and getSerialNumber to USBDeviceHandle. Kept
 shortcuts for these on USBDevice.
 
+1.7
+---
+
+get{,ASCII}StringDescriptor now return None for descriptor 0, use
+getSupportedLanguageList to get its content.
+getManufacturer, getProduct and getSerialNumber are now on USBDeviceHandle,
+with backward-compatibility aliases on their original location.
+Synchronous bulk and interrupt API exposes number of bytes sent and received
+bytes even when a timeout occurs.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
