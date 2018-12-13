@@ -1504,9 +1504,13 @@ class USBDeviceHandle(object):
 
     def _bulkTransfer(self, endpoint, data, length, timeout):
         transferred = c_int()
-        mayRaiseUSBError(libusb1.libusb_bulk_transfer(
-            self.__handle, endpoint, data, length, byref(transferred), timeout,
-        ))
+        try:
+            mayRaiseUSBError(libusb1.libusb_bulk_transfer(
+                self.__handle, endpoint, data, length, byref(transferred), timeout,
+            ))
+        except USBErrorTimeout as exception:
+            exception.transferred = transferred.value
+            raise
         return transferred.value
 
     def bulkWrite(self, endpoint, data, timeout=0):
@@ -1521,6 +1525,10 @@ class USBDeviceHandle(object):
         interface (ex: bytearray) for the "data" parameter.
 
         Returns the number of bytes actually sent.
+
+        May raise an exception from the USBError family. USBErrorTimeout
+        exception has a "transferred" property giving the number of bytes sent
+        up to the timeout.
         """
         # pylint: disable=undefined-variable
         endpoint = (endpoint & ~ENDPOINT_DIR_MASK) | ENDPOINT_OUT
@@ -1539,19 +1547,36 @@ class USBDeviceHandle(object):
         interface (ex: bytearray) for the "data" parameter.
 
         Returns received data.
+
+        May raise an exception from the USBError family. USBErrorTimeout
+        exception has a "received" property giving the bytes received up to the
+        timeout.
         """
         # pylint: disable=undefined-variable
         endpoint = (endpoint & ~ENDPOINT_DIR_MASK) | ENDPOINT_IN
         # pylint: enable=undefined-variable
         data, data_buffer = create_binary_buffer(length)
-        transferred = self._bulkTransfer(endpoint, data, length, timeout)
+        try:
+            transferred = self._bulkTransfer(endpoint, data, length, timeout)
+        except USBErrorTimeout as exception:
+            exception.received = data_buffer[:exception.transferred]
+            raise
         return data_buffer[:transferred]
 
     def _interruptTransfer(self, endpoint, data, length, timeout):
         transferred = c_int()
-        mayRaiseUSBError(libusb1.libusb_interrupt_transfer(
-            self.__handle, endpoint, data, length, byref(transferred), timeout,
-        ))
+        try:
+            mayRaiseUSBError(libusb1.libusb_interrupt_transfer(
+                self.__handle,
+                endpoint,
+                data,
+                length,
+                byref(transferred),
+                timeout,
+            ))
+        except USBErrorTimeout as exception:
+            exception.transferred = transferred.value
+            raise
         return transferred.value
 
     def interruptWrite(self, endpoint, data, timeout=0):
@@ -1566,6 +1591,10 @@ class USBDeviceHandle(object):
         interface (ex: bytearray) for the "data" parameter.
 
         Returns the number of bytes actually sent.
+
+        May raise an exception from the USBError family. USBErrorTimeout
+        exception has a "transferred" property giving the number of bytes sent
+        up to the timeout.
         """
         # pylint: disable=undefined-variable
         endpoint = (endpoint & ~ENDPOINT_DIR_MASK) | ENDPOINT_OUT
@@ -1584,12 +1613,25 @@ class USBDeviceHandle(object):
         interface (ex: bytearray) for the "data" parameter.
 
         Returns received data.
+
+        May raise an exception from the USBError family. USBErrorTimeout
+        exception has a "received" property giving the bytes received up to the
+        timeout.
         """
         # pylint: disable=undefined-variable
         endpoint = (endpoint & ~ENDPOINT_DIR_MASK) | ENDPOINT_IN
         # pylint: enable=undefined-variable
         data, data_buffer = create_binary_buffer(length)
-        transferred = self._interruptTransfer(endpoint, data, length, timeout)
+        try:
+            transferred = self._interruptTransfer(
+                endpoint,
+                data,
+                length,
+                timeout,
+            )
+        except USBErrorTimeout as exception:
+            exception.received = data_buffer[:exception.transferred]
+            raise
         return data_buffer[:transferred]
 
     def getTransfer(self, iso_packets=0):
