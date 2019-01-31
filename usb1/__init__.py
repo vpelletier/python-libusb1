@@ -2355,7 +2355,8 @@ class USBContext(object):
 
     def getByVendorIDAndProductID(
             self, vendor_id, product_id,
-            skip_on_access_error=False, skip_on_error=False):
+            skip_on_access_error=False, skip_on_error=False
+            serialNumber=None):
         """
         Get the first USB device matching given vendor and product ids.
         Returns an USBDevice instance, or None if no present device match.
@@ -2363,17 +2364,22 @@ class USBContext(object):
             (see getDeviceList)
         skip_on_access_error (bool)
             (see getDeviceList)
+        serialNumber (string)
+            return if serial numbers match
         """
         for device in self.getDeviceIterator(
                 skip_on_error=skip_on_access_error or skip_on_error,
             ):
             if device.getVendorID() == vendor_id and \
                     device.getProductID() == product_id:
-                return device
+                if serialNumber == None or \
+                   serialNumber == device.getSerialNumber()
+                    return device
 
     def openByVendorIDAndProductID(
             self, vendor_id, product_id,
-            skip_on_access_error=False, skip_on_error=False):
+            skip_on_access_error=False, skip_on_error=False,
+            serialNumber=None):
         """
         Get the first USB device matching given vendor and product ids.
         Returns an USBDeviceHandle instance, or None if no present device
@@ -2382,11 +2388,14 @@ class USBContext(object):
             (see getDeviceList)
         skip_on_access_error (bool)
             (see getDeviceList)
+        serialNumber (string)
+            return if serial numbers match
         """
         result = self.getByVendorIDAndProductID(
             vendor_id, product_id,
             skip_on_access_error=skip_on_access_error,
-            skip_on_error=skip_on_error)
+            skip_on_error=skip_on_error,
+            serialNumber=serialNumber)
         if result is not None:
             return result.open()
 
