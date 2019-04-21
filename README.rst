@@ -94,14 +94,14 @@ Asynchronous I/O, with more error handling:
             # This example does not resubmit transfers on errors. You may want
             # to resubmit in some cases (timeout, ...).
             return
-        data = handle.getBuffer()[:transfer.getActualLength()]
+        data = transfer.getBuffer()[:transfer.getActualLength()]
         # Process data...
         # Resubmit transfer once data is processed.
         transfer.submit()
 
     # Build a list of transfer objects and submit them to prime the pump.
     transfer_list = []
-    for _ in xrange(TRANSFER_COUNT):
+    for _ in range(TRANSFER_COUNT):
         transfer = handle.getTransfer()
         transfer.setBulk(
             usb1.ENDPOINT_IN | ENDPOINT,
@@ -111,7 +111,7 @@ Asynchronous I/O, with more error handling:
         transfer.submit()
         transfer_list.append(transfer)
     # Loop as long as there is at least one submitted transfer.
-    while any(x.isSubmitted() for x in reader_list):
+    while any(x.isSubmitted() for x in transfer_list):
         try:
             context.handleEvents()
         except usb1.USBErrorInterrupted:
