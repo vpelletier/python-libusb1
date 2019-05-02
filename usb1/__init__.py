@@ -314,8 +314,10 @@ class USBTransfer(object):
     # pylint: enable=undefined-variable
     __transfer = None
     __initialized = False
-    __submitted = False
+    __submitted_dict = {}
     __callback = None
+    # Just to silence pylint watnings, this attribute gets overridden after
+    # class definition.
     __ctypesCallbackWrapper = None
     __doomed = False
     __user_data = None
@@ -342,23 +344,19 @@ class USBTransfer(object):
             raise USBErrorNoMem
             # pylint: enable=undefined-variable
         self.__transfer = result
-        self.__ctypesCallbackWrapper = libusb1.libusb_transfer_cb_fn_p(
-            self.__callbackWrapper)
 
     def close(self):
         """
         Break reference cycles to allow instance to be garbage-collected.
         Raises if called on a submitted transfer.
         """
-        if self.__submitted:
+        if self.isSubmitted():
             raise ValueError('Cannot close a submitted transfer')
         self.doom()
         self.__initialized = False
         # Break possible external reference cycles
         self.__callback = None
         self.__user_data = None
-        # Break libusb_transfer reference cycles
-        self.__ctypesCallbackWrapper = None
         # For some reason, overwriting callback is not enough to remove this
         # reference cycle - though sometimes it works:
         #   self -> self.__dict__ -> libusb_transfer -> dict[x] -> dict[x] ->
@@ -395,20 +393,19 @@ class USBTransfer(object):
                 # Transfer was not submitted, we can free it.
                 self.__libusb_free_transfer(self.__transfer)
 
-    # pylint: disable=unused-argument
-    def __callbackWrapper(self, transfer_p):
+    @classmethod
+    def __callbackWrapper(cls, transfer_p):
         """
         Makes it possible for user-provided callback to alter transfer when
         fired (ie, mark transfer as not submitted upon call).
         """
-        self.__submitted = False
+        self = cls.__submitted_dict.pop(addressof(transfer_p.contents))
         self.__after_completion(self)
         callback = self.__callback
         if callback is not None:
             callback(self)
         if self.__doomed:
             self.close()
-    # pylint: enable=unused-argument
 
     def setCallback(self, callback):
         """
@@ -443,7 +440,7 @@ class USBTransfer(object):
         timeout
             Transfer timeout in milliseconds. 0 to disable.
         """
-        if self.__submitted:
+        if self.isSubmitted():
             raise ValueError('Cannot alter a submitted transfer')
         if self.__doomed:
             raise DoomedTransferError('Cannot reuse a doomed transfer')
@@ -497,7 +494,7 @@ class USBTransfer(object):
         timeout
             Transfer timeout in milliseconds. 0 to disable.
         """
-        if self.__submitted:
+        if self.isSubmitted():
             raise ValueError('Cannot alter a submitted transfer')
         if self.__doomed:
             raise DoomedTransferError('Cannot reuse a doomed transfer')
@@ -535,7 +532,7 @@ class USBTransfer(object):
         timeout
             Transfer timeout in milliseconds. 0 to disable.
         """
-        if self.__submitted:
+        if self.isSubmitted():
             raise ValueError('Cannot alter a submitted transfer')
         if self.__doomed:
             raise DoomedTransferError('Cannot reuse a doomed transfer')
@@ -577,7 +574,7 @@ class USBTransfer(object):
             will be divided evenly among available transfers if possible, and
             raise ValueError otherwise.
         """
-        if self.__submitted:
+        if self.isSubmitted():
             raise ValueError('Cannot alter a submitted transfer')
         num_iso_packets = self.__num_iso_packets
         if num_iso_packets == 0:
@@ -771,7 +768,7 @@ class USBTransfer(object):
         setIsochronous).
         Note: disallowed on control transfers (use setControl).
         """
-        if self.__submitted:
+        if self.isSubmitted():
             raise ValueError('Cannot alter a submitted transfer')
         transfer = self.__transfer.contents
         # pylint: disable=undefined-variable
@@ -798,13 +795,15 @@ class USBTransfer(object):
         """
         Tells if this transfer is submitted and still pending.
         """
-        return self.__submitted
+        return self.__transfer is not None and addressof(
+            self.__transfer.contents,
+        ) in self.__submitted_dict
 
     def submit(self):
         """
         Submit transfer for asynchronous handling.
         """
-        if self.__submitted:
+        if self.isSubmitted():
             raise ValueError('Cannot submit a submitted transfer')
         if not self.__initialized:
             raise ValueError(
@@ -813,11 +812,13 @@ class USBTransfer(object):
         if self.__doomed:
             raise DoomedTransferError('Cannot submit doomed transfer')
         self.__before_submit(self)
-        self.__submitted = True
-        result = libusb1.libusb_submit_transfer(self.__transfer)
+        transfer = self.__transfer
+        assert transfer is not None
+        self.__submitted_dict[addressof(transfer.contents)] = self
+        result = libusb1.libusb_submit_transfer(transfer)
         if result:
             self.__after_completion(self)
-            self.__submitted = False
+            self.__submitted_dict.pop(addressof(transfer.contents))
             raiseUSBError(result)
 
     def cancel(self):
@@ -826,12 +827,20 @@ class USBTransfer(object):
         Note: cancellation happens asynchronously, so you must wait for
         TRANSFER_CANCELLED.
         """
-        if not self.__submitted:
+        if not self.isSubmitted():
             # XXX: Workaround for a bug reported on libusb 1.0.8: calling
             # libusb_cancel_transfer on a non-submitted transfer might
             # trigger a segfault.
             raise self.__USBErrorNotFound
         self.__mayRaiseUSBError(self.__libusb_cancel_transfer(self.__transfer))
+
+# XXX: This is very unsightly, but I do not see another way of declaring within
+# class body both the class method and its ctypes function pointer.
+# pylint: disable=protected-access,no-member
+USBTransfer._USBTransfer__ctypesCallbackWrapper = libusb1.libusb_transfer_cb_fn_p(
+    USBTransfer._USBTransfer__callbackWrapper,
+)
+# pylint: enable=protected-access,no-member
 
 class USBTransferHelper(object):
     """
