@@ -5,3 +5,5 @@ include examples/README
 include examples/*.py
 include testUSB1.py
 include stdeb.cfg
+include versioneer.py
+include usb1/_version.py
