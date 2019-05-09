@@ -435,6 +435,13 @@ with backward-compatibility aliases on their original location.
 Synchronous bulk and interrupt API exposes number of bytes sent and received
 bytes even when a timeout occurs.
 
+1.7.1
+-----
+
+usb1.__version__ is now present, managed by versioneer.
+Fix an occasional segfault when closing a transfer from inside its callback
+function.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
