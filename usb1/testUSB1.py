@@ -341,5 +341,9 @@ class USBTransferTests(unittest.TestCase):
         transfer._USBTransfer__mayRaiseUSBError(0)
         self.assertRaises(usb1.USBErrorIO, transfer._USBTransfer__mayRaiseUSBError, usb1.ERROR_IO)
 
+    def testHasVersion(self):
+        # Property is present and non-empty
+        self.assertTrue(usb1.__version__)
+
 if __name__ == '__main__':
     unittest.main()
