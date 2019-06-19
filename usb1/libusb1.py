@@ -1103,7 +1103,7 @@ def get_extra(descriptor):
     result = []
     extra_length = descriptor.extra_length
     if extra_length:
-        extra = buffer_at(descriptor.extra.value, extra_length)
+        extra = buffer_at(descriptor.extra, extra_length)
         append = result.append
         while extra:
             length = _string_item_to_int(extra[0])

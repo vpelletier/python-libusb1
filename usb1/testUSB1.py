@@ -244,8 +244,7 @@ class USBTransferTests(unittest.TestCase):
             self.assertTrue(exception_list, exception_list)
             self.assertTrue(poller.is_alive())
 
-    @staticmethod
-    def testDescriptors():
+    def _testDescriptors(self, get_extra=False):
         """
         Test descriptor walk.
         Needs any usb device, which won't be opened.
@@ -253,6 +252,7 @@ class USBTransferTests(unittest.TestCase):
         with USBContext() as context:
             device_list = context.getDeviceList(skip_on_error=True)
             found = False
+            seen_extra = False
             for device in device_list:
                 device.getBusNumber()
                 device.getPortNumber()
@@ -262,12 +262,26 @@ class USBTransferTests(unittest.TestCase):
                     for endpoint in settings:
                         pass
                 for configuration in device.iterConfigurations():
+                    if get_extra and len(configuration.getExtra()) > 0:
+                        seen_extra = True
                     for interface in configuration:
                         for settings in interface:
+                            if get_extra and len(settings.getExtra()) > 0:
+                                seen_extra = True
                             for endpoint in settings:
+                                if get_extra and len(endpoint.getExtra()) > 0:
+                                    seen_extra = True
                                 found = True
             if not found:
                 raise unittest.SkipTest('descriptor walk test did not complete')
+            if get_extra and not seen_extra:
+                raise unittest.SkipTest('did not see any extra descriptors')
+
+    def testDescriptors(self):
+        self._testDescriptors()
+
+    def testDescriptorsWithExtra(self):
+        self._testDescriptors(get_extra=True)
 
     def testDefaultEnumScope(self):
         """
