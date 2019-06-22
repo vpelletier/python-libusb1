@@ -956,7 +956,7 @@ else:
 
 def libusb_control_transfer_get_data(transfer_p):
     transfer = transfer_p.contents
-    return buffer_at(transfer.buffer.value, transfer.length)[
+    return buffer_at(transfer.buffer, transfer.length)[
         LIBUSB_CONTROL_SETUP_SIZE:]
 
 def libusb_control_transfer_get_setup(transfer_p):
