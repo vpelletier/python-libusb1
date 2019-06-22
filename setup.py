@@ -63,4 +63,5 @@ setup(
         'Topic :: System :: Hardware :: Hardware Drivers',
     ],
     use_2to3=sys.version_info >= (3, ),
+    test_suite='usb1.testUSB1',
 )
