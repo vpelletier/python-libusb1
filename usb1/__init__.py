@@ -1657,7 +1657,7 @@ class USBDeviceHandle(object):
         return result
 
 class USBConfiguration(object):
-    def __init__(self, context, config):
+    def __init__(self, context, config, device_speed):
         """
         You should not instanciate this class directly.
         Call USBDevice methods to get instances of this class.
@@ -1666,6 +1666,7 @@ class USBConfiguration(object):
             raise TypeError('Unexpected descriptor type.')
         self.__config = config
         self.__context = context
+        self.__device_speed = device_speed
 
     def getNumInterfaces(self):
         return self.__config.bNumInterfaces
@@ -1683,11 +1684,13 @@ class USBConfiguration(object):
 
     def getMaxPower(self):
         """
-        Returns device's power consumption in mW.
-        Beware of unit: USB descriptor uses 2mW increments, this method
-        converts it to mW units.
+        Returns device's power consumption in mA.
+
+        USB descriptor is expressed in units of 2 mA when the device is operating in high-speed mode
+        and in units of 8 mA when the device is operating in super-speed mode. This function scales
+        the descriptor value appropriately.
         """
-        return self.__config.MaxPower * 2
+        return self.__config.MaxPower * (8 if self.__device_speed == SPEED_SUPER else 2)
 
     def getExtra(self):
         """
@@ -1945,7 +1948,7 @@ class USBDevice(object):
 
     def __getitem__(self, index):
         return USBConfiguration(
-            self.__context, self.__configuration_descriptor_list[index])
+            self.__context, self.__configuration_descriptor_list[index], self.getDeviceSpeed())
 
     def __key(self):
         return (
@@ -1970,7 +1973,7 @@ class USBDevice(object):
     def iterConfigurations(self):
         context = self.__context
         for config in self.__configuration_descriptor_list:
-            yield USBConfiguration(context, config)
+            yield USBConfiguration(context, config, self.getDeviceSpeed())
 
     # BBB
     iterConfiguations = iterConfigurations
