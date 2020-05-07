@@ -442,6 +442,12 @@ usb1.__version__ is now present, managed by versioneer.
 Fix an occasional segfault when closing a transfer from inside its callback
 function.
 
+1.8
+---
+
+Fix getExtra and libusb1.libusb_control_transfer_get_data .
+Fix getMaxPower unit on SuperSpeed devices.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
