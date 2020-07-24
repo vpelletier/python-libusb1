@@ -227,7 +227,7 @@ def main():
     )
     try:
         mode()
-    except NoHotplugSupport, exc:
+    except NoHotplugSupport as exc:
         print(exc.value)
         sys.exit(1)
     except (KeyboardInterrupt, SystemExit):
