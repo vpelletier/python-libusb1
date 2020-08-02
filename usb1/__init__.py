@@ -127,15 +127,10 @@ def mayRaiseUSBError(
         __raiseUSBError(value)
     return value
 
-try:
-    namedtuple = collections.namedtuple
-except AttributeError:
-    Version = tuple
-else:
-    Version = namedtuple(
-        'Version',
-        ['major', 'minor', 'micro', 'nano', 'rc', 'describe'],
-    )
+Version = collections.namedtuple(
+    'Version',
+    ['major', 'minor', 'micro', 'nano', 'rc', 'describe'],
+)
 
 if sys.version_info[0] == 3:
     BYTE = bytes([0])
