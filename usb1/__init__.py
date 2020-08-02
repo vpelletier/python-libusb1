@@ -1166,7 +1166,6 @@ class USBDeviceHandle(object):
     # pylint: enable=undefined-variable
     __set = set
     __KeyError = KeyError
-    __sys = sys
 
     def __init__(self, context, handle, device):
         """
