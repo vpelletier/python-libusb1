@@ -16,7 +16,6 @@
 from setuptools import setup
 from codecs import open
 import os
-import sys
 import versioneer
 
 long_description = open(
@@ -53,6 +52,6 @@ setup(
         'Topic :: Software Development :: Libraries',
         'Topic :: System :: Hardware :: Hardware Drivers',
     ],
-    use_2to3=sys.version_info >= (3, ),
+    use_2to3=True,
     test_suite='usb1.testUSB1',
 )
