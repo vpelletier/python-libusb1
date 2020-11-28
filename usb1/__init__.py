@@ -48,7 +48,7 @@ subclassing USBError.
 from __future__ import division, absolute_import
 from ctypes import byref, c_int, sizeof, POINTER, \
     cast, c_uint8, c_uint16, c_ubyte, c_void_p, cdll, addressof, \
-    c_char, pythonapi
+    c_char
 from ctypes.util import find_library
 import sys
 import threading
@@ -204,8 +204,6 @@ else:
 # pylint: disable=undefined-variable
 CONTROL_SETUP = BYTE * CONTROL_SETUP_SIZE
 # pylint: enable=undefined-variable
-
-_free = pythonapi.free
 
 try:
     WeakSet = weakref.WeakSet
@@ -2411,7 +2409,7 @@ class USBContext(object):
                 ))
                 fd_index += 1
         finally:
-            _free(pollfd_p_p)
+            libusb1.libusb_free_pollfds(pollfd_p_p)
         return result
 
     @_validContext
