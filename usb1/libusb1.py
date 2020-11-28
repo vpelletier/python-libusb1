@@ -30,7 +30,7 @@ from ctypes import (
     c_short, c_int, c_uint, c_size_t, c_long,
     c_uint8, c_uint16, c_uint32,
     c_void_p, c_char_p, py_object, pointer, c_char,
-    c_ssize_t,
+    c_ssize_t, pythonapi
 )
 import ctypes.util
 import platform
@@ -1249,6 +1249,16 @@ libusb_set_pollfd_notifiers.argtypes = [libusb_context_p,
                                         libusb_pollfd_added_cb_p,
                                         libusb_pollfd_removed_cb_p, py_object]
 libusb_set_pollfd_notifiers.restype = None
+try:
+    #void libusb_get_pollfds(const struct libusb_pollfd **);
+    libusb_free_pollfds = libusb.libusb_free_pollfds
+    libusb_free_pollfds.argtypes = [libusb_pollfd_p_p]
+    libusb_free_pollfds.restype = None
+except AttributeError:
+    # Not a safe replacement in general, but the versions of libusb that lack
+    # libusb_free_pollfds() only provide that function on *nix, where
+    # Python's free() and libusb's free() are ~always the same anyways.
+    libusb_free_pollfds = pythonapi.free
 
 #typedef int libusb_hotplug_callback_handle;
 libusb_hotplug_callback_handle = c_int
