@@ -147,8 +147,14 @@ def _loadLibrary():
     else:
         dll_loader = ctypes.CDLL
         suffix = system == 'Darwin' and '.dylib' or '.so'
+    filename = 'libusb-1.0' + suffix
+    # If this is a binary wheel, use the integrated libusb unconditionally.
+    # To use the libusb from the Python installation or the OS, install from sdist:
+    #   > pip install --no-binary :all: libusb1
+    if os.path.exists(os.path.join(os.path.dirname(__file__), filename)):
+        filename = os.path.join(os.path.dirname(__file__), filename)
     try:
-        return dll_loader('libusb-1.0' + suffix, use_errno=True, use_last_error=True)
+        return dll_loader(filename, use_errno=True, use_last_error=True)
     except OSError:
         libusb_path = None
         base_name = 'usb-1.0'
