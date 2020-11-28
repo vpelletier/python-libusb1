@@ -48,7 +48,7 @@ subclassing USBError.
 from __future__ import division, absolute_import
 from ctypes import byref, c_int, sizeof, POINTER, \
     cast, c_uint8, c_uint16, c_ubyte, c_void_p, cdll, addressof, \
-    c_char
+    c_char, pythonapi
 from ctypes.util import find_library
 import sys
 import threading
@@ -205,14 +205,7 @@ else:
 CONTROL_SETUP = BYTE * CONTROL_SETUP_SIZE
 # pylint: enable=undefined-variable
 
-__libc_name = find_library('c')
-if __libc_name is None:
-    # Of course, will leak memory.
-    # Should we warn user ? How ?
-    _free = lambda x: None
-else:
-    _free = getattr(cdll, __libc_name).free
-del __libc_name
+_free = pythonapi.free
 
 try:
     WeakSet = weakref.WeakSet
