@@ -158,12 +158,8 @@ def _loadLibrary():
     else:
         dll_loader = ctypes.CDLL
         suffix = system == 'Darwin' and '.dylib' or '.so'
-    loader_kw = {}
-    if sys.version_info[:2] >= (2, 6):
-        loader_kw['use_errno'] = True
-        loader_kw['use_last_error'] = True
     try:
-        return dll_loader('libusb-1.0' + suffix, **loader_kw)
+        return dll_loader('libusb-1.0' + suffix, use_errno=True, use_last_error=True)
     except OSError:
         libusb_path = None
         base_name = 'usb-1.0'
@@ -187,7 +183,7 @@ def _loadLibrary():
             libusb_path = ctypes.util.find_library(base_name)
             if libusb_path is None:
                 raise
-        return dll_loader(libusb_path, **loader_kw)
+        return dll_loader(libusb_path, use_errno=True, use_last_error=True)
 
 libusb = _loadLibrary()
 

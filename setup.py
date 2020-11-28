@@ -24,12 +24,6 @@ long_description = open(
     encoding='utf8',
 ).read()
 
-try:
-    next
-except NameError:
-    # "next" builtin missing < 2.6
-    next = lambda x: x.next()
-
 setup(
     name='libusb1',
     description=next(x for x in long_description.splitlines() if x.strip()),

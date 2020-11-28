@@ -59,18 +59,12 @@ import functools
 import contextlib
 import inspect
 from . import libusb1
-if sys.version_info[:2] >= (2, 6):
 # pylint: disable=wrong-import-order,ungrouped-imports
-    if sys.platform == 'win32':
-        from ctypes import get_last_error as get_errno
-    else:
-        from ctypes import get_errno
-# pylint: enable=wrong-import-order,ungrouped-imports
+if sys.platform == 'win32':
+    from ctypes import get_last_error as get_errno
 else:
-    def get_errno():
-        raise NotImplementedError(
-            'Your python version does not support errno/last_error'
-        )
+    from ctypes import get_errno
+# pylint: enable=wrong-import-order,ungrouped-imports
 
 __all__ = [
     'USBContext', 'USBDeviceHandle', 'USBDevice', 'hasCapability',
