@@ -964,7 +964,7 @@ class USBPollerThread(threading.Thread):
             (same as USBPoller.__init__ "poller" parameter)
 
         exc_callback (callable)
-          Called with a libusb_error value as single parameter when event
+          Called with an USBError instance as single parameter when event
           handling fails.
           If not given, an USBError will be raised, interrupting the thread.
         """
@@ -1330,8 +1330,8 @@ class USBDeviceHandle(object):
         Reinitialise current device.
         Attempts to restore current configuration & alt settings.
         If this fails, will result in a device disconnect & reconnect, so you
-        have to close current device and rediscover it (notified by a
-        ERROR_NOT_FOUND error code).
+        have to close current device and rediscover it (notified by an
+        USBErrorNotFound exception).
         """
         mayRaiseUSBError(libusb1.libusb_reset_device(self.__handle))
 
