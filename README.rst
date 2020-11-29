@@ -448,6 +448,18 @@ function.
 Fix getExtra and libusb1.libusb_control_transfer_get_data .
 Fix getMaxPower unit on SuperSpeed devices.
 
+1.8.1
+-----
+
+Release process rework:
+
+- embed libusb1 dll for easier deployment on Windows
+- cryptographically signed releases
+
+Use libusb_free_pollfds whenever available (libusb1>=1.0.20).
+Fix hotplug callback destruction at context teardown.
+Drop remnants of python 2.6 support code.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
