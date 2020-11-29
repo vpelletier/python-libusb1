@@ -6,6 +6,12 @@ python:
 - "3.5"
 - "3.6"
 - "pypy"
+jobs:
+  include:
+    - python: '3.6'
+      install: pip install mypy
+      script: mypy --strict usb1
+      env: LINT=1
 addons:
   apt:
     packages:
