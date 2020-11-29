@@ -35,7 +35,7 @@ except ImportError:
     from HTMLParser import HTMLParser
 
 if os.getenv('I_KNOW_HOW_TO_RELEASE_PYTHON_LIBUSB1') != '1' and any(
-    x in sys.argv for x in ('sdist', 'bdist_wheel', 'upload')
+    x in sys.argv for x in ('sdist', 'upload')
 ):
     print('Use setup.sh to build')
     sys.exit(1)
