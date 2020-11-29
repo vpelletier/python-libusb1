@@ -1889,6 +1889,9 @@ class USBDevice(object):
                     continue
                 mayRaiseUSBError(result)
                 append(config.contents)
+        self.__bus_number = libusb1.libusb_get_bus_number(device_p)
+        self.__port_number = libusb1.libusb_get_port_number(device_p)
+        self.__device_address = libusb1.libusb_get_device_address(device_p)
 
     def __del__(self):
         self.close()
@@ -1931,9 +1934,9 @@ class USBDevice(object):
 
     def __key(self):
         return (
-            id(self.__context), self.getBusNumber(),
-            self.getDeviceAddress(), self.getVendorID(),
-            self.getProductID(),
+            id(self.__context), self.__bus_number,
+            self.__device_address, self.device_descriptor.idVendor,
+            self.device_descriptor.idProduct,
         )
 
     def __hash__(self):
@@ -1967,13 +1970,13 @@ class USBDevice(object):
         """
         Get device's bus number.
         """
-        return libusb1.libusb_get_bus_number(self.device_p)
+        return self.__bus_number
 
     def getPortNumber(self):
         """
         Get device's port number.
         """
-        return libusb1.libusb_get_port_number(self.device_p)
+        return self.__port_number
 
     def getPortNumberList(self):
         """
@@ -1992,7 +1995,7 @@ class USBDevice(object):
         """
         Get device's address on its bus.
         """
-        return libusb1.libusb_get_device_address(self.device_p)
+        return self.__device_address
 
     def getbcdUSB(self):
         """
