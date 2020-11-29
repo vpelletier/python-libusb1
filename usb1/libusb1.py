@@ -30,7 +30,7 @@ from ctypes import (
     c_short, c_int, c_uint, c_size_t, c_long,
     c_uint8, c_uint16, c_uint32,
     c_void_p, c_char_p, py_object, pointer, c_char,
-    c_ssize_t, pythonapi
+    c_ssize_t, CDLL
 )
 import ctypes.util
 import platform
@@ -1264,7 +1264,7 @@ except AttributeError:
     # Not a safe replacement in general, but the versions of libusb that lack
     # libusb_free_pollfds() only provide that function on *nix, where
     # Python's free() and libusb's free() are ~always the same anyways.
-    libusb_free_pollfds = pythonapi.free
+    libusb_free_pollfds = CDLL(None).free
 
 #typedef int libusb_hotplug_callback_handle;
 libusb_hotplug_callback_handle = c_int
