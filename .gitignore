@@ -1,5 +1,6 @@
-test-libusb/
-MANIFEST
-dist/
-build/
+/test-libusb/
+/MANIFEST
+/dist/
+/build/
 *.pyc
+/.eggs/
