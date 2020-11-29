@@ -3,9 +3,9 @@ language: python
 python:
 - "2.7"
 - "3.4"
-- "3.5"
-- "3.6"
+- "3.8"
 - "pypy"
+- "pypy3"
 addons:
   apt:
     packages:
@@ -17,11 +17,13 @@ addons:
 # Note: "doxygen" actually comes from "apt-get build-deps libusb-1.0-0", but
 # there is no direct travis equivalent.
 before_script:
-- ./buildTestLibusb.sh https://github.com/libusb/libusb.git libusb.git master v1.0.6 v1.0.20
+- ./buildTestLibusb.sh https://github.com/libusb/libusb.git libusb.git master v1.0.19 v1.0.22
 install: pip install .
 script: python -m usb1.testUSB1
 env:
 - LD_LIBRARY_PATH=
 - LD_LIBRARY_PATH=test-libusb/build/libusb.git/master/lib
-- LD_LIBRARY_PATH=test-libusb/build/libusb.git/v1.0.6/lib
+# Debian jessie (oldoldstable)
 - LD_LIBRARY_PATH=test-libusb/build/libusb.git/v1.0.19/lib
+# Debian buster (stable)
+- LD_LIBRARY_PATH=test-libusb/build/libusb.git/v1.0.22/lib
