@@ -1029,8 +1029,8 @@ class USBPollerThread(threading.Thread):
                             if poll(getNextTimeout()):
                                 try:
                                     handle_events_locked()
-                                except USBError:
-                                    exceptionHandler(sys.exc_info()[1])
+                                except USBError as exc:
+                                    exceptionHandler(exc)
                     finally:
                         unlock_events()
         finally:
