@@ -18,8 +18,6 @@
 import unittest
 import sys
 import itertools
-import select
-import threading
 import usb1
 import libusb1
 from ctypes import pointer
@@ -42,25 +40,6 @@ class USBContext(usb1.USBContext):
             raise unittest.SkipTest(
                 'usb1.USBContext() fails - no USB bus on system ?'
             )
-
-class PollDetector(object):
-    def __init__(self, *args, **kw):
-        try:
-            poll = select.poll
-        except AttributeError:
-            raise unittest.SkipTest('select.poll missing')
-        self.__poll = poll(*args, **kw)
-        self.__event = threading.Event()
-
-    def poll(self, *args, **kw):
-        self.__event.set()
-        return self.__poll.poll(*args, **kw)
-
-    def wait(self, *args, **kw):
-        self.__event.wait(*args, **kw)
-
-    def __getattr__(self, name):
-        return getattr(self.__poll, name)
 
 class USBTransferTests(unittest.TestCase):
     @staticmethod
@@ -199,50 +178,6 @@ class USBTransferTests(unittest.TestCase):
         transfer.setCallback(callback)
         got_callback = transfer.getCallback()
         self.assertEqual(callback, got_callback)
-
-    def testUSBPollerThreadExit(self):
-        """
-        USBPollerThread must exit by itself when context is destroyed.
-        """
-        with USBContext() as context:
-            poll_detector = PollDetector()
-            try:
-                poller = usb1.USBPollerThread(context, poll_detector)
-            except OSError:
-                raise unittest.SkipTest('libusb without file descriptor events')
-            poller.start()
-            poll_detector.wait(1)
-        poller.join(1)
-        self.assertFalse(poller.is_alive())
-
-    def testUSBPollerThreadException(self):
-        """
-        USBPollerThread exception handling.
-        """
-        class FakeEventPoll(PollDetector):
-            # pylint: disable=method-hidden
-            def poll(self, *args, **kw):
-                self.poll = super(FakeEventPoll, self).poll
-                return ['dummy']
-            # pylint: enable=method-hidden
-        with USBContext() as context:
-            def fakeHandleEventsLocked():
-                raise usb1.USBError(0)
-            context.handleEventsLocked = fakeHandleEventsLocked
-            exception_event = threading.Event()
-            exception_list = []
-            def exceptionHandler(exc):
-                exception_list.append(exc)
-                exception_event.set()
-            try:
-                poller = usb1.USBPollerThread(
-                    context, FakeEventPoll(), exceptionHandler)
-            except OSError:
-                raise unittest.SkipTest('libusb without file descriptor events')
-            poller.start()
-            exception_event.wait(1)
-            self.assertTrue(exception_list, exception_list)
-            self.assertTrue(poller.is_alive())
 
     def _testDescriptors(self, get_extra=False):
         """

@@ -925,111 +925,6 @@ class USBTransferHelper(object):
         # Deprecated: to drop
         return self.__transfer.isSubmitted()
 
-# BBB
-class USBPollerThread(threading.Thread):
-    """
-    Implements libusb1 documentation about threaded, asynchronous
-    applications.
-    In short, instanciate this class once (...per USBContext instance), call
-    start() on the instance, and do whatever you need.
-    This thread will be used to execute transfer completion callbacks, and you
-    are free to use libusb1's synchronous API in another thread, and can forget
-    about libusb1 file descriptors.
-
-    See http://libusb.sourceforge.net/api-1.0/mtasync.html .
-    """
-    _can_run = True
-
-    def __init__(self, context, poller, exc_callback=None):
-        """
-        Create a poller thread for given context.
-        Warning: it will not check if another poller instance was already
-        present for that context, and will replace it.
-
-        poller
-            (same as USBPoller.__init__ "poller" parameter)
-
-        exc_callback (callable)
-          Called with an USBError instance as single parameter when event
-          handling fails.
-          If not given, an USBError will be raised, interrupting the thread.
-        """
-        super(USBPollerThread, self).__init__()
-        warnings.warn(
-            'USBPollerThread causes long stalls when used with poll (it was '
-            'intended for epoll), and is generally misleading. Consider '
-            'calling looping over context.handleEvents() in a thread instead.',
-            DeprecationWarning,
-        )
-        self.daemon = True
-        self.__context = context
-        self.__poller = poller
-        self.__fd_set = set()
-        if exc_callback is not None:
-            self.exceptionHandler = exc_callback
-
-    def stop(self):
-        """
-        Stop & join thread.
-
-        Allows stopping event thread before context gets closed.
-        """
-        self._can_run = False
-        self.join()
-
-    # pylint: disable=method-hidden
-    @staticmethod
-    def exceptionHandler(exc):
-        raise exc
-    # pylint: enable=method-hidden
-
-    def run(self):
-        # We expect quite some spinning in below loop, so move any unneeded
-        # operation out of it.
-        context = self.__context
-        poll = self.__poller.poll
-        try_lock_events = context.tryLockEvents
-        lock_event_waiters = context.lockEventWaiters
-        wait_for_event = context.waitForEvent
-        unlock_event_waiters = context.unlockEventWaiters
-        event_handling_ok = context.eventHandlingOK
-        unlock_events = context.unlockEvents
-        handle_events_locked = context.handleEventsLocked
-        event_handler_active = context.eventHandlerActive
-        getNextTimeout = context.getNextTimeout
-        exceptionHandler = self.exceptionHandler
-        fd_set = self.__fd_set
-        context.setPollFDNotifiers(self._registerFD, self._unregisterFD)
-        for fd, events in context.getPollFDList():
-            self._registerFD(fd, events, None)
-        try:
-            while fd_set and self._can_run:
-                if try_lock_events():
-                    lock_event_waiters()
-                    while event_handler_active():
-                        wait_for_event()
-                    unlock_event_waiters()
-                else:
-                    try:
-                        while event_handling_ok():
-                            if poll(getNextTimeout()):
-                                try:
-                                    handle_events_locked()
-                                except USBError as exc:
-                                    exceptionHandler(exc)
-                    finally:
-                        unlock_events()
-        finally:
-            context.setPollFDNotifiers(None, None)
-
-    def _registerFD(self, fd, events, _):
-        self.__poller.register(fd, events)
-        self.__fd_set.add(fd)
-
-    def _unregisterFD(self, fd, _):
-        self.__fd_set.discard(fd)
-        self.__poller.unregister(fd)
-
 class USBPoller(object):
     """
     Class allowing integration of USB event polling in a file-descriptor
@@ -2506,30 +2401,37 @@ class USBContext(object):
 
     @_validContext
     def tryLockEvents(self):
-        """
-        See libusb_try_lock_events doc.
-        """
+        warnings.warn(
+            'You may not be able to unlock in the event of USBContext exit. '
+            'Consider looping over handleEvents() in a thread.',
+            DeprecationWarning,
+        )
         return libusb1.libusb_try_lock_events(self.__context_p)
 
     @_validContext
     def lockEvents(self):
-        """
-        See libusb_lock_events doc.
-        """
+        warnings.warn(
+            'You may not be able to unlock in the event of USBContext exit. '
+            'Consider looping over handleEvents() in a thread.',
+            DeprecationWarning,
+        )
         libusb1.libusb_lock_events(self.__context_p)
 
     @_validContext
     def lockEventWaiters(self):
-        """
-        See libusb_lock_event_waiters doc.
-        """
+        warnings.warn(
+            'You may not be able to unlock in the event of USBContext exit. '
+            'Consider looping over handleEvents() in a thread.',
+            DeprecationWarning,
+        )
         libusb1.libusb_lock_event_waiters(self.__context_p)
 
     @_validContext
     def waitForEvent(self, tv=0):
-        """
-        See libusb_wait_for_event doc.
-        """
+        warnings.warn(
+            'Consider looping over handleEvents() in a thread.',
+            DeprecationWarning,
+        )
         if tv is None:
             tv = 0
         tv_s = int(tv)
@@ -2538,30 +2440,38 @@ class USBContext(object):
 
     @_validContext
     def unlockEventWaiters(self):
-        """
-        See libusb_unlock_event_waiters doc.
-        """
+        warnings.warn(
+            'This method will lock in the event of USBContext exit, '
+            'preventing libusb lock release. '
+            'Consider looping over handleEvents() in a thread.',
+            DeprecationWarning,
+        )
         libusb1.libusb_unlock_event_waiters(self.__context_p)
 
     @_validContext
     def eventHandlingOK(self):
-        """
-        See libusb_event_handling_ok doc.
-        """
+        warnings.warn(
+            'Consider looping over handleEvents() in a thread.',
+            DeprecationWarning,
+        )
         return libusb1.libusb_event_handling_ok(self.__context_p)
 
     @_validContext
     def unlockEvents(self):
-        """
-        See libusb_unlock_events doc.
-        """
+        warnings.warn(
+            'This method will lock in the event of USBContext exit, '
+            'preventing libusb lock release. '
+            'Consider looping over handleEvents() in a thread.',
+            DeprecationWarning,
+        )
         libusb1.libusb_unlock_events(self.__context_p)
 
     @_validContext
     def handleEventsLocked(self):
-        """
-        See libusb_handle_events_locked doc.
-        """
+        warnings.warn(
+            'Consider looping over handleEvents() in a thread.',
+            DeprecationWarning,
+        )
         # XXX: does tv parameter need to be exposed ?
         mayRaiseUSBError(libusb1.libusb_handle_events_locked(
             self.__context_p, _zero_tv_p,
@@ -2569,9 +2479,10 @@ class USBContext(object):
 
     @_validContext
     def eventHandlerActive(self):
-        """
-        See libusb_event_handler_active doc.
-        """
+        warnings.warn(
+            'Consider looping over handleEvents() in a thread.',
+            DeprecationWarning,
+        )
         return libusb1.libusb_event_handler_active(self.__context_p)
 
     @staticmethod

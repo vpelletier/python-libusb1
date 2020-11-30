@@ -460,6 +460,11 @@ Use libusb_free_pollfds whenever available (libusb1>=1.0.20).
 Fix hotplug callback destruction at context teardown.
 Drop remnants of python 2.6 support code.
 
+unreleased
+----------
+
+Drop USBPollerThread and deprecate libusb-lock-related USBContext API.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
