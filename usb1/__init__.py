@@ -53,7 +53,7 @@ from ctypes.util import find_library
 import sys
 import threading
 import warnings
-import weakref
+from weakref import WeakSet
 import collections
 import functools
 import contextlib
@@ -204,20 +204,6 @@ else:
 # pylint: disable=undefined-variable
 CONTROL_SETUP = BYTE * CONTROL_SETUP_SIZE
 # pylint: enable=undefined-variable
-
-try:
-    WeakSet = weakref.WeakSet
-except AttributeError:
-    # Python < 2.7: tiny wrapper around WeakKeyDictionary
-    class WeakSet(object):
-        def __init__(self):
-            self.__dict = weakref.WeakKeyDictionary()
-
-        def add(self, item):
-            self.__dict[item] = None
-
-        def pop(self):
-            return self.__dict.popitem()[0]
 
 # Default string length
 # From a comment in libusb-1.0: "Some devices choke on size > 255"
