@@ -6,6 +6,7 @@ echo "Building distributions..."
 for PYTHON in python2 python3; do
   LIBUSB_BINARY=build/win32/libusb-1.0.dll "${PYTHON}" setup.py --quiet bdist_wheel --plat-name win32
   LIBUSB_BINARY=build/win_amd64/libusb-1.0.dll "${PYTHON}" setup.py --quiet bdist_wheel --plat-name win_amd64
+  "${PYTHON}" setup.py --quiet bdist_wheel --plat-name any
 done
 python3 setup.py --quiet sdist
 echo "Done. Next, check their content, sign each:"
