@@ -465,6 +465,11 @@ Drop remnants of python 2.6 support code.
 
 Drop USBPollerThread and deprecate libusb-lock-related USBContext API.
 
+1.9.1
+-----
+
+Fix installation from pypi source tarball, broken in 1.8.1 .
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/

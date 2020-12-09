@@ -15,8 +15,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 from __future__ import print_function
 from setuptools import setup
-from distutils.core import Command
-import distutils.command.install
+from setuptools import Command
+import setuptools.command.install
 from codecs import open
 import errno
 import hashlib
@@ -45,11 +45,11 @@ CURRENT_WINDOWS_7Z_SHA256 = (
 )
 
 cmdclass = versioneer.get_cmdclass()
-class install(distutils.command.install.install):
+class install(setuptools.command.install.install):
     def run(self):
-        # XXX: distutils.command.install.install is an old-style class on
+        # XXX: setuptools.command.install.install is an old-style class on
         # python2.7 :(
-        distutils.command.install.install.run(self)
+        setuptools.command.install.install.run(self)
         if os.getenv('LIBUSB_BINARY'):
             self.copy_file(
                 os.getenv('LIBUSB_BINARY'),
