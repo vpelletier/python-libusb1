@@ -100,12 +100,13 @@ class update_libusb(Command):
             raise ValueError('Failed to locate current windows binary release')
         build_dir = os.path.join(os.path.dirname(__file__), 'build')
         download_cache_path = os.path.join(build_dir, 'download-cache')
+        if not os.path.exists(download_cache_path):
+            os.makedirs(download_cache_path)
         archive_path = os.path.join(
             download_cache_path,
             urlsplit(url).path.rsplit('/', 1)[-1],
         )
         if not os.path.exists(archive_path):
-            os.makedirs(download_cache_path)
             with open(archive_path, 'wb') as archive_file:
                 archive_file.write(urlopen(url).read())
         with open(archive_path, 'rb') as archive_file:
