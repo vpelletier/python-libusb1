@@ -188,9 +188,11 @@ setup(
         'Topic :: Software Development :: Libraries',
         'Topic :: System :: Hardware :: Hardware Drivers',
     ],
-    setup_requires=[
-        'wheel',
-    ],
+    setup_requires=(
+        ['wheel']
+        if 'bdist_wheel' in sys.argv else
+        []
+    ),
     use_2to3=True,
     test_suite='usb1.testUSB1',
 )
