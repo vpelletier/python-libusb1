@@ -470,6 +470,12 @@ Drop USBPollerThread and deprecate libusb-lock-related USBContext API.
 
 Fix installation from pypi source tarball, broken in 1.8.1 .
 
+1.9.2
+-----
+
+Windows wheels: Update bundled libusb to 1.0.24 .
+Fix soure-only build when wheel is not available.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
