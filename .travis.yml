@@ -21,18 +21,12 @@ addons:
     - libusb-1.0-0
     - libudev-dev
     - doxygen
+    - bash
     sources:
     - ubuntu-toolchain-r-test
 # Note: "doxygen" actually comes from "apt-get build-deps libusb-1.0-0", but
 # there is no direct travis equivalent.
-before_script:
-- ./buildTestLibusb.sh https://github.com/libusb/libusb.git libusb.git master v1.0.19 v1.0.22
 install: pip install .
-script: python -m usb1.testUSB1
-env:
-- LD_LIBRARY_PATH=
-- LD_LIBRARY_PATH=test-libusb/build/libusb.git/master/lib
-# Debian jessie (oldoldstable)
-- LD_LIBRARY_PATH=test-libusb/build/libusb.git/v1.0.19/lib
-# Debian buster (stable)
-- LD_LIBRARY_PATH=test-libusb/build/libusb.git/v1.0.22/lib
+# v1.0.19 is Debian jessie (oldoldstable)
+# v1.0.22 is Debian buster (stable)
+script: ./runTestLibusb.sh https://github.com/libusb/libusb.git libusb.git master v1.0.19 v1.0.22
