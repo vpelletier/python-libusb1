@@ -98,6 +98,8 @@ class update_libusb(Command):
         url = finder.found
         if url is None:
             raise ValueError('Failed to locate current windows binary release')
+        if not url.endswith('.7z'):
+            raise ValueError('unexpected extension: %r' % (url, ))
         build_dir = os.path.join(os.path.dirname(__file__), 'build')
         download_cache_path = os.path.join(build_dir, 'download-cache')
         if not os.path.exists(download_cache_path):
