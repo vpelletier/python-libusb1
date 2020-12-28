@@ -121,7 +121,7 @@ class update_libusb(Command):
                     archive_path + '.asc', archive_path,
                 ],
                 # gnupg will not shut its pie hole.
-                stdout=devnull,
+                stderr=devnull,
                 close_fds=True,
             )
             # This check is for the maintainer to notice a new release, and
