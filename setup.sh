@@ -9,7 +9,8 @@ for PYTHON in python2 python3; do
   "${PYTHON}" setup.py --quiet bdist_wheel --plat-name any
 done
 python3 setup.py --quiet sdist
+release_prefix="dist/libusb1-$(python3 -c 'import versioneer; print(versioneer.get_version())')"
 echo "Done. Next, check their content, sign each:"
-echo "  gpg --armor --detach-sign dist/<release file>"
+echo "  for release in ${release_prefix}*; do gpg --armor --detach-sign \"\$release\"; done"
 echo "and upload them:"
-echo "  twine upload dist/<release file> dist/<release file>.asc"
+echo "  twine upload ${release_prefix}*"
