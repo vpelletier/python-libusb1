@@ -172,7 +172,13 @@ setup(
     license='LGPLv2.1+',
     platforms=['any'],
     py_modules=['libusb1'],
-    packages=['usb1'],
+    packages=['usb1', 'usb1.__pyinstaller'],
+    include_package_data=True,
+    entry_points={
+        'pyinstaller40': [
+            'hook-dirs=usb1.__pyinstaller:get_hook_dirs',
+            'tests=usb1.__pyinstaller:get_PyInstaller_tests']
+    },
     classifiers=[
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
