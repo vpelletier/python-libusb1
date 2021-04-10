@@ -16,7 +16,6 @@
 from __future__ import print_function
 from setuptools import setup
 from setuptools import Command
-import setuptools.command.install
 from codecs import open
 import hashlib
 import os
@@ -44,18 +43,6 @@ CURRENT_WINDOWS_7Z_SHA256 = (
 )
 
 cmdclass = versioneer.get_cmdclass()
-class install(setuptools.command.install.install):
-    def run(self):
-        # XXX: setuptools.command.install.install is an old-style class on
-        # python2.7 :(
-        setuptools.command.install.install.run(self)
-        if os.getenv('LIBUSB_BINARY'):
-            self.copy_file(
-                os.getenv('LIBUSB_BINARY'),
-                os.path.join(self.install_lib, 'usb1'),
-            )
-cmdclass['install'] = install
-
 class upload(Command):
     def run(self):
         print('This project uses signed releases. See KEYS for instructions.')
@@ -172,7 +159,9 @@ setup(
     platforms=['any'],
     py_modules=['libusb1'],
     packages=['usb1', 'usb1.__pyinstaller'],
-    include_package_data=True,
+    package_data={
+        "usb1": ["libusb-1.0.dll"],
+    },
     entry_points={
         'pyinstaller40': [
             'hook-dirs=usb1.__pyinstaller:get_hook_dirs',
