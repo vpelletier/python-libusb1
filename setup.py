@@ -18,7 +18,6 @@ from setuptools import setup
 from setuptools import Command
 import setuptools.command.install
 from codecs import open
-import errno
 import hashlib
 import os
 import subprocess
