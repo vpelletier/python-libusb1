@@ -14,6 +14,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 from __future__ import print_function
+from setuptools import find_packages
 from setuptools import setup
 from setuptools import Command
 from codecs import open
@@ -158,7 +159,7 @@ setup(
     license='LGPLv2.1+',
     platforms=['any'],
     py_modules=['libusb1'],
-    packages=['usb1', 'usb1.__pyinstaller'],
+    packages=find_packages(),
     package_data={
         "usb1": ["libusb-1.0.dll"],
     },
