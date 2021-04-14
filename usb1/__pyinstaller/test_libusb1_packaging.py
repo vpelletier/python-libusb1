@@ -1,3 +1,15 @@
+"""
+PyTest testcases for the pyinstaller hook
+
+Instructions to run these tests:
+
+- Install PyInstaller with the hook_testing extra requirements:
+  > pip install pyinstaller[hook_testing]
+
+- Run the tests using the provided utility by pyinstaller:
+  > python -m PyInstaller.utils.run_tests --include_only usb1
+
+"""
 import subprocess
 from PyInstaller import __main__ as pyi_main
 
