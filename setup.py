@@ -45,6 +45,17 @@ CURRENT_WINDOWS_7Z_SHA256 = (
 
 cmdclass = versioneer.get_cmdclass()
 class upload(Command):
+    """
+    Declaw "setup.py upload".
+    """
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
     def run(self):
         print('This project uses signed releases. See KEYS for instructions.')
         print('Hint:')
