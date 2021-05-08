@@ -2215,7 +2215,7 @@ class USBContext(object):
                 with self.__context_cond:
                     self.__context_refcount -= 1
                     if not self.__context_refcount:
-                        self.__context_cond.notifyAll()
+                        self.__context_cond.notify_all()
         if inspect.isgeneratorfunction(func):
             def wrapper(self, *args, **kw):
                 with refcount(self):
@@ -2293,7 +2293,7 @@ class USBContext(object):
                 self.__context_cond.wait()
             self._exit()
         finally:
-            self.__context_cond.notifyAll()
+            self.__context_cond.notify_all()
             self.__context_cond.release()
 
     def _exit(self):
