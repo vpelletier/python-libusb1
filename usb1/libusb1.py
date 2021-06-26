@@ -169,6 +169,8 @@ def _loadLibrary():
                     '/opt/local/lib/libusb-1.0.dylib',
                     # fink standard path
                     '/sw/lib/libusb-1.0.dylib',
+                    # homebrew standard path for symlink (Apple M1 Silicon)
+                    '/opt/homebrew/opt/libusb/lib/libusb-1.0.dylib',
                 ):
                 if os.path.exists(libusb_path):
                     break
