@@ -2,21 +2,37 @@
 # Run tests against multiple libusb versions.
 # Useful to check backward-compatibility with libusb versions which lack some
 # exports.
-if [ $# -lt 3 ]; then
-  echo "Usage: $0 remote remote_name changeset [changeset [...]]"
+set -eu
+
+if [ $# -lt 4 ]; then
+  echo "Usage: $0 python remote remote_name changeset [changeset [...]]"
+  exit 1
+fi
+python="$1"
+remote="$2"
+remote_name="$3"
+shift 3
+
+if [ "x$python" = "x" ]; then
+  echo "<python> argument must not be empty"
   exit 1
 fi
 
-set -e
-
-base="$PWD/test-libusb"
-build_base="$base/build"
-
-remote="$1"
-remote_name="$2"
-shift 2
+python_libusb1="$(dirname "$(realpath "$0")")"
+base="${python_libusb1}/test-libusb"
+venv_dir="${base}/$(basename "$python")"
+build_base="${base}/build"
 repo_dir="${base}/repo/${remote_name}"
-test -e "$repo_dir" || git clone -n "$remote" "$repo_dir"
+
+test -e "$venv_dir" && rm -r "$venv_dir"
+virtualenv --python "$python" "$venv_dir"
+"${venv_dir}/bin/pip" install "$python_libusb1"
+
+if [ -e "$repo_dir" ]; then
+  git -C "$repo_dir" fetch
+else
+  git clone --no-checkout "$remote" "$repo_dir"
+fi
 cd "$repo_dir"
 # Also test against system-installed libusb
 lib_dir_list=("")
@@ -25,7 +41,7 @@ while [ $# -ne 0 ]; do
   changeset="$1"
   shift
   build_dir="${build_base}/${remote_name}/${changeset}"
-  if test ! -e "$build_dir"; then
+  if [ ! -e "$build_dir" ]; then
     mkdir -p "$build_dir"
     git checkout --force "$changeset"
     git clean --force -dx
@@ -39,10 +55,10 @@ done
 result=0
 for lib_dir in "${lib_dir_list[@]}"; do
   export LD_LIBRARY_PATH="${lib_dir}"
-  if python -m usb1.testUSB1; then
+  if "${venv_dir}/bin/python" -m usb1.testUSB1; then
     :
   else
-    echo "status=$?"
+    echo "failed with ${lib_dir}: status=$?"
     result=1
   fi
 done
