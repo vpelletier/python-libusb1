@@ -476,6 +476,14 @@ Fix installation from pypi source tarball, broken in 1.8.1 .
 Windows wheels: Update bundled libusb to 1.0.24 .
 Fix soure-only build when wheel is not available.
 
+1.9.3
+-----
+
+Add support for pyinstaller.
+Improve the way the windows dlls are embedded in wheels.
+Fix support for python 3.10 .
+Add support for homebrew on Apple M1.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
