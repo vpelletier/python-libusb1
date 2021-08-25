@@ -564,6 +564,8 @@ libusb_speed = Enum({
     'LIBUSB_SPEED_HIGH': 3,
     # The device is operating at super speed (5000MBit/s).
     'LIBUSB_SPEED_SUPER': 4,
+    # The device is operating at super speed plus (10000MBit/s)
+    'LIBUSB_SPEED_SUPER_PLUS': 5,
 })
 
 libusb_supported_speed = Enum({

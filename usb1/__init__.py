@@ -2022,6 +2022,7 @@ class USBDevice(object):
             SPEED_FULL
             SPEED_HIGH
             SPEED_SUPER
+            SPEED_SUPER_PLUS
         """
         return libusb1.libusb_get_device_speed(self.device_p)
 
