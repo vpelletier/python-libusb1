@@ -487,6 +487,7 @@ Add support for homebrew on Apple M1.
 ?.?.?
 -----
 
+Add LIBUSB_SPEED_SUPER_PLUS.
 Better control device iterator end of life.
 Fix objects escaping control from their parent.
 
