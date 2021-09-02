@@ -46,10 +46,14 @@ class USBTransferTests(unittest.TestCase):
     def getTransfer(iso_packets=0):
         # Dummy handle
         return usb1.USBTransfer(
+            context=None,
             handle=pointer(libusb1.libusb_device_handle()),
             iso_packets=iso_packets,
             before_submit=lambda x: None,
             after_completion=lambda x: None,
+            registerFinalizer=lambda handle, finalizer: None,
+            unregisterFinalizer=lambda handle: None,
+        )
 
     @staticmethod
     def testGetVersion():
@@ -273,24 +277,6 @@ class USBTransferTests(unittest.TestCase):
         self.assertNotEqual(fd_list, None)
         context.exit() # Deprecated
         self.assertEqual(context.getPollFDList(), None)
-
-    def testUSBTransferMayRaiseUSBError(self):
-        """
-        mayRaiseUSBError needs to be a class property to be reliably able
-        to call it during interpreter shutdown. But setting a function as
-        property makes it bound to the instance when accessed. This is not
-        obviously visible because mayRaiseUSBError has a should-never-be-used
-        second argument for exactly the same purpose, but which accidentally
-        receives the value intended as the first parameter (the first parameter
-        being replaced by "self" as for any bound method).
-        So this test verifies that USBTranfer.__mayRaiseUSBError behaves the
-        intended way.
-        And to make this test work when there is no USB device around, directly
-        instanciate USBTransfer and access tested private property.
-        """
-        transfer = self.getTransfer()
-        transfer._USBTransfer__mayRaiseUSBError(0)
-        self.assertRaises(usb1.USBErrorIO, transfer._USBTransfer__mayRaiseUSBError, usb1.ERROR_IO)
 
     def testHasVersion(self):
         # Property is present and non-empty

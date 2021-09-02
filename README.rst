@@ -488,6 +488,7 @@ Add support for homebrew on Apple M1.
 -----
 
 Better control device iterator end of life.
+Fix objects escaping control from their parent.
 
 .. _CPython: http://www.python.org/
 

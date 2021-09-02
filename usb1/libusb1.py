@@ -508,9 +508,10 @@ LIBUSB_CONTROL_SETUP_SIZE = sizeof(libusb_control_setup)
 # will be used.
 #
 # For more information, see \ref contexts.
-class libusb_context(Structure):
-    pass
-libusb_context_p = POINTER(libusb_context)
+#class libusb_context(Structure):
+#    pass
+#libusb_context_p = POINTER(libusb_context)
+libusb_context_p = c_void_p # Any pointer is fine
 libusb_context_p_p = POINTER(libusb_context_p)
 
 # Structure representing a USB device detected on the system. This is an
