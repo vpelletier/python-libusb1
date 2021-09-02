@@ -484,6 +484,11 @@ Improve the way the windows dlls are embedded in wheels.
 Fix support for python 3.10 .
 Add support for homebrew on Apple M1.
 
+?.?.?
+-----
+
+Better control device iterator end of life.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/

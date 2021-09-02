@@ -2085,9 +2085,13 @@ class USBContext(object):
                 with refcount(self):
                     if self.__context_p:
                         # pylint: disable=not-callable
-                        for value in func(self, *args, **kw):
-                            # pylint: enable=not-callable
-                            yield value
+                        generator = func(self, *args, **kw)
+                        # pylint: enable=not-callable
+                        try:
+                            for value in generator:
+                                yield value
+                        finally:
+                            generator.close()
         else:
             def wrapper(self, *args, **kw):
                 with refcount(self):
@@ -2190,6 +2194,7 @@ class USBContext(object):
         skip_on_error (bool)
             If True, ignore devices which raise USBError.
         """
+        libusb_free_device_list = libusb1.libusb_free_device_list
         device_p_p = libusb1.libusb_device_p_p()
         libusb_device_p = libusb1.libusb_device_p
         device_list_len = libusb1.libusb_get_device_list(self.__context_p,
@@ -2211,7 +2216,7 @@ class USBContext(object):
                     self.__close_set.add(device)
                     yield device
         finally:
-            libusb1.libusb_free_device_list(device_p_p, 1)
+            libusb_free_device_list(device_p_p, 1)
 
     def getDeviceList(self, skip_on_access_error=False, skip_on_error=False):
         """
@@ -2241,12 +2246,17 @@ class USBContext(object):
         skip_on_access_error (bool)
             (see getDeviceList)
         """
-        for device in self.getDeviceIterator(
-                skip_on_error=skip_on_access_error or skip_on_error,
-            ):
-            if device.getVendorID() == vendor_id and \
-                    device.getProductID() == product_id:
-                return device
+        device_iterator = self.getDeviceIterator(
+            skip_on_error=skip_on_access_error or skip_on_error,
+        )
+        try:
+            for device in device_iterator:
+                if device.getVendorID() == vendor_id and \
+                        device.getProductID() == product_id:
+                    return device
+                device.close()
+        finally:
+            device_iterator.close()
 
     def openByVendorIDAndProductID(
             self, vendor_id, product_id,
