@@ -46,8 +46,10 @@ class USBTransferTests(unittest.TestCase):
     def getTransfer(iso_packets=0):
         # Dummy handle
         return usb1.USBTransfer(
-            pointer(libusb1.libusb_device_handle()),
-            iso_packets, lambda x: None, lambda x: None)
+            handle=pointer(libusb1.libusb_device_handle()),
+            iso_packets=iso_packets,
+            before_submit=lambda x: None,
+            after_completion=lambda x: None,
 
     @staticmethod
     def testGetVersion():
@@ -286,7 +288,7 @@ class USBTransferTests(unittest.TestCase):
         And to make this test work when there is no USB device around, directly
         instanciate USBTransfer and access tested private property.
         """
-        transfer = usb1.USBTransfer(None, 0, None, None)
+        transfer = self.getTransfer()
         transfer._USBTransfer__mayRaiseUSBError(0)
         self.assertRaises(usb1.USBErrorIO, transfer._USBTransfer__mayRaiseUSBError, usb1.ERROR_IO)
 

@@ -16,7 +16,7 @@
 
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 # pylint: disable=too-many-public-methods, too-many-instance-attributes
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring,bad-continuation
 """
 Pythonic wrapper for libusb-1.0.
 
@@ -111,11 +111,9 @@ del __bindConstants
 def raiseUSBError(
         value,
         # Avoid globals lookup on call to work during interpreter shutdown.
-        # pylint: disable=dangerous-default-value
         __STATUS_TO_EXCEPTION_DICT=STATUS_TO_EXCEPTION_DICT,
-        # pylint: enable=dangerous-default-value
         __USBError=USBError,
-    ):
+    ): # pylint: disable=dangerous-default-value
     raise __STATUS_TO_EXCEPTION_DICT.get(value, __USBError)(value)
 
 def mayRaiseUSBError(
@@ -139,7 +137,7 @@ if sys.version_info[0] == 3:
     long = int
     # pylint: enable=redefined-builtin
     integer_memoryview = memoryview
-else:
+else: # BBB
     BYTE = '\x00'
     # Work around python2's memoryview, which only accepts & generates strings.
     # For consistency between async control and other async transfers.
@@ -290,7 +288,13 @@ class USBTransfer(object):
     __transfer_buffer = None
     __transfer_py_buffer = None
 
-    def __init__(self, handle, iso_packets, before_submit, after_completion):
+    def __init__(
+        self,
+        handle,
+        iso_packets,
+        before_submit,
+        after_completion,
+    ):
         """
         You should not instanciate this class directly.
         Call "getTransfer" method on an USBDeviceHandle instance to get
@@ -304,12 +308,12 @@ class USBTransfer(object):
         self.__before_submit = before_submit
         self.__after_completion = after_completion
         self.__num_iso_packets = iso_packets
-        result = libusb1.libusb_alloc_transfer(iso_packets)
-        if not result:
+        transfer = libusb1.libusb_alloc_transfer(iso_packets)
+        if not transfer:
             # pylint: disable=undefined-variable
             raise USBErrorNoMem
             # pylint: enable=undefined-variable
-        self.__transfer = result
+        self.__transfer = transfer
 
     def close(self):
         """
@@ -365,6 +369,7 @@ class USBTransfer(object):
         Makes it possible for user-provided callback to alter transfer when
         fired (ie, mark transfer as not submitted upon call).
         """
+        # pylint: disable=protected-access
         self = cls.__submitted_dict.pop(addressof(transfer_p.contents))
         self.__after_completion(self)
         callback = self.__callback
@@ -372,6 +377,7 @@ class USBTransfer(object):
             callback(self)
         if self.__doomed:
             self.close()
+        # pylint: enable=protected-access
 
     def setCallback(self, callback):
         """
@@ -761,9 +767,12 @@ class USBTransfer(object):
         """
         Tells if this transfer is submitted and still pending.
         """
-        return self.__transfer is not None and addressof(
-            self.__transfer.contents,
-        ) in self.__submitted_dict
+        transfer = self.__transfer
+        return transfer is not None and self.__isSubmitted(transfer)
+
+    @classmethod
+    def __isSubmitted(cls, transfer):
+        return addressof(transfer.contents) in cls.__submitted_dict
 
     def submit(self):
         """
@@ -1034,7 +1043,12 @@ class USBDeviceHandle(object):
     __set = set
     __KeyError = KeyError
 
-    def __init__(self, context, handle, device):
+    def __init__(
+        self,
+        context,
+        handle,
+        device,
+    ):
         """
         You should not instanciate this class directly.
         Call "open" method on an USBDevice instance to get an USBDeviceHandle
@@ -1209,9 +1223,10 @@ class USBDeviceHandle(object):
         result = libusb1.libusb_kernel_driver_active(self.__handle, interface)
         if result == 0:
             return False
-        elif result == 1:
+        if result == 1:
             return True
         raiseUSBError(result)
+        return None # unreachable, to make pylint happy
 
     def detachKernelDriver(self, interface):
         """
@@ -1286,7 +1301,9 @@ class USBDeviceHandle(object):
         except USBErrorNotFound:
             # pylint: enable=undefined-variable
             return None
+        # pylint: disable=undefined-variable
         if received < 2 or descriptor_string[1] != DT_STRING:
+        # pylint: enable=undefined-variable
             raise ValueError('Invalid string descriptor')
         return descriptor_string[2:min(
             received,
@@ -1377,7 +1394,9 @@ class USBDeviceHandle(object):
             mayRaiseUSBError(libusb1.libusb_bulk_transfer(
                 self.__handle, endpoint, data, length, byref(transferred), timeout,
             ))
+        # pylint: disable=undefined-variable
         except USBErrorTimeout as exception:
+            # pylint: enable=undefined-variable
             exception.transferred = transferred.value
             raise
         return transferred.value
@@ -1427,7 +1446,9 @@ class USBDeviceHandle(object):
         data, data_buffer = create_binary_buffer(length)
         try:
             transferred = self._bulkTransfer(endpoint, data, length, timeout)
+        # pylint: disable=undefined-variable
         except USBErrorTimeout as exception:
+            # pylint: enable=undefined-variable
             exception.received = data_buffer[:exception.transferred]
             raise
         return data_buffer[:transferred]
@@ -1443,7 +1464,9 @@ class USBDeviceHandle(object):
                 byref(transferred),
                 timeout,
             ))
+        # pylint: disable=undefined-variable
         except USBErrorTimeout as exception:
+            # pylint: enable=undefined-variable
             exception.transferred = transferred.value
             raise
         return transferred.value
@@ -1498,7 +1521,9 @@ class USBDeviceHandle(object):
                 length,
                 timeout,
             )
+        # pylint: disable=undefined-variable
         except USBErrorTimeout as exception:
+            # pylint: enable=undefined-variable
             exception.received = data_buffer[:exception.transferred]
             raise
         return data_buffer[:transferred]
@@ -1510,8 +1535,11 @@ class USBDeviceHandle(object):
           allocate.
         """
         result = USBTransfer(
-            self.__handle, iso_packets,
-            self.__inflight_add, self.__inflight_remove,
+            context=self.__context,
+            handle=self.__handle,
+            iso_packets=iso_packets,
+            before_submit=self.__inflight_add,
+            after_completion=self.__inflight_remove,
         )
         self.__transfer_set.add(result)
         return result
@@ -1550,7 +1578,9 @@ class USBConfiguration(object):
         and in units of 8 mA when the device is operating in super-speed mode. This function scales
         the descriptor value appropriately.
         """
+        # pylint: disable=undefined-variable
         return self.__config.MaxPower * (8 if self.__device_speed == SPEED_SUPER else 2)
+        # pylint: enable=undefined-variable
 
     def getExtra(self):
         """
@@ -1737,7 +1767,12 @@ class USBDevice(object):
     __byref = byref
     __KeyError = KeyError
 
-    def __init__(self, context, device_p, can_load_configuration=True):
+    def __init__(
+        self,
+        context,
+        device_p,
+        can_load_configuration,
+    ):
         """
         You should not instanciate this class directly.
         Call USBContext methods to receive instances of this class.
@@ -1747,6 +1782,8 @@ class USBDevice(object):
         libusb1.libusb_ref_device(device_p)
         self.device_p = device_p
         # Fetch device descriptor
+        # Note: if this is made lazy, access errors will happen later, breaking
+        # getDeviceIterator exception handling.
         device_descriptor = libusb1.libusb_device_descriptor()
         result = libusb1.libusb_get_device_descriptor(
             device_p, byref(device_descriptor))
@@ -1755,7 +1792,6 @@ class USBDevice(object):
         if can_load_configuration:
             self.__configuration_descriptor_list = descriptor_list = []
             append = descriptor_list.append
-            device_p = self.device_p
             for configuration_id in xrange(
                     self.device_descriptor.bNumConfigurations):
                 config = libusb1.libusb_config_descriptor_p()
@@ -2033,7 +2069,11 @@ class USBDevice(object):
         """
         handle = libusb1.libusb_device_handle_p()
         mayRaiseUSBError(libusb1.libusb_open(self.device_p, byref(handle)))
-        result = USBDeviceHandle(self.__context, handle, self)
+        result = USBDeviceHandle(
+            context=self.__context,
+            handle=handle,
+            device=self,
+        )
         self.__close_set.add(result)
         return result
 
@@ -2099,6 +2139,7 @@ class USBContext(object):
                         # pylint: disable=not-callable
                         return func(self, *args, **kw)
                         # pylint: enable=not-callable
+                    return None
         functools.update_wrapper(wrapper, func)
         return wrapper
     # pylint: enable=no-self-argument,protected-access
@@ -2208,7 +2249,11 @@ class USBContext(object):
                     # it doesn't copy pointer value (=pointed memory address) ?
                     # At least, it's not so convenient and forces using such
                     # weird code.
-                    device = USBDevice(self, libusb_device_p(device_p.contents))
+                    device = USBDevice(
+                        context=self,
+                        device_p=libusb_device_p(device_p.contents),
+                        can_load_configuration=True,
+                    )
                 except USBError:
                     if not skip_on_error:
                         raise
@@ -2257,6 +2302,7 @@ class USBContext(object):
                 device.close()
         finally:
             device_iterator.close()
+        return None
 
     def openByVendorIDAndProductID(
             self, vendor_id, product_id,
@@ -2276,6 +2322,7 @@ class USBContext(object):
             skip_on_error=skip_on_error)
         if result is not None:
             return result.open()
+        return None
 
     @_validContext
     def getPollFDList(self):
@@ -2289,10 +2336,9 @@ class USBContext(object):
             errno = get_errno()
             if errno:
                 raise OSError(errno)
-            else:
-                # Assume not implemented
-                raise NotImplementedError(
-                    'Your libusb does not seem to implement pollable FDs')
+            # Assume not implemented
+            raise NotImplementedError(
+                'Your libusb does not seem to implement pollable FDs')
         try:
             result = []
             append = result.append
@@ -2383,9 +2429,10 @@ class USBContext(object):
             self.__context_p, byref(timeval))
         if result == 0:
             return None
-        elif result == 1:
+        if result == 1:
             return timeval.tv_sec + (timeval.tv_usec * 0.000001)
         raiseUSBError(result)
+        return None # unreachable, to make pylint happy
 
     @_validContext
     def setDebug(self, level):
@@ -2522,10 +2569,10 @@ class USBContext(object):
             assert addressof(context_p.contents) == addressof(
                 self.__context_p.contents), (context_p, self.__context_p)
             device = USBDevice(
-                self,
-                device_p,
+                context=self,
+                device_p=device_p,
                 # pylint: disable=undefined-variable
-                event != HOTPLUG_EVENT_DEVICE_LEFT,
+                can_load_configuration=event != HOTPLUG_EVENT_DEVICE_LEFT,
                 # pylint: enable=undefined-variable
             )
             self.__close_set.add(device)
