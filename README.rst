@@ -17,7 +17,6 @@ Dependencies
 
 - CPython_ 2.7+ or 3.4+, pypy_ 2.0+. Older versions may work, but are not
   recommended as there is no automated regression testing set up for them.
-
 - libusb-1.0_
 
 Supported OSes
@@ -26,13 +25,9 @@ Supported OSes
 python-libusb1 can be expected to work on:
 
 - GNU/Linux
-
 - Windows [#]_ native dll or via Cygwin_
-
 - OSX [#]_ via MacPorts_, Fink_ or Homebrew_
-
 - FreeBSD (including Debian GNU/kFreeBSD)
-
 - OpenBSD
 
 .. [#] Beware of libusb-win32, which implements 0.1 API, not 1.0 .
