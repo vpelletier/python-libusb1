@@ -64,6 +64,19 @@ which of libusbk or WinUSB to use for each device and install it appropriately
 Installing from source tree does not install the dll, so you need to install the
 library where ctypes can find it - and of course the driver as well.
 
+Checking release file signature
+-------------------------------
+
+pipy releases are signed. To verify the signature:
+
+- download the release file, note its URL
+- download its detached signature by adding `.asc` at the end of the release
+  file URL
+- add the release key(s) to a gnupg keyring (`KEYS` file in the home
+  repository), and use gnupg to validate the signature both corresponds to the
+  distribution file and is trusted by your keyring
+- install the already-fetched release file
+
 Usage
 =====
 
