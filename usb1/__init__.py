@@ -1244,7 +1244,9 @@ class USBDeviceHandle(object):
         registerFinalizer(finalizer_handle, self.close)
 
     def __registerFinalizer(self, handle, finalizer):
-        assert handle not in self.__finalizer_dict
+        if handle in self.__finalizer_dict:
+            finalizer.detach()
+            raise ValueError
         self.__finalizer_dict[handle] = finalizer
 
     def __unregisterFinalizer(self, handle):
@@ -1999,7 +2001,9 @@ class USBDevice(object):
         registerFinalizer(finalizer_handle, self.close)
 
     def __registerFinalizer(self, handle, finalizer):
-        assert handle not in self.__finalizer_dict
+        if handle in self.__finalizer_dict:
+            finalizer.detach()
+            raise ValueError
         self.__finalizer_dict[handle] = finalizer
 
     def __unregisterFinalizer(self, handle):
@@ -2355,7 +2359,9 @@ class USBContext(object):
         self.close()
 
     def __registerFinalizer(self, handle, finalizer):
-        assert handle not in self.__finalizer_dict
+        if handle in self.__finalizer_dict:
+            finalizer.detach()
+            raise ValueError
         self.__finalizer_dict[handle] = finalizer
 
     def __unregisterFinalizer(self, handle):
