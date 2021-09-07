@@ -2290,6 +2290,7 @@ class USBContext(object):
     __removed_cb = None
     __poll_cb_user_data = None
     __auto_open = True
+    __has_pollfd_finalizer = False
     __mayRaiseUSBError = mayRaiseUSBError
     __libusb_handle_events = libusb1.libusb_handle_events
 
@@ -2388,7 +2389,6 @@ class USBContext(object):
             context_p=self.__context_p,
             hotplug_callback_dict=self.__hotplug_callback_dict,
             finalizer_dict=self.__finalizer_dict,
-            null_pointer=_null_pointer,
         )
         return self
 
@@ -2428,25 +2428,15 @@ class USBContext(object):
         context_p,
         hotplug_callback_dict,
         finalizer_dict,
-        null_pointer,
 
-        added_cb_p=cast(_null_pointer, libusb1.libusb_pollfd_added_cb_p),
-        removed_cb_p=cast(_null_pointer, libusb1.libusb_pollfd_removed_cb_p),
         libusb_exit=libusb1.libusb_exit,
         libusb_hotplug_deregister_callback=libusb1.libusb_hotplug_deregister_callback,
-        libusb_set_pollfd_notifiers=libusb1.libusb_set_pollfd_notifiers,
     ):
         while hotplug_callback_dict:
             # Duplicates hotplugDeregisterCallback logic, to avoid finalizer
             # referencing its own instance.
             handle, _ = hotplug_callback_dict.popitem()
             libusb_hotplug_deregister_callback(context_p, handle)
-        libusb_set_pollfd_notifiers(
-            context_p,
-            added_cb_p,
-            removed_cb_p,
-            null_pointer,
-        )
         while finalizer_dict:
             for handle, finalizer in list(finalizer_dict.items()):
                 finalizer()
@@ -2643,6 +2633,35 @@ class USBContext(object):
             cast(added_cb, libusb1.libusb_pollfd_added_cb_p),
             cast(removed_cb, libusb1.libusb_pollfd_removed_cb_p),
             user_data,
+        )
+        if not self.__has_pollfd_finalizer:
+            self.__has_pollfd_finalizer = True
+            try:
+                self.__registerFinalizer(
+                    handle=id(self),
+                    finalizer=weakref_finalize(
+                        self,
+                        self.__finalizePollFDNotifiers, # Note: staticmethod
+                        context_p=self.__context_p,
+                    ),
+                )
+            except ValueError: # Already registered
+                pass
+
+    @staticmethod
+    def __finalizePollFDNotifiers(
+        context_p,
+
+        null_pointer=_null_pointer,
+        added_cb_p=cast(_null_pointer, libusb1.libusb_pollfd_added_cb_p),
+        removed_cb_p=cast(_null_pointer, libusb1.libusb_pollfd_removed_cb_p),
+        libusb_set_pollfd_notifiers=libusb1.libusb_set_pollfd_notifiers,
+    ):
+        libusb_set_pollfd_notifiers(
+            context_p,
+            added_cb_p,
+            removed_cb_p,
+            null_pointer,
         )
 
     @_validContext
