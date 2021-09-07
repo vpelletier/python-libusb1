@@ -418,6 +418,7 @@ Expose bare string descriptors (aka string indexes) on USBDevice.
 
 get{,ASCII}StringDescriptor now return None for descriptor 0 instead of raising
 UnicodeDecodeError. Use getSupportedLanguageList to access it.
+
 Moved getManufacturer, getProduct and getSerialNumber to USBDeviceHandle. Kept
 shortcuts for these on USBDevice.
 
@@ -426,8 +427,10 @@ shortcuts for these on USBDevice.
 
 get{,ASCII}StringDescriptor now return None for descriptor 0, use
 getSupportedLanguageList to get its content.
+
 getManufacturer, getProduct and getSerialNumber are now on USBDeviceHandle,
 with backward-compatibility aliases on their original location.
+
 Synchronous bulk and interrupt API exposes number of bytes sent and received
 bytes even when a timeout occurs.
 
@@ -435,6 +438,7 @@ bytes even when a timeout occurs.
 -----
 
 usb1.__version__ is now present, managed by versioneer.
+
 Fix an occasional segfault when closing a transfer from inside its callback
 function.
 
@@ -442,6 +446,7 @@ function.
 ---
 
 Fix getExtra and libusb1.libusb_control_transfer_get_data .
+
 Fix getMaxPower unit on SuperSpeed devices.
 
 1.8.1
@@ -453,7 +458,9 @@ Release process rework:
 - cryptographically signed releases
 
 Use libusb_free_pollfds whenever available (libusb1>=1.0.20).
+
 Fix hotplug callback destruction at context teardown.
+
 Drop remnants of python 2.6 support code.
 
 1.9
@@ -470,21 +477,27 @@ Fix installation from pypi source tarball, broken in 1.8.1 .
 -----
 
 Windows wheels: Update bundled libusb to 1.0.24 .
+
 Fix soure-only build when wheel is not available.
 
 1.9.3
 -----
 
 Add support for pyinstaller.
+
 Improve the way the windows dlls are embedded in wheels.
+
 Fix support for python 3.10 .
+
 Add support for homebrew on Apple M1.
 
 ?.?.?
 -----
 
 Add LIBUSB_SPEED_SUPER_PLUS.
+
 Better control device iterator end of life.
+
 Fix objects escaping control from their parent.
 
 .. _CPython: http://www.python.org/
