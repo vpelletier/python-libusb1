@@ -53,6 +53,17 @@ Latest version from source tree::
     $ cd python-libusb1
     $ pip install .
 
+Windows installation notes
+--------------------------
+
+On Windows, installing wheels from pypi also installs the libusb dll within the
+usb1 python module. It does not install any driver, so you still need to decide
+which of libusbk or WinUSB to use for each device and install it appropriately
+(possibly using Zadig_, or by providing a driver for your users to install).
+
+Installing from source tree does not install the dll, so you need to install the
+library where ctypes can find it - and of course the driver as well.
+
 Usage
 =====
 
@@ -515,3 +526,5 @@ Fix objects escaping control from their parent.
 .. _libusb-1.0: https://github.com/libusb/libusb/wiki/
 
 .. _libusb1.0 documentation: http://libusb.sourceforge.net/api-1.0/
+
+.. _Zadig: https://zadig.akeo.ie/
