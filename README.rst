@@ -47,15 +47,11 @@ Releases from PyPI, with name *libusb1*. Installing from command line::
 
     $ pip install libusb1
 
-or::
-
-    $ easy_install libusb1
-
 Latest version from source tree::
 
     $ git clone https://github.com/vpelletier/python-libusb1.git
     $ cd python-libusb1
-    $ python setup.py install
+    $ pip install .
 
 Usage
 =====
