@@ -1955,8 +1955,22 @@ class USBDevice(object):
         Call USBContext methods to receive instances of this class.
         """
         self.__context = context
-        self.__finalizer_dict = {}
+        self.__finalizer_dict = finalizer_dict = {}
+        self.__configuration_descriptor_list = descriptor_list = []
         libusb1.libusb_ref_device(device_p)
+        finalizer_handle = id(self)
+        self.close = weakref_finalize(
+            self,
+            self.close, # Note: static method
+            device_p=device_p,
+            finalizer_dict=finalizer_dict,
+            unregisterFinalizer=functools.partial(
+                unregisterFinalizer,
+                handle=finalizer_handle,
+            ),
+            descriptor_list=descriptor_list,
+        )
+        registerFinalizer(finalizer_handle, self.close)
         self.device_p = device_p
         # Fetch device descriptor
         # Note: if this is made lazy, access errors will happen later, breaking
@@ -1967,7 +1981,6 @@ class USBDevice(object):
         mayRaiseUSBError(result)
         self.device_descriptor = device_descriptor
         if can_load_configuration:
-            self.__configuration_descriptor_list = descriptor_list = []
             append = descriptor_list.append
             for configuration_id in xrange(
                     self.device_descriptor.bNumConfigurations):
@@ -1986,19 +1999,6 @@ class USBDevice(object):
         self.__bus_number = libusb1.libusb_get_bus_number(device_p)
         self.__port_number = libusb1.libusb_get_port_number(device_p)
         self.__device_address = libusb1.libusb_get_device_address(device_p)
-        finalizer_handle = id(self)
-        self.close = weakref_finalize(
-            self,
-            self.close, # Note: static method
-            device_p=device_p,
-            finalizer_dict=self.__finalizer_dict,
-            unregisterFinalizer=functools.partial(
-                unregisterFinalizer,
-                handle=finalizer_handle,
-            ),
-            descriptor_list=descriptor_list,
-        )
-        registerFinalizer(finalizer_handle, self.close)
 
     def __registerFinalizer(self, handle, finalizer):
         if handle in self.__finalizer_dict:
