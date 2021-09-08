@@ -15,12 +15,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 # pylint: disable=invalid-name, missing-docstring, too-many-public-methods
-import unittest
-import sys
-import itertools
-import usb1
-import libusb1
+from __future__ import absolute_import
 from ctypes import pointer
+import itertools
+import sys
+import unittest
+import usb1
+from . import libusb1
 
 buff_len = 1024
 buffer_base = [x % 256 for x in range(buff_len)]
