@@ -33,8 +33,8 @@ from ctypes import (
     c_ssize_t, CDLL
 )
 import ctypes.util
-import platform
 import os.path
+import platform
 import sys
 
 class Enum(object):
