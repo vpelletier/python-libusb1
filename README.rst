@@ -513,6 +513,9 @@ Add support for homebrew on Apple M1.
 ?.?.?
 -----
 
+Do not load the C library on import. Allows applications to customise the
+lookup logic (see `usb1.loadLibrary`).
+
 Add LIBUSB_SPEED_SUPER_PLUS.
 
 Better control device iterator end of life.

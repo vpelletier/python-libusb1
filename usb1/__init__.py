@@ -58,7 +58,7 @@ import collections
 import functools
 import contextlib
 import inspect
-from . import libusb1
+from . import _libusb1 as libusb1
 # pylint: disable=wrong-import-order,ungrouped-imports
 if sys.platform == 'win32':
     from ctypes import get_last_error as get_errno
@@ -71,6 +71,7 @@ __all__ = [
     'USBPoller', 'USBTransfer', 'USBTransferHelper', 'EVENT_CALLBACK_SET',
     'USBEndpoint', 'USBInterfaceSetting', 'USBInterface',
     'USBConfiguration', 'DoomedTransferError', 'getVersion', 'USBError',
+    'loadLibrary',
 ]
 # Bind libusb1 constants and libusb1.USBError to this module, so user does not
 # have to import two modules.
@@ -467,6 +468,8 @@ class USBTransfer(object):
                 unregisterFinalizer,
                 handle=finalizer_handle,
             ),
+            libusb_free_transfer=libusb1.libusb_free_transfer,
+            libusb_cancel_transfer=libusb1.libusb_cancel_transfer,
         )
         registerFinalizer(finalizer_handle, self.__close)
 
@@ -500,9 +503,9 @@ class USBTransfer(object):
         transfer,
         context,
         unregisterFinalizer,
+        libusb_free_transfer,
+        libusb_cancel_transfer,
 
-        libusb_free_transfer=libusb1.libusb_free_transfer,
-        libusb_cancel_transfer=libusb1.libusb_cancel_transfer,
         # pylint: disable=undefined-variable
         USBErrorInterrupted_=USBErrorInterrupted,
         # pylint: enable=undefined-variable
@@ -1240,6 +1243,7 @@ class USBDeviceHandle(object):
                 unregisterFinalizer,
                 handle=finalizer_handle,
             ),
+            libusb_close=libusb1.libusb_close,
         )
         registerFinalizer(finalizer_handle, self.close)
 
@@ -1259,9 +1263,9 @@ class USBDeviceHandle(object):
         inflight,
         finalizer_dict,
         unregisterFinalizer,
+        libusb_close,
 
         set_=set,
-        libusb_close=libusb1.libusb_close,
         # pylint: disable=undefined-variable
         USBErrorNotFound_=USBErrorNotFound,
         USBErrorNoDevice_=USBErrorNoDevice,
@@ -1969,6 +1973,8 @@ class USBDevice(object):
                 handle=finalizer_handle,
             ),
             descriptor_list=descriptor_list,
+            libusb_unref_device=libusb1.libusb_unref_device,
+            libusb_free_config_descriptor=libusb1.libusb_free_config_descriptor,
         )
         registerFinalizer(finalizer_handle, self.close)
         self.device_p = device_p
@@ -2015,10 +2021,10 @@ class USBDevice(object):
         finalizer_dict,
         unregisterFinalizer,
         descriptor_list,
+        libusb_unref_device,
+        libusb_free_config_descriptor,
 
         byref_=byref,
-        libusb_unref_device=libusb1.libusb_unref_device,
-        libusb_free_config_descriptor=libusb1.libusb_free_config_descriptor,
     ):
         while finalizer_dict:
             for handle, finalizer in list(finalizer_dict.items()):
@@ -2292,7 +2298,7 @@ class USBContext(object):
     __auto_open = True
     __has_pollfd_finalizer = False
     __mayRaiseUSBError = mayRaiseUSBError
-    __libusb_handle_events = libusb1.libusb_handle_events
+    __libusb_handle_events = None
 
     # pylint: disable=no-self-argument,protected-access
     def _validContext(func):
@@ -2379,9 +2385,13 @@ class USBContext(object):
         form: this means there are ways to avoid calling close(), which can
         cause issues particularly hard to debug (ex: interpreter hangs on
         exit).
+
+        Calls loadLibrary.
         """
         assert self.__context_refcount == 0
         assert not self.__context_p
+        loadLibrary()
+        self.__libusb_handle_events = libusb1.libusb_handle_events
         mayRaiseUSBError(libusb1.libusb_init(byref(self.__context_p)))
         self.__close = weakref_finalize(
             self,
@@ -2389,6 +2399,8 @@ class USBContext(object):
             context_p=self.__context_p,
             hotplug_callback_dict=self.__hotplug_callback_dict,
             finalizer_dict=self.__finalizer_dict,
+            libusb_exit=libusb1.libusb_exit,
+            libusb_hotplug_deregister_callback=libusb1.libusb_hotplug_deregister_callback,
         )
         return self
 
@@ -2428,9 +2440,8 @@ class USBContext(object):
         context_p,
         hotplug_callback_dict,
         finalizer_dict,
-
-        libusb_exit=libusb1.libusb_exit,
-        libusb_hotplug_deregister_callback=libusb1.libusb_hotplug_deregister_callback,
+        libusb_exit,
+        libusb_hotplug_deregister_callback,
     ):
         while hotplug_callback_dict:
             # Duplicates hotplugDeregisterCallback logic, to avoid finalizer
@@ -2643,6 +2654,7 @@ class USBContext(object):
                         self,
                         self.__finalizePollFDNotifiers, # Note: staticmethod
                         context_p=self.__context_p,
+                        libusb_set_pollfd_notifiers=libusb1.libusb_set_pollfd_notifiers,
                     ),
                 )
             except ValueError: # Already registered
@@ -2651,11 +2663,11 @@ class USBContext(object):
     @staticmethod
     def __finalizePollFDNotifiers(
         context_p,
+        libusb_set_pollfd_notifiers,
 
         null_pointer=_null_pointer,
         added_cb_p=cast(_null_pointer, libusb1.libusb_pollfd_added_cb_p),
         removed_cb_p=cast(_null_pointer, libusb1.libusb_pollfd_removed_cb_p),
-        libusb_set_pollfd_notifiers=libusb1.libusb_set_pollfd_notifiers,
     ):
         libusb_set_pollfd_notifiers(
             context_p,
@@ -2871,7 +2883,10 @@ def getVersion():
     - rc
     - describe
     Returns (0, 0, 0, 0, '', '') if libusb doesn't have required entry point.
+
+    Calls loadLibrary.
     """
+    loadLibrary()
     version = libusb1.libusb_get_version().contents
     return Version(
         version.major,
@@ -2891,7 +2906,10 @@ def hasCapability(capability):
         CAP_HAS_HOTPLUG
         CAP_HAS_HID_ACCESS
         CAP_SUPPORTS_DETACH_KERNEL_DRIVER
+
+    Calls loadLibrary.
     """
+    loadLibrary()
     return libusb1.libusb_has_capability(capability)
 
 class LibUSBContext(USBContext):
@@ -2904,6 +2922,8 @@ class LibUSBContext(USBContext):
             DeprecationWarning,
         )
         super(LibUSBContext, self).__init__()
+
+loadLibrary = libusb1.loadLibrary
 
 from ._version import get_versions
 __version__ = get_versions()['version']
