@@ -13,25 +13,19 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-from __future__ import print_function
+
 from setuptools import find_packages
 from setuptools import setup
 from setuptools import Command
 from codecs import open
 import hashlib
+from html.parser import HTMLParser
 import os
 import subprocess
 import sys
+from urllib.parse import urlsplit
+from urllib.request import urlopen
 import versioneer
-try:
-    from urllib.request import urlopen
-    from urllib.parse import urlsplit
-    from html.parser import HTMLParser
-except ImportError:
-    # BBB: python 2.7
-    from urllib2 import urlopen
-    from urlparse import urlsplit
-    from HTMLParser import HTMLParser
 
 if os.getenv('I_KNOW_HOW_TO_RELEASE_PYTHON_LIBUSB1') != '1' and any(
     x in sys.argv for x in ('sdist', 'upload')
@@ -183,7 +177,6 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
@@ -199,6 +192,5 @@ setup(
         if 'bdist_wheel' in sys.argv else
         []
     ),
-    use_2to3=True,
     test_suite='usb1.testUSB1',
 )

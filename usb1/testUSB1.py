@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 # pylint: disable=invalid-name, missing-docstring, too-many-public-methods
-from __future__ import absolute_import
+
 from ctypes import pointer
 import itertools
 import sys
@@ -25,18 +25,14 @@ from . import libusb1
 
 buff_len = 1024
 buffer_base = [x % 256 for x in range(buff_len)]
-if sys.version_info[0] == 3:
-    buff = bytes(buffer_base)
-    other_buff = bytes(reversed(buffer_base))
-else:
-    buff = ''.join(chr(x) for x in buffer_base)
-    other_buff = ''.join(chr(x) for x in reversed(buffer_base))
+buff = bytes(buffer_base)
+other_buff = bytes(reversed(buffer_base))
 bytearray_buff = bytearray(buffer_base)
 
 class USBContext(usb1.USBContext):
     def open(self):
         try:
-            return super(USBContext, self).open()
+            return super().open()
         except usb1.USBError:
             raise unittest.SkipTest(
                 'usb1.USBContext() fails - no USB bus on system ?'

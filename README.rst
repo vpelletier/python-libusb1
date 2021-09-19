@@ -513,6 +513,8 @@ Add support for homebrew on Apple M1.
 ?.?.?
 -----
 
+Drop python <3.4 support.
+
 Do not load the C library on import. Allows applications to customise the
 lookup logic (see `usb1.loadLibrary`).
 

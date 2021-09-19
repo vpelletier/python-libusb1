@@ -38,7 +38,7 @@ import platform
 import sys
 from threading import Lock
 
-class Enum(object):
+class Enum:
     def __init__(self, member_dict, scope_dict=None):
         if scope_dict is None:
             # Affect caller's locals, not this module's.
@@ -1300,7 +1300,7 @@ def libusb_get_iso_packet_buffer(transfer_p, packet):
     if packet >= transfer.num_iso_packets:
         return None
     iso_packet_desc_list = _get_iso_packet_list(transfer)
-    for i in xrange(packet):
+    for i in range(packet):
         offset += iso_packet_desc_list[i].length
     return _get_iso_packet_buffer(
         transfer, offset, iso_packet_desc_list[packet].length)

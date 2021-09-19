@@ -45,7 +45,6 @@ All LIBUSB_ERROR_* constants are available in this module as exception classes,
 subclassing USBError.
 """
 
-from __future__ import division, absolute_import
 from ctypes import byref, c_int, sizeof, POINTER, \
     cast, c_uint8, c_uint16, c_ubyte, c_void_p, cdll, addressof, \
     c_char
@@ -131,226 +130,8 @@ Version = collections.namedtuple(
     ['major', 'minor', 'micro', 'nano', 'rc', 'describe'],
 )
 
-if sys.version_info[0] == 3:
-    BYTE = bytes([0])
-    # pylint: disable=redefined-builtin
-    xrange = range
-    long = int
-    # pylint: enable=redefined-builtin
-    integer_memoryview = memoryview
-else: # BBB
-    BYTE = '\x00'
-    # Work around python2's memoryview, which only accepts & generates strings.
-    # For consistency between async control and other async transfers.
-    # Python 2.7 will not be fixed, so wrap its memoryview.
-    # Breaks the no-copy promise, but control transfer performance should
-    # matter less than other types.
-    class integer_memoryview(object):
-        def __init__(self, view):
-            if not isinstance(view, memoryview):
-                view = memoryview(view)
-            self.__view = view
-
-        # Many boring magic methods, just to mimic memoryview
-        def __eq__(self, other):
-            return self.__view == other
-
-        def __ge__(self, other):
-            return self.__view >= other
-
-        def __gt__(self, other):
-            return self.__view > other
-
-        def __le__(self, other):
-            return self.__view <= other
-
-        def __lt__(self, other):
-            return self.__view < other
-
-        def __ne__(self, other):
-            return self.__view != other
-
-        def __hash__(self):
-            # raises
-            return hash(self.__view)
-
-        def __delitem__(self, key):
-            # raises
-            del self.__view[key]
-
-        def __len__(self):
-            return len(self.__view)
-
-        # To access format, itemsize, ndim, readonly, shape, strides,
-        # suboffsets, tobytes, tolist.
-        def __getattr__(self, name):
-            return getattr(self.__view, name)
-
-        # Actual payload of this class.
-        def __getitem__(self, key):
-            value = self.__view[key]
-            if isinstance(value, memoryview):
-                return self.__class__(value)
-            return ord(value)
-
-        def __setitem__(self, key, value):
-            if isinstance(value, (int, long)):
-                value = chr(value)
-            else:
-                value = ''.join(chr(x) for x in value)
-            self.__view[key] = value
-
-try:
-    weakref_finalize = weakref.finalize
-except AttributeError: # BBB
-    import itertools
-    # pylint: disable=bad-whitespace,inconsistent-return-statements
-    # pylint: disable=protected-access,no-else-return,too-few-public-methods
-    # pylint: disable=broad-except
-    class weakref_finalize(object):
-        # Copied from python 3.9.0, and hence is covered by the PSF License v2
-        # Minimal changes to simplify the backport (ex: self.__class__
-        # instead of class name) and python2 idioms (ex: inherit from object).
-        """Class for finalization of weakrefable objects
-
-        finalize(obj, func, *args, **kwargs) returns a callable finalizer
-        object which will be called when obj is garbage collected. The
-        first time the finalizer is called it evaluates func(*arg, **kwargs)
-        and returns the result. After this the finalizer is dead, and
-        calling it just returns None.
-
-        When the program exits any remaining finalizers for which the
-        atexit attribute is true will be run in reverse order of creation.
-        By default atexit is true.
-        """
-
-        # Finalizer objects don't have any state of their own.  They are
-        # just used as keys to lookup _Info objects in the registry.  This
-        # ensures that they cannot be part of a ref-cycle.
-
-        __slots__ = ()
-        _registry = {}
-        _shutdown = False
-        _index_iter = itertools.count()
-        _dirty = False
-        _registered_with_atexit = False
-
-        class _Info(object):
-            __slots__ = ("weakref", "func", "args", "kwargs", "atexit", "index")
-
-        def __init__(self, obj, func, *args, **kwargs):
-            if not self._registered_with_atexit:
-                # We may register the exit function more than once because
-                # of a thread race, but that is harmless
-                import atexit
-                atexit.register(self._exitfunc)
-                self.__class__._registered_with_atexit = True
-            info = self._Info()
-            info.weakref = weakref.ref(obj, self)
-            info.func = func
-            info.args = args
-            info.kwargs = kwargs or None
-            info.atexit = True
-            info.index = next(self._index_iter)
-            self._registry[self] = info
-            self.__class__._dirty = True
-
-        def __call__(self, _=None):
-            """If alive then mark as dead and return func(*args, **kwargs);
-            otherwise return None"""
-            info = self._registry.pop(self, None)
-            if info and not self._shutdown:
-                return info.func(*info.args, **(info.kwargs or {}))
-
-        def detach(self):
-            """If alive then mark as dead and return (obj, func, args, kwargs);
-            otherwise return None"""
-            info = self._registry.get(self)
-            obj = info and info.weakref()
-            if obj is not None and self._registry.pop(self, None):
-                return (obj, info.func, info.args, info.kwargs or {})
-
-        def peek(self):
-            """If alive then return (obj, func, args, kwargs);
-            otherwise return None"""
-            info = self._registry.get(self)
-            obj = info and info.weakref()
-            if obj is not None:
-                return (obj, info.func, info.args, info.kwargs or {})
-
-        @property
-        def alive(self):
-            """Whether finalizer is alive"""
-            return self in self._registry
-
-        @property
-        def atexit(self):
-            """Whether finalizer should be called at exit"""
-            info = self._registry.get(self)
-            return bool(info) and info.atexit
-
-        @atexit.setter
-        def atexit(self, value):
-            info = self._registry.get(self)
-            if info:
-                info.atexit = bool(value)
-
-        def __repr__(self):
-            info = self._registry.get(self)
-            obj = info and info.weakref()
-            if obj is None:
-                return '<%s object at %#x; dead>' % (type(self).__name__, id(self))
-            else:
-                return '<%s object at %#x; for %r at %#x>' % \
-                    (type(self).__name__, id(self), type(obj).__name__, id(obj))
-
-        @classmethod
-        def _select_for_exit(cls):
-            # Return live finalizers marked for exit, oldest first
-            L = [(f,i) for (f,i) in cls._registry.items() if i.atexit]
-            L.sort(key=lambda item:item[1].index)
-            return [f for (f,i) in L]
-
-        @classmethod
-        def _exitfunc(cls):
-            # At shutdown invoke finalizers for which atexit is true.
-            # This is called once all other non-daemonic threads have been
-            # joined.
-            reenable_gc = False
-            try:
-                if cls._registry:
-                    import gc
-                    if gc.isenabled():
-                        reenable_gc = True
-                        gc.disable()
-                    pending = None
-                    while True:
-                        if pending is None or cls._dirty:
-                            pending = cls._select_for_exit()
-                            cls._dirty = False
-                        if not pending:
-                            break
-                        f = pending.pop()
-                        try:
-                            # gc is disabled, so (assuming no daemonic
-                            # threads) the following is the only line in
-                            # this function which might trigger creation
-                            # of a new finalizer
-                            f()
-                        except Exception:
-                            sys.excepthook(*sys.exc_info())
-                        assert f not in cls._registry
-            finally:
-                # prevent any more finalizers from executing during shutdown
-                cls._shutdown = True
-                if reenable_gc:
-                    gc.enable()
-    # pylint: enable=bad-whitespace,inconsistent-return-statements
-    # pylint: enable=protected-access,no-else-return,too-few-public-methods
-    # pylint: enable=broad-except
-
 # pylint: disable=undefined-variable
-CONTROL_SETUP = BYTE * CONTROL_SETUP_SIZE
+CONTROL_SETUP = b'\x00' * CONTROL_SETUP_SIZE
 # pylint: enable=undefined-variable
 
 # Default string length
@@ -380,11 +161,10 @@ def create_binary_buffer(init_or_size):
     ctypes.create_string_buffer variant which does not add a trailing null
     when init_or_size is not a size.
     """
-    # As per ctypes.create_string_buffer, as of python 2.7.10 at least:
-    # - int or long is a length
-    # - str or unicode is an initialiser
-    # Testing the latter confuses 2to3, so test the former.
-    if isinstance(init_or_size, (int, long)):
+    # As per ctypes.create_string_buffer:
+    # - int is a length
+    # - bytes is an initialiser
+    if isinstance(init_or_size, int):
         init_or_size = bytearray(init_or_size)
     return create_initialised_buffer(init_or_size)
 
@@ -394,7 +174,7 @@ def create_initialised_buffer(init):
     try:
         # zero-copy if init is a writable buffer
         return string_type.from_buffer(init), init
-    # cpython (2.7 and 3.5) raises TypeError, pypy 5.4.1 raises ValueError
+    # cpython (3.5, 3.9) raises TypeError, pypy 5.4.1 raises ValueError
     except (TypeError, ValueError):
         # create our own writable buffer
         init = bytearray(init)
@@ -402,9 +182,8 @@ def create_initialised_buffer(init):
 
 class DoomedTransferError(Exception):
     """Exception raised when altering/submitting a doomed transfer."""
-    pass
 
-class USBTransfer(object):
+class USBTransfer:
     """
     USB asynchronous transfer control & data.
 
@@ -459,7 +238,7 @@ class USBTransfer(object):
             # pylint: enable=undefined-variable
         self.__transfer = transfer
         finalizer_handle = id(self)
-        self.__close = weakref_finalize(
+        self.__close = weakref.finalize(
             self,
             self.__close, # Note: class method
             transfer=transfer,
@@ -571,7 +350,7 @@ class USBTransfer(object):
             request_type defines transfer direction (see
             ENDPOINT_OUT and ENDPOINT_IN)).
         buffer_or_len
-            Either a string (when sending data), or expected data length (when
+            Either bytes (when sending data), or expected data length (when
             receiving data).
         callback
             Callback function to be invoked on transfer completion.
@@ -585,7 +364,7 @@ class USBTransfer(object):
             raise ValueError('Cannot alter a submitted transfer')
         if self.__doomed:
             raise DoomedTransferError('Cannot reuse a doomed transfer')
-        if isinstance(buffer_or_len, (int, long)):
+        if isinstance(buffer_or_len, int):
             length = buffer_or_len
             # pylint: disable=undefined-variable
             string_buffer, transfer_py_buffer = create_binary_buffer(
@@ -600,7 +379,7 @@ class USBTransfer(object):
         self.__initialized = False
         self.__transfer_buffer = string_buffer
         # pylint: disable=undefined-variable
-        self.__transfer_py_buffer = integer_memoryview(
+        self.__transfer_py_buffer = memoryview(
             transfer_py_buffer,
         )[CONTROL_SETUP_SIZE:]
         # pylint: enable=undefined-variable
@@ -623,7 +402,7 @@ class USBTransfer(object):
             Endpoint to submit transfer to. Defines transfer direction (see
             ENDPOINT_OUT and ENDPOINT_IN)).
         buffer_or_len
-            Either a string (when sending data), or expected data length (when
+            Either bytes (when sending data), or expected data length (when
             receiving data)
             To avoid memory copies, use an object implementing the writeable
             buffer interface (ex: bytearray).
@@ -661,7 +440,7 @@ class USBTransfer(object):
             Endpoint to submit transfer to. Defines transfer direction (see
             ENDPOINT_OUT and ENDPOINT_IN)).
         buffer_or_len
-            Either a string (when sending data), or expected data length (when
+            Either bytes (when sending data), or expected data length (when
             receiving data)
             To avoid memory copies, use an object implementing the writeable
             buffer interface (ex: bytearray).
@@ -699,7 +478,7 @@ class USBTransfer(object):
             Endpoint to submit transfer to. Defines transfer direction (see
             ENDPOINT_OUT and ENDPOINT_IN)).
         buffer_or_len
-            Either a string (when sending data), or expected data length (when
+            Either bytes (when sending data), or expected data length (when
             receiving data)
             To avoid memory copies, use an object implementing the writeable
             buffer interface (ex: bytearray).
@@ -986,7 +765,7 @@ USBTransfer._USBTransfer__ctypesCallbackWrapper = libusb1.libusb_transfer_cb_fn_
 )
 # pylint: enable=protected-access,no-member
 
-class USBTransferHelper(object):
+class USBTransferHelper:
     """
     Simplifies subscribing to the same transfer over and over, and callback
     handling:
@@ -1089,7 +868,7 @@ class USBTransferHelper(object):
         # Deprecated: to drop
         return self.__transfer.isSubmitted()
 
-class USBPoller(object):
+class USBPoller:
     """
     Class allowing integration of USB event polling in a file-descriptor
     monitoring event loop.
@@ -1186,7 +965,7 @@ class USBPoller(object):
         self.unregister(fd)
     # pylint: enable=unused-argument
 
-class _ReleaseInterface(object):
+class _ReleaseInterface:
     def __init__(self, handle, interface):
         self._handle = handle
         self._interface = interface
@@ -1198,7 +977,7 @@ class _ReleaseInterface(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._handle.releaseInterface(self._interface)
 
-class USBDeviceHandle(object):
+class USBDeviceHandle:
     """
     Represents an opened USB device.
     """
@@ -1232,7 +1011,7 @@ class USBDeviceHandle(object):
         self.__handle = handle
         self.__device = device
         finalizer_handle = id(self)
-        self.close = weakref_finalize(
+        self.close = weakref.finalize(
             self,
             self.close, # Note: static method
             context=context,
@@ -1461,7 +1240,7 @@ class USBDeviceHandle(object):
         langid_list = cast(descriptor_string, POINTER(c_uint16))
         return [
             libusb1.libusb_le16_to_cpu(langid_list[offset])
-            for offset in xrange(1, cast(descriptor_string, POINTER(c_ubyte))[0] // 2)
+            for offset in range(1, cast(descriptor_string, POINTER(c_ubyte))[0] // 2)
         ]
 
     def getStringDescriptor(self, descriptor, lang_id, errors='strict'):
@@ -1727,7 +1506,7 @@ class USBDeviceHandle(object):
             unregisterFinalizer=self.__unregisterFinalizer,
         )
 
-class USBConfiguration(object):
+class USBConfiguration:
     def __init__(self, context, config, device_speed):
         """
         You should not instanciate this class directly.
@@ -1778,7 +1557,7 @@ class USBConfiguration(object):
         """
         context = self.__context
         interface_list = self.__config.interface
-        for interface_num in xrange(self.getNumInterfaces()):
+        for interface_num in range(self.getNumInterfaces()):
             yield USBInterface(context, interface_list[interface_num])
 
     # BBB
@@ -1794,7 +1573,7 @@ class USBConfiguration(object):
             raise IndexError('No such interface: %r' % (interface, ))
         return USBInterface(self.__context, self.__config.interface[interface])
 
-class USBInterface(object):
+class USBInterface:
     def __init__(self, context, interface):
         """
         You should not instanciate this class directly.
@@ -1817,7 +1596,7 @@ class USBInterface(object):
         """
         context = self.__context
         alt_setting_list = self.__interface.altsetting
-        for alt_setting_num in xrange(self.getNumSettings()):
+        for alt_setting_num in range(self.getNumSettings()):
             yield USBInterfaceSetting(
                 context, alt_setting_list[alt_setting_num])
 
@@ -1835,7 +1614,7 @@ class USBInterface(object):
         return USBInterfaceSetting(
             self.__context, self.__interface.altsetting[alt_setting])
 
-class USBInterfaceSetting(object):
+class USBInterfaceSetting:
     def __init__(self, context, alt_setting):
         """
         You should not instanciate this class directly.
@@ -1890,7 +1669,7 @@ class USBInterfaceSetting(object):
         """
         context = self.__context
         endpoint_list = self.__alt_setting.endpoint
-        for endpoint_num in xrange(self.getNumEndpoints()):
+        for endpoint_num in range(self.getNumEndpoints()):
             yield USBEndpoint(context, endpoint_list[endpoint_num])
 
     # BBB
@@ -1907,7 +1686,7 @@ class USBInterfaceSetting(object):
         return USBEndpoint(
             self.__context, self.__alt_setting.endpoint[endpoint])
 
-class USBEndpoint(object):
+class USBEndpoint:
     def __init__(self, context, endpoint):
         if not isinstance(endpoint, libusb1.libusb_endpoint_descriptor):
             raise TypeError('Unexpected descriptor type.')
@@ -1935,7 +1714,7 @@ class USBEndpoint(object):
     def getExtra(self):
         return libusb1.get_extra(self.__endpoint)
 
-class USBDevice(object):
+class USBDevice:
     """
     Represents a USB device.
 
@@ -1963,7 +1742,7 @@ class USBDevice(object):
         self.__configuration_descriptor_list = descriptor_list = []
         libusb1.libusb_ref_device(device_p)
         finalizer_handle = id(self)
-        self.close = weakref_finalize(
+        self.close = weakref.finalize(
             self,
             self.close, # Note: static method
             device_p=device_p,
@@ -1988,7 +1767,7 @@ class USBDevice(object):
         self.device_descriptor = device_descriptor
         if can_load_configuration:
             append = descriptor_list.append
-            for configuration_id in xrange(
+            for configuration_id in range(
                     self.device_descriptor.bNumConfigurations):
                 config = libusb1.libusb_config_descriptor_p()
                 result = libusb1.libusb_get_config_descriptor(
@@ -2284,7 +2063,7 @@ _zero_tv = libusb1.timeval(0, 0)
 _zero_tv_p = byref(_zero_tv)
 _null_pointer = c_void_p()
 
-class USBContext(object):
+class USBContext:
     """
     libusb1 USB context.
 
@@ -2393,7 +2172,7 @@ class USBContext(object):
         loadLibrary()
         self.__libusb_handle_events = libusb1.libusb_handle_events
         mayRaiseUSBError(libusb1.libusb_init(byref(self.__context_p)))
-        self.__close = weakref_finalize(
+        self.__close = weakref.finalize(
             self,
             self.___close, # Note: static method
             context_p=self.__context_p,
@@ -2650,7 +2429,7 @@ class USBContext(object):
             try:
                 self.__registerFinalizer(
                     handle=id(self),
-                    finalizer=weakref_finalize(
+                    finalizer=weakref.finalize(
                         self,
                         self.__finalizePollFDNotifiers, # Note: staticmethod
                         context_p=self.__context_p,
@@ -2921,7 +2700,7 @@ class LibUSBContext(USBContext):
             'LibUSBContext is being renamed to USBContext',
             DeprecationWarning,
         )
-        super(LibUSBContext, self).__init__()
+        super().__init__()
 
 loadLibrary = libusb1.loadLibrary
 
