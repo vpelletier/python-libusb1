@@ -14,6 +14,8 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
+# pylint: disable=unused-wildcard-import,wrong-import-position
+# pylint: disable=wildcard-import,missing-module-docstring
 from __future__ import absolute_import
 from ._libusb1 import loadLibrary
 loadLibrary()

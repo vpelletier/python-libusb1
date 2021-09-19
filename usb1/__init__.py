@@ -16,7 +16,7 @@
 
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 # pylint: disable=too-many-public-methods, too-many-instance-attributes
-# pylint: disable=missing-docstring,bad-continuation
+# pylint: disable=missing-docstring
 """
 Pythonic wrapper for libusb-1.0.
 
@@ -45,19 +45,22 @@ All LIBUSB_ERROR_* constants are available in this module as exception classes,
 subclassing USBError.
 """
 
+import collections
+import contextlib
 from ctypes import byref, c_int, sizeof, POINTER, \
     cast, c_uint8, c_uint16, c_ubyte, c_void_p, cdll, addressof, \
     c_char
 from ctypes.util import find_library
+import functools
+import inspect
 import sys
 import threading
 import warnings
 import weakref
-import collections
-import functools
-import contextlib
-import inspect
 from . import _libusb1 as libusb1
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
 # pylint: disable=wrong-import-order,ungrouped-imports
 if sys.platform == 'win32':
     from ctypes import get_last_error as get_errno
@@ -2703,7 +2706,3 @@ class LibUSBContext(USBContext):
         super().__init__()
 
 loadLibrary = libusb1.loadLibrary
-
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions

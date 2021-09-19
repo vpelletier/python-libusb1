@@ -27,7 +27,7 @@ Some are only available after calling loadLibrary.
 from ctypes import (
     Structure, LittleEndianStructure,
     CFUNCTYPE, POINTER, addressof, sizeof, cast,
-    c_short, c_int, c_uint, c_size_t, c_long,
+    c_short, c_int, c_uint, c_long,
     c_uint8, c_uint16, c_uint32,
     c_void_p, c_char_p, py_object, pointer, c_char,
     c_ssize_t, CDLL
@@ -147,7 +147,7 @@ def __getLibrary():
         suffix = '.dll'
     else:
         dll_loader = ctypes.CDLL
-        suffix = system == 'Darwin' and '.dylib' or '.so'
+        suffix = '.dylib' if system == 'Darwin' else '.so'
     filename = 'libusb-1.0' + suffix
     # If this is a binary wheel, use the integrated libusb unconditionally.
     # To use the libusb from the Python installation or the OS, install from sdist:
@@ -203,7 +203,7 @@ def loadLibrary(libusb=None):
     - libusb argument is None
     - libusb argument is the same object that was initially loaded.
     """
-    global __loaded
+    global __loaded # pylint: disable=global-statement
     if not __loaded: # avoid touching the lock if we are already loaded
         with __load_lock:
             if not __loaded: # we were not loaded, check again under lock
@@ -212,7 +212,7 @@ def loadLibrary(libusb=None):
                 return True
     return libusb is None or globals()['libusb'] is libusb
 
-def __loadLibrary(libusb):
+def __loadLibrary(libusb): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     # WARNING: every local in this function will be stored in
     # globals . Treat this namespace the same as the module's.
     if libusb is None:
@@ -787,12 +787,12 @@ libusb_request_type = Enum({
 })
 
 # BBB
-# pylint: disable=bad-whitespace,undefined-variable
+# pylint: disable=undefined-variable
 LIBUSB_TYPE_STANDARD = LIBUSB_REQUEST_TYPE_STANDARD
 LIBUSB_TYPE_CLASS    = LIBUSB_REQUEST_TYPE_CLASS
 LIBUSB_TYPE_VENDOR   = LIBUSB_REQUEST_TYPE_VENDOR
 LIBUSB_TYPE_RESERVED = LIBUSB_REQUEST_TYPE_RESERVED
-# pylint: enable=bad-whitespace,undefined-variable
+# pylint: enable=undefined-variable
 
 # Recipient bits of the bmRequestType field in control transfers. Values 4
 # through 31 are reserved.
