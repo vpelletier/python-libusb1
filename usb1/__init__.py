@@ -2608,8 +2608,9 @@ class USBContext:
         it cannot call any synchronous libusb function.
         """
         def wrapped_callback(context_p, device_p, event, _):
-            assert addressof(context_p.contents) == addressof(
-                self.__context_p.contents), (context_p, self.__context_p)
+            assert context_p == self.__context_p.value, (
+                context_p, self.__context_p,
+            )
             device = USBDevice(
                 context=self,
                 device_p=device_p,
