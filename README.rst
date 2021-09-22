@@ -510,8 +510,13 @@ Fix support for python 3.10 .
 
 Add support for homebrew on Apple M1.
 
-1.10.1
-------
+1.10.1 (yanked)
+---------------
+
+NOTE: Release yanked_ frop pypi and re-released as 2.0.0.
+
+2.0.0
+-----
 
 Drop python <3.4 support.
 
@@ -541,3 +546,5 @@ Fix objects escaping control from their parent.
 .. _libusb1.0 documentation: http://libusb.sourceforge.net/api-1.0/
 
 .. _Zadig: https://zadig.akeo.ie/
+
+.. _yanked: https://www.python.org/dev/peps/pep-0592/
