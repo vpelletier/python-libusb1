@@ -21,6 +21,6 @@ done
 python3 setup.py --quiet sdist clean --all
 release_prefix="dist/libusb1-$(python3 -c 'import versioneer; print(versioneer.get_version())')"
 echo "Done. Next, check their content, sign each:"
-echo "  for release in ${release_prefix}*; do gpg --armor --detach-sign \"\$release\"; done"
+echo "  for release in ${release_prefix}-*.whl ${release_prefix}.tar.gz; do gpg --armor --detach-sign \"\$release\"; done"
 echo "and upload them:"
-echo "  twine upload ${release_prefix}*"
+echo "  twine upload ${release_prefix}-*.whl{,.asc} ${release_prefix}.tar.gz{,.asc}"
