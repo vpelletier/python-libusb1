@@ -510,7 +510,7 @@ Fix support for python 3.10 .
 
 Add support for homebrew on Apple M1.
 
-?.?.?
+1.10.0
 -----
 
 Drop python <3.4 support.
