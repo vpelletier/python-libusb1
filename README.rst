@@ -513,7 +513,7 @@ Add support for homebrew on Apple M1.
 1.10.1 (yanked)
 ---------------
 
-NOTE: Release yanked_ frop pypi and re-released as 2.0.0.
+NOTE: Release yanked_ from pypi and re-released as 2.0.0.
 
 2.0.0
 -----
