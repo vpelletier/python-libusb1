@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2013-2018  Vincent Pelletier <plr.vincent@gmail.com>
+# Copyright (C) 2013-2021  Vincent Pelletier <plr.vincent@gmail.com>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,7 @@
 Advanced hotplug examples.
 Presents ways of integrating hotplug into your userland USB driver.
 """
-from __future__ import print_function
+
 import select
 import sys
 import usb1
@@ -58,12 +58,12 @@ class SelectPoller(object):
         for fd_list, happened_flag in zip(
                 select.select(*([[
                     fd
-                    for fd, events in self._fd_dict.iteritems() if events & flag
+                    for fd, events in self._fd_dict.items() if events & flag
                 ] for flag in flag_list] + [timeout])),
                 flag_list,
             ):
             result[fd] = result.get(fd, 0) | happened_flag
-        return result.items()
+        return list(result.items())
 # (end of demonstration helpers)
 
 class AwesomeDevice(object):
