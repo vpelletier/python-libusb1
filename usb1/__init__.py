@@ -2079,7 +2079,7 @@ class USBContext:
     __poll_cb_user_data = None
     __auto_open = True
     __has_pollfd_finalizer = False
-    __mayRaiseUSBError = mayRaiseUSBError
+    __mayRaiseUSBError = staticmethod(mayRaiseUSBError)
     __libusb_handle_events = None
 
     # pylint: disable=no-self-argument,protected-access
