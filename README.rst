@@ -15,7 +15,7 @@ PyPI: http://pypi.python.org/pypi/libusb1
 Dependencies
 ============
 
-- CPython_ 2.7+ or 3.4+, pypy_ 2.0+. Older versions may work, but are not
+- CPython_ 3.4+, pypy_ 2.0+. Older versions may work, but are not
   recommended as there is no automated regression testing set up for them.
 - libusb-1.0_
 
