@@ -2255,14 +2255,9 @@ class USBContext:
         try:
             for device_p in device_p_p[:device_list_len]:
                 try:
-                    # Instanciate our own libusb_device_p object so we can free
-                    # libusb-provided device list. Is this a bug in ctypes that
-                    # it doesn't copy pointer value (=pointed memory address) ?
-                    # At least, it's not so convenient and forces using such
-                    # weird code.
                     device = USBDevice(
                         context=self,
-                        device_p=libusb_device_p(device_p.contents),
+                        device_p=device_p,
                         registerFinalizer=self.__registerFinalizer,
                         unregisterFinalizer=self.__unregisterFinalizer,
                         can_load_configuration=True,

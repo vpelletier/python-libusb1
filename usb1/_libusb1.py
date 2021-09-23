@@ -971,9 +971,10 @@ libusb_context_p_p = POINTER(libusb_context_p)
 # 1, and libusb_free_device_list() can optionally decrease the reference count
 # on all devices in the list. libusb_open() adds another reference which is
 # later destroyed by libusb_close().
-class libusb_device(Structure):
-    pass
-libusb_device_p = POINTER(libusb_device)
+#class libusb_device(Structure):
+#    pass
+#libusb_device_p = POINTER(libusb_device)
+libusb_device_p = c_void_p # Any pointer is fine
 libusb_device_p_p = POINTER(libusb_device_p)
 libusb_device_p_p_p = POINTER(libusb_device_p_p)
 
