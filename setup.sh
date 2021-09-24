@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
-# pypy fails when installing the wheel: libusb.py compilation does not produce a .pyc .
-for python in /usr/bin/python3.9 /usr/bin/pypy3; do
-  "$(dirname "$(realpath "$0")")"/runTestLibusb.sh "$python" https://github.com/libusb/libusb.git libusb.git master v1.0.19 v1.0.22
+cd "$(dirname "$(realpath "$0")")"
+for python_v in python3 pypy3; do
+  ./runTestLibusb.sh "$python_v" https://github.com/libusb/libusb.git libusb.git master v1.0.19 v1.0.22 v1.0.24
 done
 export I_KNOW_HOW_TO_RELEASE_PYTHON_LIBUSB1=1
 echo "Fetching libusb1 windows binary distribution..."
