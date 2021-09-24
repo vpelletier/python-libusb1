@@ -529,6 +529,19 @@ Better control device iterator end of life.
 
 Fix objects escaping control from their parent.
 
+2.0.1
+-----
+
+Fix a TypeError exception in USBContext.handleEvents .
+
+Fix an AttributeError exception in USBContext.hotplugRegisterCallback .
+
+Fix segfault in pypy3 when finalizing USBDevice objects .
+
+Source only: convert examples to python3.
+
+Release process: also run some examples scripts.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
