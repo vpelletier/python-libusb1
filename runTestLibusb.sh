@@ -53,12 +53,25 @@ while [ $# -ne 0 ]; do
 done
 
 result=0
+venv_python="${venv_dir}/bin/python"
 for lib_dir in "${lib_dir_list[@]}"; do
   export LD_LIBRARY_PATH="${lib_dir}"
-  if "${venv_dir}/bin/python" -m usb1.testUSB1; then
+  if "$venv_python" -m usb1.testUSB1; then
     :
   else
-    echo "failed with ${lib_dir}: status=$?"
+    echo "usb1.testUSB1 failed with ${lib_dir}: status=$?"
+    result=1
+  fi
+  if "$venv_python" "${python_libusb1}/examples/listdevs.py"; then
+    :
+  else
+    echo "examples/listdevs.py failed with ${lib_dir}: status=$?"
+    result=1
+  fi
+  if timeout --preserve-status --signal INT 1 "$venv_python" "${python_libusb1}/examples/hotplug.py"; then
+    :
+  else
+    echo "examples/hotplug.py failed with ${lib_dir}: status=$?"
     result=1
   fi
 done
