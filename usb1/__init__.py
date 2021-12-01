@@ -58,9 +58,8 @@ import threading
 import warnings
 import weakref
 from . import _libusb1 as libusb1
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
+from . import _version
+__version__ = _version.get_versions()['version']
 # pylint: disable=wrong-import-order,ungrouped-imports
 if sys.platform == 'win32':
     from ctypes import get_last_error as get_errno
