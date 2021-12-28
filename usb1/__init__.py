@@ -2162,7 +2162,7 @@ class USBContext:
         This happens automatically on the first method call needing access to
         the uninitialised properties, but with a warning.
         Call this method ONLY if your usage pattern prevents you from using the
-            with USBContext() as contewt:
+            with USBContext() as context:
         form: this means there are ways to avoid calling close(), which can
         cause issues particularly hard to debug (ex: interpreter hangs on
         exit).
