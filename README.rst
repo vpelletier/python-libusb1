@@ -15,7 +15,7 @@ PyPI: http://pypi.python.org/pypi/libusb1
 Dependencies
 ============
 
-- CPython_ 3.4+, pypy_ 2.0+. Older versions may work, but are not
+- CPython_ 3.6+, pypy_ 2.0+. Older versions may work, but are not
   recommended as there is no automated regression testing set up for them.
 - libusb-1.0_
 
@@ -541,6 +541,14 @@ Fix segfault in pypy3 when finalizing USBDevice objects .
 Source only: convert examples to python3.
 
 Release process: also run some examples scripts.
+
+3.0.0
+-----
+
+Update versioneer to be compatible with 3.11 .
+
+Drop python <3.6 support (consequence of versioneer update), hence the major
+version change.
 
 .. _CPython: http://www.python.org/
 

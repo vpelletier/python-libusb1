@@ -33,7 +33,7 @@ if os.getenv('I_KNOW_HOW_TO_RELEASE_PYTHON_LIBUSB1') != '1' and any(
     sys.exit(1)
 
 CURRENT_WINDOWS_7Z_SHA256 = (
-    '620cec4dbe4868202949294157da5adb75c9fbb4f04266146fc833eef85f90fb'
+    '3d1c98416f454026034b2b5d67f8a294053898cb70a8b489874e75b136c6674d'
 )
 
 cmdclass = versioneer.get_cmdclass()
@@ -127,8 +127,8 @@ class update_libusb(Command):
                 )
             )
         for arch_path, out_dir in (
-            ('VS2019/MS32/dll/libusb-1.0.dll', os.path.join(build_dir, 'win32')),
-            ('VS2019/MS64/dll/libusb-1.0.dll', os.path.join(build_dir, 'win_amd64')),
+            ('VS2019/MS32/Release/dll/libusb-1.0.dll', os.path.join(build_dir, 'win32')),
+            ('VS2019/MS64/Release/dll/libusb-1.0.dll', os.path.join(build_dir, 'win_amd64')),
         ):
             subprocess.check_call(
                 [
