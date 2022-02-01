@@ -102,48 +102,46 @@ class update_libusb(Command):
             for suffix in ('', '.asc'):
                 with open(archive_path + suffix, 'wb') as archive_file:
                     archive_file.write(urlopen(url + suffix).read())
-        # py2 does not have subprocess.DEVNULL.
-        with open(os.devnull, 'wb') as devnull:
-            # to build/update trustedkeys-libusb.kbx:
-            # gpg --no-default-keyring --keyring trustedkeys-libusb.kbx --receive-keys ...
+        # to build/update trustedkeys-libusb.kbx:
+        # gpg --no-default-keyring --keyring trustedkeys-libusb.kbx --receive-keys ...
+        subprocess.check_call(
+            [
+                'gpgv',
+                '--keyring', 'trustedkeys-libusb.kbx',
+                archive_path + '.asc', archive_path,
+            ],
+            # gnupg will not shut its pie hole.
+            stderr=subprocess.DEVNULL,
+            close_fds=True,
+        )
+        # This check is for the maintainer to notice a new release, and
+        # to retrospectively confirm that a release was done with files
+        # from a certain archive (and not just any signed release).
+        # It is *not* to check file authenticity (for this, we have gpg).
+        with open(archive_path, 'rb') as archive_file:
+            archive_sha256 = hashlib.sha256(archive_file.read()).hexdigest()
+        if archive_sha256 != CURRENT_WINDOWS_7Z_SHA256:
+            raise ValueError(
+                'Windows release sha56 mismatch: %r fetched with a sha256 of %r' % (
+                    url,
+                    archive_sha256,
+                )
+            )
+        for arch_path, out_dir in (
+            ('VS2019/MS32/dll/libusb-1.0.dll', os.path.join(build_dir, 'win32')),
+            ('VS2019/MS64/dll/libusb-1.0.dll', os.path.join(build_dir, 'win_amd64')),
+        ):
             subprocess.check_call(
                 [
-                    'gpgv',
-                    '--keyring', 'trustedkeys-libusb.kbx',
-                    archive_path + '.asc', archive_path,
+                    '7z', 'e', '-aoa',
+                    '-o' + out_dir,
+                    archive_path,
+                    arch_path,
                 ],
-                # gnupg will not shut its pie hole.
-                stderr=devnull,
+                # 7z will not shut its pie hole.
+                stdout=subprocess.DEVNULL,
                 close_fds=True,
             )
-            # This check is for the maintainer to notice a new release, and
-            # to retrospectively confirm that a release was done with files
-            # from a certain archive (and not just any signed release).
-            # It is *not* to check file authenticity (for this, we have gpg).
-            with open(archive_path, 'rb') as archive_file:
-                archive_sha256 = hashlib.sha256(archive_file.read()).hexdigest()
-            if archive_sha256 != CURRENT_WINDOWS_7Z_SHA256:
-                raise ValueError(
-                    'Windows release sha56 mismatch: %r fetched with a sha256 of %r' % (
-                        url,
-                        archive_sha256,
-                    )
-                )
-            for arch_path, out_dir in (
-                ('VS2019/MS32/dll/libusb-1.0.dll', os.path.join(build_dir, 'win32')),
-                ('VS2019/MS64/dll/libusb-1.0.dll', os.path.join(build_dir, 'win_amd64')),
-            ):
-                subprocess.check_call(
-                    [
-                        '7z', 'e', '-aoa',
-                        '-o' + out_dir,
-                        archive_path,
-                        arch_path,
-                    ],
-                    # 7z will not shut its pie hole.
-                    stdout=devnull,
-                    close_fds=True,
-                )
 cmdclass['update_libusb'] = update_libusb
 
 long_description = open(
