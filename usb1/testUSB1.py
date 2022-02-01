@@ -44,7 +44,7 @@ class USBTransferTests(unittest.TestCase):
         # Dummy handle
         return usb1.USBTransfer(
             context=None,
-            handle=pointer(libusb1.libusb_device_handle()),
+            handle=None,
             iso_packets=iso_packets,
             before_submit=lambda x: None,
             after_completion=lambda x: None,
