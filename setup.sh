@@ -2,7 +2,12 @@
 set -eu
 cd "$(dirname "$(realpath "$0")")"
 for python_v in python3 pypy3; do
-  ./runTestLibusb.sh "$python_v" https://github.com/libusb/libusb.git libusb.git master v1.0.19 v1.0.22 v1.0.24
+  if ./runTestLibusb.sh "$python_v" https://github.com/libusb/libusb.git libusb.git master v1.0.19 v1.0.22 v1.0.24; then
+    :
+  else
+    echo "runTestLibusb.sh failed with ${python_v} ($("$python_v" --version))"
+    false
+  fi
 done
 export I_KNOW_HOW_TO_RELEASE_PYTHON_LIBUSB1=1
 echo "Fetching libusb1 windows binary distribution..."
