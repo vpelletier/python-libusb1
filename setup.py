@@ -14,7 +14,6 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
-from setuptools import find_packages
 from setuptools import setup
 from setuptools import Command
 from codecs import open
@@ -144,47 +143,15 @@ class update_libusb(Command):
             )
 cmdclass['update_libusb'] = update_libusb
 
-long_description = open(
-    os.path.join(os.path.dirname(__file__), 'README.rst'),
-    encoding='utf8',
-).read()
-
 setup(
-    name='libusb1',
-    description=next(x for x in long_description.splitlines() if x.strip()),
-    long_description='.. contents::\n\n' + long_description,
-    keywords='usb libusb',
     version=versioneer.get_version(),
     cmdclass=cmdclass,
-    author='Vincent Pelletier',
-    author_email='plr.vincent@gmail.com',
-    url='http://github.com/vpelletier/python-libusb1',
-    license='LGPLv2.1+',
-    platforms=['any'],
-    py_modules=['libusb1'],
-    packages=find_packages(),
-    package_data={
-        "usb1": ["libusb-1.0.dll"],
-    },
+
     entry_points={
         'pyinstaller40': [
             'hook-dirs=usb1.__pyinstaller:get_hook_dirs',
             'tests=usb1.__pyinstaller:get_PyInstaller_tests']
     },
-    classifiers=[
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: PyPy',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: System :: Hardware :: Hardware Drivers',
-    ],
     setup_requires=(
         ['wheel']
         if 'bdist_wheel' in sys.argv else
