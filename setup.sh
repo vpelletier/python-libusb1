@@ -6,7 +6,7 @@ for python_v in python3 pypy3; do
     :
   else
     echo "runTestLibusb.sh failed with ${python_v} ($("$python_v" --version))"
-    false
+    exit 1
   fi
 done
 export I_KNOW_HOW_TO_RELEASE_PYTHON_LIBUSB1=1
