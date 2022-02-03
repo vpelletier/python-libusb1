@@ -16,10 +16,13 @@
 
 # pylint: disable=invalid-name, missing-docstring, too-many-public-methods
 
-from ctypes import pointer
+from ctypes import pointer, sizeof
+import functools
+import gc
 import itertools
 import sys
 import unittest
+import weakref
 import usb1
 from . import libusb1
 
@@ -38,7 +41,50 @@ class USBContext(usb1.USBContext):
                 'usb1.USBContext() fails - no USB bus on system ?'
             )
 
+def checkTransferAllocCount(func):
+    @functools.wraps(func)
+    def wrapper(self, *args, **kw):
+        before = self.transfer_alloc_count
+        libusb_free_transfer = libusb1.libusb_free_transfer
+        libusb_alloc_transfer = libusb1.libusb_alloc_transfer
+        try:
+            libusb1.libusb_free_transfer = self._fakeFreeTransfer
+            libusb1.libusb_alloc_transfer = self._fakeAllocTransfer
+            print('running')
+            result = func(self, *args, **kw)
+            print('done')
+        finally:
+            libusb1.libusb_free_transfer = libusb_free_transfer
+            libusb1.libusb_alloc_transfer = libusb_alloc_transfer
+        gc.collect()
+        self.assertEqual(self.transfer_alloc_count, before)
+        return result
+    return wrapper
+
 class USBTransferTests(unittest.TestCase):
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        usb1.loadLibrary()
+        self.transfer_alloc_count = 0
+
+    def _fakeFreeTransfer(self, _):
+        self.transfer_alloc_count -= 1
+
+    def _fakeAllocTransfer(self, isochronous_count):
+        self.transfer_alloc_count += 1
+        buffer = bytearray(
+            sizeof(
+                libusb1.libusb_transfer,
+            ) + sizeof(
+                libusb1.libusb_iso_packet_descriptor,
+            ) * max(0, isochronous_count - 1),
+        )
+        transfer = libusb1.libusb_transfer.from_buffer(buffer)
+        # Keep a reference (in the finalizer itself) to the buffer for as long
+        # as transfer is alive.
+        weakref.finalize(transfer, lambda _: None, buffer)
+        return pointer(transfer)
+
     @staticmethod
     def getTransfer(iso_packets=0):
         # Dummy handle
@@ -66,6 +112,7 @@ class USBTransferTests(unittest.TestCase):
         """
         usb1.hasCapability(usb1.CAP_HAS_CAPABILITY)
 
+    @checkTransferAllocCount
     def testSetControl(self):
         """
         Simplest test: feed some data, must not raise.
@@ -129,6 +176,7 @@ class USBTransferTests(unittest.TestCase):
         # No callback
         setter(endpoint, buff)
 
+    @checkTransferAllocCount
     def testSetBulk(self):
         """
         Simplest test: feed some data, must not raise.
@@ -136,6 +184,7 @@ class USBTransferTests(unittest.TestCase):
         """
         self._testTransferSetter(self.getTransfer(), 'setBulk')
 
+    @checkTransferAllocCount
     def testSetInterrupt(self):
         """
         Simplest test: feed some data, must not raise.
@@ -143,6 +192,7 @@ class USBTransferTests(unittest.TestCase):
         """
         self._testTransferSetter(self.getTransfer(), 'setInterrupt')
 
+    @checkTransferAllocCount
     def testSetIsochronous(self):
         """
         Simplest test: feed some data, must not raise.
@@ -174,6 +224,7 @@ class USBTransferTests(unittest.TestCase):
             buff,
         )
 
+    @checkTransferAllocCount
     def testSetGetCallback(self):
         transfer = self.getTransfer()
         def callback(transfer):
