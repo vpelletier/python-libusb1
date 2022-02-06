@@ -50,9 +50,7 @@ def checkTransferAllocCount(func):
         try:
             libusb1.libusb_free_transfer = self._fakeFreeTransfer
             libusb1.libusb_alloc_transfer = self._fakeAllocTransfer
-            print('running')
             result = func(self, *args, **kw)
-            print('done')
         finally:
             libusb1.libusb_free_transfer = libusb_free_transfer
             libusb1.libusb_alloc_transfer = libusb_alloc_transfer
