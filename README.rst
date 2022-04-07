@@ -148,7 +148,7 @@ Some description is needed though on how to jump from libusb-1.0 documentation
 to python-libusb1, and vice-versa:
 
 ``usb1`` module groups libusb-1.0 functions as class methods. The first
-parameter (when it's a ``libusb_...`` pointer) defined the class the fonction
+parameter (when it's a ``libusb_...`` pointer) defined the class the function
 belongs to. For example:
 
 - :c_code:`int libusb_init (libusb_context **context)` becomes USBContext class
