@@ -2424,21 +2424,23 @@ class USBContext:
         if not self.__has_pollfd_finalizer:
             self.__has_pollfd_finalizer = True
             try:
-                self.__registerFinalizer(
-                    handle=id(self),
-                    finalizer=weakref.finalize(
-                        self,
-                        self.__finalizePollFDNotifiers, # Note: staticmethod
-                        context_p=self.__context_p,
-                        libusb_set_pollfd_notifiers=libusb1.libusb_set_pollfd_notifiers,
-                    ),
+                finalizer_handle = id(self)
+                finalizer_dict = self.__finalizer_dict
+                finalizer = weakref.finalize(
+                    self,
+                    self.__finalizePollFDNotifiers, # Note: staticmethod
+                    context_p=self.__context_p,
+                    unregisterFinalizer=lambda: finalizer_dict.pop(finalizer_handle),
+                    libusb_set_pollfd_notifiers=libusb1.libusb_set_pollfd_notifiers,
                 )
+                self.__registerFinalizer(finalizer_handle, finalizer)
             except ValueError: # Already registered
                 pass
 
     @staticmethod
     def __finalizePollFDNotifiers(
         context_p,
+        unregisterFinalizer,
         libusb_set_pollfd_notifiers,
 
         null_pointer=_null_pointer,
@@ -2451,6 +2453,7 @@ class USBContext:
             removed_cb_p,
             null_pointer,
         )
+        unregisterFinalizer()
 
     @_validContext
     def getNextTimeout(self):
