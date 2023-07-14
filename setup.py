@@ -33,7 +33,7 @@ if os.getenv('I_KNOW_HOW_TO_RELEASE_PYTHON_LIBUSB1') != '1' and any(
     sys.exit(1)
 
 CURRENT_WINDOWS_7Z_SHA256 = (
-    '3d1c98416f454026034b2b5d67f8a294053898cb70a8b489874e75b136c6674d'
+    '9c242696342dbde9cdc47239391f71833939bf9f7aa2bbb28cdaabe890465ec5'
 )
 
 cmdclass = versioneer.get_cmdclass()
