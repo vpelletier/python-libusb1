@@ -147,11 +147,6 @@ setup(
     version=versioneer.get_version(),
     cmdclass=cmdclass,
 
-    entry_points={
-        'pyinstaller40': [
-            'hook-dirs=usb1.__pyinstaller:get_hook_dirs',
-            'tests=usb1.__pyinstaller:get_PyInstaller_tests']
-    },
     setup_requires=(
         ['wheel']
         if 'bdist_wheel' in sys.argv else
