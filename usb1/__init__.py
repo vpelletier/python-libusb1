@@ -2430,7 +2430,10 @@ class USBContext:
                     self,
                     self.__finalizePollFDNotifiers, # Note: staticmethod
                     context_p=self.__context_p,
-                    unregisterFinalizer=lambda: finalizer_dict.pop(finalizer_handle),
+                    unregisterFinalizer=functools.partial(
+                        finalizer_dict.pop,
+                        finalizer_handle,
+                    ),
                     libusb_set_pollfd_notifiers=libusb1.libusb_set_pollfd_notifiers,
                 )
                 self.__registerFinalizer(finalizer_handle, finalizer)
