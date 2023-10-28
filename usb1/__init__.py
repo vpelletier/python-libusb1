@@ -2394,6 +2394,15 @@ class USBContext:
     # TODO: handleEventsTimeoutCompleted
 
     @_validContext
+    def interruptEventHandler(self):
+        """
+        Interrupt any active thread that is handling events.
+        This is mainly useful for interrupting a dedicated event handling thread
+        when the application wishes to exit.
+        """
+        libusb1.libusb_interrupt_event_handler(self.__context_p)
+
+    @_validContext
     def setPollFDNotifiers(
             self, added_cb=None, removed_cb=None, user_data=None):
         """
