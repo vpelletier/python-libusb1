@@ -566,6 +566,14 @@ def __loadLibrary(libusb): # pylint: disable=too-many-locals,too-many-branches,t
     #int libusb_handle_events_locked(libusb_context *ctx, struct timeval *tv);
     libusb_handle_events_locked = libusb.libusb_handle_events_locked
     libusb_handle_events_locked.argtypes = [libusb_context_p, timeval_p]
+    #void libusb_interrupt_event_handler(libusb_context *ctx);
+    try:
+        libusb_interrupt_event_handler = libusb.libusb_interrupt_event_handler
+    except AttributeError:
+        def libusb_interrupt_event_handler(_):
+            raise NotImplementedError
+    else:
+        libusb_interrupt_event_handler.argtypes = [libusb_context_p]
     #int libusb_get_next_timeout(libusb_context *ctx, struct timeval *tv);
     libusb_get_next_timeout = libusb.libusb_get_next_timeout
     libusb_get_next_timeout.argtypes = [libusb_context_p, timeval_p]
