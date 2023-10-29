@@ -550,8 +550,8 @@ Update versioneer to be compatible with 3.11 .
 Drop python <3.6 support (consequence of versioneer update), hence the major
 version change.
 
-unreleased
-----------
+3.1.0
+-----
 
 Fix bug preventing use of setPollFDNotifiers.
 
