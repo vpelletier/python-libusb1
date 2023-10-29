@@ -550,6 +550,16 @@ Update versioneer to be compatible with 3.11 .
 Drop python <3.6 support (consequence of versioneer update), hence the major
 version change.
 
+unreleased
+----------
+
+Fix bug preventing use of setPollFDNotifiers.
+
+Wrap libusb_interrupt_event_handler, available since libusb 1.0.21, to help
+applications wake an event handling thread (ex: durring exit).
+
+Windows wheels: Update bundled libusb dll to 1.0.26 .
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
