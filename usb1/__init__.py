@@ -713,6 +713,16 @@ class USBTransfer:
         transfer.buffer = cast(buff, c_void_p)
         transfer.length = sizeof(buff)
 
+    def setFlags(self, flags):
+        """
+        Set transfer flags.
+
+        flags is a bitwise or of TRANSFER_FLAGS_* constants.
+        """
+        if self.isSubmitted():
+            raise ValueError('Cannot alter a submitted transfer')
+        self.__transfer.contents.flags = flags
+
     def isSubmitted(self):
         """
         Tells if this transfer is submitted and still pending.
