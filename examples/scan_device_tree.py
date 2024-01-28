@@ -30,10 +30,12 @@ def scan_device_tree():
 	                f"Attributes: 0x{cfg.getAttributes():02x}"
 	            )
 
-	            for iface in cfg:
+	            for iface_idx, iface in enumerate(cfg):
 	                iface: usb1.USBInterface
 
-	                for altsetting in iface:
+	                print(f"    ---> Interface {iface_idx}")
+
+	                for altsetting_idx, altsetting in enumerate(iface):
 	                    altsetting: usb1.USBInterfaceSetting
 
 	                    # The docs for USBInterfaceSetting can be seen here:
@@ -42,7 +44,7 @@ def scan_device_tree():
 	                    # https://www.usb.org/defined-class-codes
 
 	                    print(
-	                        f"    ---> Alternate settings: Num Endpoints: {altsetting.getNumEndpoints()}, "
+	                        f"        ---> Alternate settings {altsetting_idx}: Num Endpoints: {altsetting.getNumEndpoints()}, "
 	                        f"Class and SubClass: (0x{altsetting.getClass():02x}, 0x{altsetting.getSubClass():02x}), "
 	                        f"Protocol: {altsetting.getProtocol()}"
 	                    )
@@ -64,9 +66,10 @@ def scan_device_tree():
 	                            ep_type = "Interrupt"
 
 	                        print(
-	                            f"        ---> Endpoint 0x{endpoint.getAddress():02x}: Direction: "
+	                            f"            ---> Endpoint 0x{endpoint.getAddress():02x}: Direction: "
 	                            f"{'Dev-To-Host' if endpoint.getAddress() & 0x80 != 0 else 'Host-To-Dev'}, Type: {ep_type}"
 	                        )
+
 
 if __name__ == '__main__':
     scan_device_tree()
