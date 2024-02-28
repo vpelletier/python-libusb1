@@ -2,7 +2,7 @@
 set -eu
 cd "$(dirname "$(realpath "$0")")"
 for python_v in python3 pypy3; do
-  if ./runTestLibusb.sh "$python_v" https://github.com/libusb/libusb.git libusb.git master v1.0.19 v1.0.22 v1.0.24 v1.0.25 v1.0.26; then
+  if ./runTestLibusb.sh "$python_v" https://github.com/libusb/libusb.git libusb.git master v1.0.19 v1.0.22 v1.0.24 v1.0.25 v1.0.26 v1.0.27; then
     :
   else
     echo "runTestLibusb.sh failed with ${python_v} ($("$python_v" --version))"
