@@ -329,5 +329,58 @@ class USBTransferTests(unittest.TestCase):
         # Property is present and non-empty
         self.assertTrue(usb1.__version__)
 
+    def testGlobalLogCallback(self):
+        if hasattr(libusb1, 'libusb_init'):
+            raise unittest.SkipTest('libusb without libusb_init_context')
+        message_list = []
+        def callback(context, level, message):
+            message_list.append((context, level, message))
+        try:
+            usb1.setLogCallback(callback)
+            with USBContext(
+                log_level=usb1.LOG_LEVEL_DEBUG,
+            ):
+                pass
+        finally:
+            usb1.setLogCallback(None)
+        self.assertTrue(message_list)
+
+    def testContextLogCallback(self):
+        if hasattr(libusb1, 'libusb_init'):
+            raise unittest.SkipTest('libusb without libusb_init_context')
+        message_list = []
+        def callback(context, level, message):
+            message_list.append((context, level, message))
+        def log_silencer(context, level, message):
+            pass
+        try:
+            # Note: silencing global logs is needed here because we lower the
+            # log level to debug, which causes the log line to also be emitted
+            # to the global logger, which when no callback is set may output
+            # to stderr.
+            usb1.setLogCallback(log_silencer)
+            with USBContext(
+                log_level=usb1.LOG_LEVEL_DEBUG,
+                log_callback=callback,
+            ) as ctx:
+                ctx.setLogCallback(None)
+        finally:
+            usb1.setLogCallback(None)
+        self.assertTrue(message_list)
+
+    def testSetLocale(self):
+        if not hasattr(libusb1, 'libusb_setlocale'):
+            raise unittest.SkipTest('libusb without libusb_setlocale')
+        err = usb1.USBErrorIO()
+        usb1.setLocale('en')
+        caption_en = err.getMessage()
+        self.assertTrue(caption_en)
+        usb1.setLocale('fr')
+        try:
+            caption_fr = err.getMessage()
+            self.assertNotEqual(caption_en, caption_fr)
+        finally:
+            usb1.setLocale('en')
+
 if __name__ == '__main__':
     unittest.main()

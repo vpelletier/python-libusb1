@@ -26,8 +26,9 @@ Some are only available after calling loadLibrary.
 """
 from ctypes import (
     Structure, LittleEndianStructure,
+    Union,
     CFUNCTYPE, POINTER, addressof, sizeof, cast,
-    c_short, c_int, c_uint, c_long,
+    c_short, c_int, c_uint, c_long, c_longlong,
     c_uint8, c_uint16, c_uint32,
     c_void_p, c_char_p, py_object, pointer, c_char,
     c_ssize_t, CDLL
@@ -120,6 +121,11 @@ def newDescriptor(field_name_list):
     """
     return newStruct(['bLength', 'bDescriptorType'] + list(field_name_list))
 
+# Stand-in for the function until libusb is loaded - if the current libusb
+# version has this export.
+def libusb_strerror(_unused_errcode):
+    return None
+
 class USBError(Exception):
     value = None
 
@@ -131,8 +137,27 @@ class USBError(Exception):
     def __str__(self):
         return f'{libusb_error.get(self.value, "Unknown error")} [{self.value}]'
 
+    def getMessage(self):
+        """
+        Get user-friendly message representing the current error, and based on
+        the current locale.
+
+        Returns str, or None.
+        If libusb has not been loaded yet, returns None.
+        """
+        # pylint: disable=assignment-from-none
+        message = libusb_strerror(self.value)
+        # pylint: enable=assignment-from-none
+        if message is not None:
+            message = message.decode('utf-8')
+        return message
+
 c_uchar = c_uint8
 c_int_p = POINTER(c_int)
+intptr_t = {
+    sizeof(x): x
+    for x in (c_int, c_long, c_longlong)
+}[sizeof(c_void_p)]
 
 LITTLE_ENDIAN = sys.byteorder == 'little'
 
@@ -271,9 +296,30 @@ def __loadLibrary(libusb): # pylint: disable=too-many-locals,too-many-branches,t
     libusb_transfer._fields_ = _libusb_transfer_fields
     # pylint: enable=protected-access
 
-    #int libusb_init(libusb_context **ctx);
-    libusb_init = libusb.libusb_init
-    libusb_init.argtypes = [libusb_context_p_p]
+    #int libusb_init_context(libusb_context **ctx,
+    #        const struct libusb_init_option options[], int num_options);
+    try:
+        libusb_init_context = libusb.libusb_init_context
+    except AttributeError:
+        # Note: libusb_init is deprecated, only retrieve it when
+        # libusb_init_context is absent.
+        #int libusb_init(libusb_context **ctx);
+        libusb_init = libusb.libusb_init
+        libusb_init.argtypes = [libusb_context_p_p]
+        def libusb_init_context(ctx, _unused_options, num_options):
+            if num_options:
+                raise ValueError(
+                    'libusb_init_context is not available in the current '
+                    'libusb version, initialisation options are not available',
+                )
+            return libusb_init(ctx)
+    else:
+        libusb_init_context.argtypes = [
+            libusb_context_p_p,
+            POINTER(libusb_init_option),
+            c_int,
+        ]
+
     #void libusb_exit(libusb_context *ctx);
     libusb_exit = libusb.libusb_exit
     libusb_exit.argtypes = [libusb_context_p]
@@ -282,6 +328,15 @@ def __loadLibrary(libusb): # pylint: disable=too-many-locals,too-many-branches,t
     libusb_set_debug = libusb.libusb_set_debug
     libusb_set_debug.argtypes = [libusb_context_p, c_int]
     libusb_set_debug.restype = None
+    #void libusb_set_log_cb(libusb_context *ctx, libusb_log_cb cb, int mode);
+    try:
+        libusb_set_log_cb = libusb.libusb_set_log_cb
+    except AttributeError:
+        def libusb_set_log_cb(ctx, cb, mode):
+            pass
+    else:
+        libusb_set_log_cb.argtypes = [libusb_context_p, libusb_log_cb_p, c_int]
+        libusb_set_log_cb.restype = None
     #const struct libusb_version * libusb_get_version(void);
     try:
         libusb_get_version = libusb.libusb_get_version
@@ -315,6 +370,25 @@ def __loadLibrary(libusb): # pylint: disable=too-many-locals,too-many-branches,t
     else:
         libusb_error_name.argtypes = [c_int]
         libusb_error_name.restype = c_char_p
+    #int libusb_setlocale(const char *locale);
+    try:
+        libusb_setlocale = libusb.libusb_setlocale
+    except AttributeError:
+        def libusb_setlocale(_unused_locale):
+            pass
+    else:
+        libusb_setlocale.argtypes = [c_char_p]
+        libusb_setlocale.restype = int
+    #const char *libusb_strerror(int errcode);
+    try:
+        # pylint: disable=redefined-outer-name
+        libusb_strerror = libusb.libusb_strerror
+        # pylint: enable=redefined-outer-name
+    except AttributeError:
+        pass
+    else:
+        libusb_strerror.argtypes = [c_int]
+        libusb_strerror.restype = c_char_p
     #ssize_t libusb_get_device_list(libusb_context *ctx,
     #        libusb_device ***list);
     libusb_get_device_list = libusb.libusb_get_device_list
@@ -423,6 +497,23 @@ def __loadLibrary(libusb): # pylint: disable=too-many-locals,too-many-branches,t
         # pylint: enable=unused-argument
     else:
         libusb_get_max_iso_packet_size.argtypes = [libusb_device_p, c_uchar]
+
+    #int libusb_wrap_sys_device(libusb_context *ctx, intptr_t sys_dev,
+    #        libusb_device_handle **dev_handle);
+    try:
+        libusb_wrap_sys_device = libusb.libusb_wrap_sys_device
+    except AttributeError:
+        # pylint: enable=unused-argument
+        def libusb_wrap_sys_device(_, __, ___):
+            raise NotImplementedError
+        # pylint: disable=unused-argument
+    else:
+        libusb_wrap_sys_device.restype = c_int
+        libusb_wrap_sys_device.argtypes = [
+            libusb_context_p,
+            intptr_t,
+            libusb_device_handle_p_p,
+        ]
 
     #int libusb_open(libusb_device *dev, libusb_device_handle **handle);
     libusb_open = libusb.libusb_open
@@ -1033,6 +1124,22 @@ class libusb_version(Structure):
         ('describe', c_char_p),
     ]
 
+#typedef void (*libusb_log_cb)(libusb_context *ctx,
+#        enum libusb_log_level level, const char *str);
+libusb_log_cb_p = LIBUSB_CALL_FUNCTYPE(None, libusb_context_p, c_int, c_char_p)
+
+class libusb_init_option_value(Union):
+    _fields_ = [
+        ('ival', c_int),
+        ('log_cbval', libusb_log_cb_p),
+    ]
+
+class libusb_init_option(Structure):
+    _fields_ = [
+        ('option', c_int),
+        ('value', libusb_init_option_value),
+    ]
+
 libusb_speed = Enum({
     # The OS doesn't report or know the device speed.
     'LIBUSB_SPEED_UNKNOWN': 0,
@@ -1160,17 +1267,18 @@ libusb_log_level = Enum({
     'LIBUSB_LOG_LEVEL_DEBUG': 4,
 })
 
-# Note on libusb_strerror, libusb_setlocale and future functions in the
-# same spirit:
-# I do not think end-user-facing messages belong to a technical library.
-# Such features bring a new, non essential set of problems, and is a luxury
-# I do not want to spend time supporting considering limited resources and
-# more important stuff to work on.
-# For backward compatibility, expose libusb_strerror placeholder.
-# pylint: disable=unused-argument
-def libusb_strerror(errcode):
-    return None
-# pylint: enable=unused-argument
+libusb_log = Enum({
+    'LIBUSB_LOG_CB_GLOBAL': 1 << 0,
+    'LIBUSB_LOG_CB_CONTEXT': 1 << 1,
+})
+
+libusb_option = Enum({
+    'LIBUSB_OPTION_LOG_LEVEL': 0,
+    'LIBUSB_OPTION_USE_USBDK': 1,
+    'LIBUSB_OPTION_NO_DEVICE_DISCOVERY': 2,
+    'LIBUSB_OPTION_LOG_CB': 3,
+    'LIBUSB_OPTION_MAX': 4,
+})
 
 # Get the data section of a control transfer. This convenience function is here
 # to remind you that the data does not start until 8 bytes into the actual
