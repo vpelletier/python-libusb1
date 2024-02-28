@@ -146,7 +146,7 @@ def __getLibrary():
         dll_loader = ctypes.WinDLL
         suffix = '.dll'
     else:
-        dll_loader = ctypes.CDLL
+        dll_loader = CDLL
         suffix = '.dylib' if system == 'Darwin' else '.so'
     filename = 'libusb-1.0' + suffix
     # If this is a binary wheel, use the integrated libusb unconditionally.
@@ -362,7 +362,7 @@ def __loadLibrary(libusb): # pylint: disable=too-many-locals,too-many-branches,t
         libusb_get_port_numbers.restype = c_int
     # Missing: libusb_get_port_path (deprecated since 1.0.16)
     try:
-        #libusb_device * LIBUSB_CALL libusb_get_parent(libusb_device *dev);
+        #libusb_device *libusb_get_parent(libusb_device *dev);
         libusb_get_parent = libusb.libusb_get_parent
     except AttributeError:
         pass
