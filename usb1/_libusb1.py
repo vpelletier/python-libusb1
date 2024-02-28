@@ -140,6 +140,11 @@ class timeval(Structure):
                 ('tv_usec', c_long)]
 timeval_p = POINTER(timeval)
 
+if platform.system() == 'Windows':
+    LIBUSB_CALL_FUNCTYPE = ctypes.WINFUNCTYPE
+else:
+    LIBUSB_CALL_FUNCTYPE = CFUNCTYPE
+
 def __getLibrary():
     system = platform.system()
     if system == 'Windows':
@@ -1115,7 +1120,7 @@ class libusb_transfer(Structure):
     pass
 libusb_transfer_p = POINTER(libusb_transfer)
 
-libusb_transfer_cb_fn_p = CFUNCTYPE(None, libusb_transfer_p)
+libusb_transfer_cb_fn_p = LIBUSB_CALL_FUNCTYPE(None, libusb_transfer_p)
 
 libusb_capability = Enum({
     # The libusb_has_capability() API is available.
@@ -1349,8 +1354,8 @@ class libusb_pollfd(Structure):
 libusb_pollfd_p = POINTER(libusb_pollfd)
 libusb_pollfd_p_p = POINTER(libusb_pollfd_p)
 
-libusb_pollfd_added_cb_p = CFUNCTYPE(None, c_int, c_short, py_object)
-libusb_pollfd_removed_cb_p = CFUNCTYPE(None, c_int, py_object)
+libusb_pollfd_added_cb_p = LIBUSB_CALL_FUNCTYPE(None, c_int, c_short, py_object)
+libusb_pollfd_removed_cb_p = LIBUSB_CALL_FUNCTYPE(None, c_int, py_object)
 
 #typedef int libusb_hotplug_callback_handle;
 libusb_hotplug_callback_handle = c_int
@@ -1369,7 +1374,7 @@ LIBUSB_HOTPLUG_MATCH_ANY = -1
 
 #typedef int (*libusb_hotplug_callback_fn)(libusb_context *ctx,
 #        libusb_device *device, libusb_hotplug_event event, void *user_data);
-libusb_hotplug_callback_fn_p = CFUNCTYPE(
+libusb_hotplug_callback_fn_p = LIBUSB_CALL_FUNCTYPE(
     c_int, libusb_context_p, libusb_device_p, c_int, c_void_p)
 
 # /libusb.h
