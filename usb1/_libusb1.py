@@ -634,6 +634,8 @@ def __loadLibrary(libusb): # pylint: disable=too-many-locals,too-many-branches,t
         ]
         libusb_hotplug_deregister_callback.restype = None
 
+    # Note: no support possible for libusb_set_option as it uses a variadic
+
     globals().update(locals())
 
 # libusb.h
@@ -1364,6 +1366,7 @@ libusb_hotplug_event = Enum({
     'LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT': 0x02,
 })
 
+LIBUSB_HOTPLUG_NO_FLAGS = 0
 LIBUSB_HOTPLUG_MATCH_ANY = -1
 
 #typedef int (*libusb_hotplug_callback_fn)(libusb_context *ctx,
