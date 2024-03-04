@@ -2247,7 +2247,6 @@ class USBContext:
         """
         libusb_free_device_list = libusb1.libusb_free_device_list
         device_p_p = libusb1.libusb_device_p_p()
-        libusb_device_p = libusb1.libusb_device_p
         device_list_len = libusb1.libusb_get_device_list(self.__context_p,
                                                          byref(device_p_p))
         mayRaiseUSBError(device_list_len)
