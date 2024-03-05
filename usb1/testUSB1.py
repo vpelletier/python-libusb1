@@ -48,8 +48,10 @@ def checkTransferAllocCount(func):
         libusb_free_transfer = libusb1.libusb_free_transfer
         libusb_alloc_transfer = libusb1.libusb_alloc_transfer
         try:
+            # pylint: disable=protected-access
             libusb1.libusb_free_transfer = self._fakeFreeTransfer
             libusb1.libusb_alloc_transfer = self._fakeAllocTransfer
+            # pylint: enable=protected-access
             result = func(self, *args, **kw)
         finally:
             libusb1.libusb_free_transfer = libusb_free_transfer

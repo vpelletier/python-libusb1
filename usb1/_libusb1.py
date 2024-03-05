@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 # pylint: disable=invalid-name, too-few-public-methods, too-many-arguments
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, too-many-lines
 """
 Python ctypes bindings for libusb-1.0.
 
@@ -54,9 +54,10 @@ class Enum:
                 next_value += 1
             forward_dict[name] = value
             if value in reverse_dict:
-                raise ValueError('Multiple names for value %r: %r, %r' % (
-                    value, reverse_dict[value], name
-                ))
+                raise ValueError(
+                    'Multiple names for value '
+                    f'{value!r}: {reverse_dict[value]!r}, {name!r}'
+                )
             reverse_dict[value] = name
             scope_dict[name] = value
         self.forward_dict = forward_dict
@@ -127,8 +128,7 @@ class USBError(Exception):
             self.value = value
 
     def __str__(self):
-        return '%s [%s]' % (libusb_error.get(self.value, 'Unknown error'),
-                            self.value)
+        return f'{libusb_error.get(self.value, "Unknown error")} [{self.value}]'
 
 c_uchar = c_uint8
 c_int_p = POINTER(c_int)
@@ -1292,9 +1292,7 @@ def get_extra(descriptor):
             length = extra[0]
             if not 0 < length <= len(extra):
                 raise ValueError(
-                    'Extra descriptor %i is incomplete/invalid' % (
-                        len(result),
-                    ),
+                    f'Extra descriptor {len(result)} is incomplete/invalid',
                 )
             append(extra[:length])
             extra = extra[length:]

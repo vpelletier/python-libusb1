@@ -16,7 +16,7 @@
 
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 # pylint: disable=too-many-public-methods, too-many-instance-attributes
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, too-many-lines
 """
 Pythonic wrapper for libusb-1.0.
 
@@ -156,7 +156,8 @@ EVENT_CALLBACK_SET = frozenset((
     # pylint: enable=undefined-variable
 ))
 
-DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK = lambda x: False
+def DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK(_):
+    return False
 
 def create_binary_buffer(init_or_size):
     """
@@ -273,7 +274,9 @@ class USBTransfer:
         # So free transfer altogether.
         self.__close()
         self.__transfer = None
+        # pylint: disable=unused-private-member
         self.__transfer_buffer = None
+        # pylint: enable=unused-private-member
         # Break USBDeviceHandle reference cycle
         self.__before_submit = None
         self.__after_completion = None
@@ -314,7 +317,9 @@ class USBTransfer:
         self.__doomed = True
 
     @classmethod
+    # pylint: disable=unused-private-member
     def __callbackWrapper(cls, transfer_p):
+    # pylint: enable=unused-private-member
         """
         Makes it possible for user-provided callback to alter transfer when
         fired (ie, mark transfer as not submitted upon call).
@@ -379,7 +384,9 @@ class USBTransfer:
                 CONTROL_SETUP + buffer_or_len,
             )
         self.__initialized = False
+        # pylint: disable=unused-private-member
         self.__transfer_buffer = string_buffer
+        # pylint: enable=unused-private-member
         # pylint: disable=undefined-variable
         self.__transfer_py_buffer = memoryview(
             transfer_py_buffer,
@@ -424,7 +431,9 @@ class USBTransfer:
             buffer_or_len
         )
         self.__initialized = False
+        # pylint: disable=unused-private-member
         self.__transfer_buffer = string_buffer
+        # pylint: enable=unused-private-member
         self.__user_data = user_data
         libusb1.libusb_fill_bulk_transfer(
             self.__transfer, self.__handle, endpoint, string_buffer,
@@ -462,7 +471,9 @@ class USBTransfer:
             buffer_or_len
         )
         self.__initialized = False
+        # pylint: disable=unused-private-member
         self.__transfer_buffer = string_buffer
+        # pylint: enable=unused-private-member
         self.__user_data = user_data
         libusb1.libusb_fill_interrupt_transfer(
             self.__transfer, self.__handle, endpoint, string_buffer,
@@ -513,33 +524,26 @@ class USBTransfer:
             iso_length, remainder = divmod(buffer_length, num_iso_packets)
             if remainder:
                 raise ValueError(
-                    'Buffer size %i cannot be evenly distributed among %i '
-                    'transfers' % (
-                        buffer_length,
-                        num_iso_packets,
-                    )
+                    f'Buffer size {buffer_length} cannot be evenly distributed '
+                    f'among {num_iso_packets} transfers',
                 )
             iso_transfer_length_list = [iso_length] * num_iso_packets
         configured_iso_packets = len(iso_transfer_length_list)
         if configured_iso_packets > num_iso_packets:
             raise ValueError(
-                'Too many ISO transfer lengths (%i), there are '
-                'only %i ISO transfers available' % (
-                    configured_iso_packets,
-                    num_iso_packets,
-                )
+                f'Too many ISO transfer lengths ({configured_iso_packets}), '
+                f'there are only {num_iso_packets} ISO transfers available',
             )
         if sum(iso_transfer_length_list) > buffer_length:
             raise ValueError(
-                'ISO transfers too long (%i), there are only '
-                '%i bytes available' % (
-                    sum(iso_transfer_length_list),
-                    buffer_length,
-                )
+                f'ISO transfers too long ({sum(iso_transfer_length_list)}), '
+                f'there are only {buffer_length} bytes available',
             )
         transfer_p = self.__transfer
         self.__initialized = False
+        # pylint: disable=unused-private-member
         self.__transfer_buffer = string_buffer
+        # pylint: enable=unused-private-member
         self.__transfer_py_buffer = transfer_py_buffer
         self.__user_data = user_data
         libusb1.libusb_fill_iso_transfer(
@@ -708,7 +712,9 @@ class USBTransfer:
                 'To alter isochronous transfer buffer length, use '
                 'setIsochronous'
             )
+        # pylint: disable=unused-private-member
         self.__transfer_buffer = buff
+        # pylint: enable=unused-private-member
         self.__transfer_py_buffer = transfer_py_buffer
         transfer.buffer = cast(buff, c_void_p)
         transfer.length = sizeof(buff)
@@ -834,7 +840,7 @@ class USBTransferHelper:
             TRANSFER_OVERFLOW
         """
         if event not in EVENT_CALLBACK_SET:
-            raise ValueError('Unknown event %r.' % (event, ))
+            raise ValueError(f'Unknown event {event!r}.')
         self.__event_callback_dict[event] = callback
 
     def setDefaultCallback(self, callback):
@@ -1003,7 +1009,7 @@ class USBDeviceHandle:
         # Strong references to inflight transfers so they do not get freed
         # even if user drops all strong references to them. If this instance
         # is garbage-collected, we close all transfers, so it's fine.
-        self.__inflight = inflight = set()
+        inflight = set()
         # XXX: For some reason, doing self.__inflight.{add|remove} inside
         # getTransfer causes extra intermediate python objects for each
         # allocated transfer. Storing them as properties solves this. Found
@@ -1572,7 +1578,7 @@ class USBConfiguration:
         if not isinstance(interface, int):
             raise TypeError('interface parameter must be an integer')
         if not 0 <= interface < self.getNumInterfaces():
-            raise IndexError('No such interface: %r' % (interface, ))
+            raise IndexError(f'No such interface: {interface!r}')
         return USBInterface(self.__context, self.__config.interface[interface])
 
 class USBInterface:
@@ -1612,7 +1618,7 @@ class USBInterface:
         if not isinstance(alt_setting, int):
             raise TypeError('alt_setting parameter must be an integer')
         if not 0 <= alt_setting < self.getNumSettings():
-            raise IndexError('No such setting: %r' % (alt_setting, ))
+            raise IndexError(f'No such setting: {alt_setting!r}')
         return USBInterfaceSetting(
             self.__context, self.__interface.altsetting[alt_setting])
 
@@ -1684,7 +1690,7 @@ class USBInterfaceSetting:
         if not isinstance(endpoint, int):
             raise TypeError('endpoint parameter must be an integer')
         if not 0 <= endpoint < self.getNumEndpoints():
-            raise ValueError('No such endpoint: %r' % (endpoint, ))
+            raise ValueError(f'No such endpoint: {endpoint}')
         return USBEndpoint(
             self.__context, self.__alt_setting.endpoint[endpoint])
 
@@ -1693,7 +1699,9 @@ class USBEndpoint:
         if not isinstance(endpoint, libusb1.libusb_endpoint_descriptor):
             raise TypeError('Unexpected descriptor type.')
         self.__endpoint = endpoint
+        # pylint: disable=unused-private-member
         self.__context = context
+        # pylint: enable=unused-private-member
 
     def getAddress(self):
         return self.__endpoint.bEndpointAddress
@@ -1819,11 +1827,10 @@ class USBDevice:
         unregisterFinalizer()
 
     def __str__(self):
-        return 'Bus %03i Device %03i: ID %04x:%04x' % (
-            self.getBusNumber(),
-            self.getDeviceAddress(),
-            self.getVendorID(),
-            self.getProductID(),
+        return (
+            f'Bus {self.getBusNumber():03} '
+            f'Device {self.getDeviceAddress():03}: '
+            f'ID {self.getVendorID():04x}:{self.getProductID():04x}'
         )
 
     def __len__(self):
@@ -2201,9 +2208,11 @@ class USBContext:
             while self.__context_refcount and self.__context_p:
                 self.__context_cond.wait()
             self.__close()
+            # pylint: disable=unused-private-member
             self.__added_cb = None
             self.__removed_cb = None
             self.__poll_cb_user_data = None
+            # pylint: enable=unused-private-member
         finally:
             self.__context_cond.notify_all()
             self.__context_cond.release()
@@ -2420,9 +2429,11 @@ class USBContext:
             removed_cb = libusb1.libusb_pollfd_removed_cb_p(removed_cb)
         if user_data is None:
             user_data = _null_pointer
+        # pylint: disable=unused-private-member
         self.__added_cb = added_cb
         self.__removed_cb = removed_cb
         self.__poll_cb_user_data = user_data
+        # pylint: enable=unused-private-member
         libusb1.libusb_set_pollfd_notifiers(
             self.__context_p,
             cast(added_cb, libusb1.libusb_pollfd_added_cb_p),
