@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -eu
 cd "$(dirname "$(realpath "$0")")"
 for python_v in python3 pypy3; do
@@ -25,6 +25,7 @@ for python_v in python3; do
 done
 python3 setup.py --quiet sdist clean --all
 release_prefix="dist/libusb1-$(python3 -c 'import versioneer; print(versioneer.get_version())')"
+twine check --strict "${release_prefix}"*.{whl,tar.gz}
 echo "Done. Next, check their content, sign each:"
 echo "  for release in ${release_prefix}-*.whl ${release_prefix}.tar.gz; do gpg --armor --detach-sign \"\$release\"; done"
 echo "upload them to pypi:"
