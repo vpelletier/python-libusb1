@@ -2178,6 +2178,7 @@ class USBContext:
                         'Use "with USBContext() as context:" for safer cleanup'
                         ' on interpreter shutdown. See also USBContext.open().',
                         DeprecationWarning,
+                        stacklevel=4
                     )
                     self.open()
                 self.__context_refcount += 1
