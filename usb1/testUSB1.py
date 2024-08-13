@@ -277,15 +277,14 @@ class USBTransferTests(unittest.TestCase):
         """
         ENUM_NAME = 'THE_ANSWER'
         ENUM_VALUE = 42
-        local_dict = locals()
         global_dict = globals()
-        self.assertEqual(local_dict.get(ENUM_NAME), None)
+        self.assertEqual(locals().get(ENUM_NAME), None)
         self.assertEqual(global_dict.get(ENUM_NAME), None)
         self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
         # pylint: disable=unused-variable
         TEST_ENUM = libusb1.Enum({ENUM_NAME: ENUM_VALUE})
         # pylint: enable=unused-variable
-        self.assertEqual(local_dict.get(ENUM_NAME), ENUM_VALUE)
+        self.assertEqual(locals().get(ENUM_NAME), ENUM_VALUE)
         self.assertEqual(global_dict.get(ENUM_NAME), None)
         self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
 
@@ -295,16 +294,15 @@ class USBTransferTests(unittest.TestCase):
         """
         ENUM_NAME = 'THE_ANSWER'
         ENUM_VALUE = 42
-        local_dict = locals()
         global_dict = globals()
-        self.assertEqual(local_dict.get(ENUM_NAME), None)
+        self.assertEqual(locals().get(ENUM_NAME), None)
         self.assertEqual(global_dict.get(ENUM_NAME), None)
         self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
         # pylint: disable=unused-variable
         TEST_ENUM = libusb1.Enum({ENUM_NAME: ENUM_VALUE}, global_dict)
         # pylint: enable=unused-variable
         try:
-            self.assertEqual(local_dict.get(ENUM_NAME), None)
+            self.assertEqual(locals().get(ENUM_NAME), None)
             self.assertEqual(global_dict.get(ENUM_NAME), ENUM_VALUE)
             self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
         finally:
