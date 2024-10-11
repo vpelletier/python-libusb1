@@ -179,7 +179,9 @@ def __getLibrary():
             # .so is for BBB, especially if libusb-1.0.so was bundled in some
             # uses of this module.
             libusb_list = [
+                os.path.join(my_dir, 'libusb-1.0.so.0'),
                 os.path.join(my_dir, 'libusb-1.0.so'),
+                'libusb-1.0.so.0',
                 'libusb-1.0.so',
             ]
             find_library = (
