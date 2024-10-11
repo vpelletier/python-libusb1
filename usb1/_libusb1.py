@@ -33,6 +33,7 @@ from ctypes import (
     c_ssize_t, CDLL
 )
 import ctypes.util
+import errno
 import os.path
 import platform
 import sys
@@ -146,47 +147,62 @@ else:
     LIBUSB_CALL_FUNCTYPE = CFUNCTYPE
 
 def __getLibrary():
+    my_dir = os.path.dirname(__file__)
     system = platform.system()
+    # If this is a binary wheel, try to use an integrated libusb first.
+    # To use the libusb from the Python installation or the OS, install
+    # from sdist:
+    #   > pip install --no-binary :all: libusb1
     if system == 'Windows':
         dll_loader = ctypes.WinDLL
-        suffix = '.dll'
+        libusb_list = [
+            os.path.join(my_dir, 'libusb-1.0.dll'),
+            'libusb-1.0.dll',
+        ]
+        find_library = None
     else:
         dll_loader = CDLL
-        suffix = '.dylib' if system == 'Darwin' else '.so'
-    filename = 'libusb-1.0' + suffix
-    # If this is a binary wheel, use the integrated libusb unconditionally.
-    # To use the libusb from the Python installation or the OS, install from sdist:
-    #   > pip install --no-binary :all: libusb1
-    if os.path.exists(os.path.join(os.path.dirname(__file__), filename)):
-        filename = os.path.join(os.path.dirname(__file__), filename)
-    try:
-        return dll_loader(filename, use_errno=True, use_last_error=True)
-    except OSError:
-        libusb_path = None
-        base_name = 'usb-1.0'
-        if 'FreeBSD' in system:
-            # libusb.so.2 on FreeBSD: load('libusb.so') would work fine, but...
-            # libusb.so.2debian on Debian GNU/kFreeBSD: here it wouldn't work.
-            # So use find_library instead.
-            base_name = 'usb'
-        elif system == 'Darwin':
-            for libusb_path in (
-                    # macport standard path
-                    '/opt/local/lib/libusb-1.0.dylib',
-                    # fink standard path
-                    '/sw/lib/libusb-1.0.dylib',
-                    # homebrew standard path for symlink (Apple M1 Silicon)
-                    '/opt/homebrew/opt/libusb/lib/libusb-1.0.dylib',
-                ):
-                if os.path.exists(libusb_path):
-                    break
-            else:
-                libusb_path = None
-        if libusb_path is None:
-            libusb_path = ctypes.util.find_library(base_name)
-            if libusb_path is None:
-                raise
-        return dll_loader(libusb_path, use_errno=True, use_last_error=True)
+        if system == 'Darwin':
+            libusb_list = [
+                os.path.join(my_dir, 'libusb-1.0.dylib'),
+                'libusb-1.0.dylib',
+                # macport standard path
+                '/opt/local/lib/libusb-1.0.dylib',
+                # fink standard path
+                '/sw/lib/libusb-1.0.dylib',
+                # homebrew standard path for symlink (Apple M1 Silicon)
+                '/opt/homebrew/opt/libusb/lib/libusb-1.0.dylib',
+            ]
+            find_library = None
+        else:
+            # .so.0 should be the optimal suffix
+            # .so is for BBB, especially if libusb-1.0.so was bundled in some
+            # uses of this module.
+            libusb_list = [
+                os.path.join(my_dir, 'libusb-1.0.so'),
+                'libusb-1.0.so',
+            ]
+            find_library = (
+                # libusb.so.2 on FreeBSD: load('libusb.so') would work fine, but...
+                # libusb.so.2debian on Debian GNU/kFreeBSD: here it wouldn't work.
+                'usb'
+                if 'FreeBSD' in system else
+                'usb-1.0'
+            )
+    for filename in libusb_list:
+        try:
+            return dll_loader(filename, use_errno=True, use_last_error=True)
+        except OSError:
+            pass
+    if find_library is not None:
+        filename = ctypes.util.find_library(find_library)
+        if filename is not None:
+            return dll_loader(filename, use_errno=True, use_last_error=True)
+    raise OSError(
+        errno.ENOENT,
+        'cannot find a suitable libusb-1.0',
+        libusb_list,
+    )
 
 __load_lock = Lock()
 __loaded = False
