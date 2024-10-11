@@ -127,8 +127,8 @@ class update_libusb(Command):
                 )
             )
         for arch_path, out_dir in (
-            ('VS2019/MS32/Release/dll/libusb-1.0.dll', os.path.join(build_dir, 'win32')),
-            ('VS2019/MS64/Release/dll/libusb-1.0.dll', os.path.join(build_dir, 'win_amd64')),
+            ('VS2019/MS32/dll/libusb-1.0.dll', os.path.join(build_dir, 'win32')),
+            ('VS2019/MS64/dll/libusb-1.0.dll', os.path.join(build_dir, 'win_amd64')),
         ):
             subprocess.check_call(
                 [
