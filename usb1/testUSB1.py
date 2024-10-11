@@ -20,7 +20,6 @@ from ctypes import pointer, sizeof
 import functools
 import gc
 import itertools
-import sys
 import unittest
 import weakref
 import usb1

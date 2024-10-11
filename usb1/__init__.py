@@ -1871,8 +1871,7 @@ class USBDevice:
     def iterSettings(self):
         for config in self.iterConfigurations():
             for interface in config:
-                for setting in interface:
-                    yield setting
+                yield from interface
 
     def getBusNumber(self):
         """
@@ -2118,8 +2117,7 @@ class USBContext:
                         generator = func(self, *args, **kw)
                         # pylint: enable=not-callable
                         try:
-                            for value in generator:
-                                yield value
+                            yield from generator
                         finally:
                             generator.close()
         else:
