@@ -560,6 +560,23 @@ applications wake an event handling thread (ex: durring exit).
 
 Windows wheels: Update bundled libusb dll to 1.0.26 .
 
+?.?.?
+-----
+
+Fix callbacks on 32bits Windows.
+
+Try loading libusb1.so.0 in addition to libusb1.so on \*nix.
+
+Bundle libusb1 dll 1.0.27 in Windows wheels.
+
+Expose more modern libusb1 API:
+- libusb_init_context
+- libusb_set_log_cb
+- libusb_setlocale + libusb_strerror
+- libusb_wrap_sys_device
+
+As a result, python-libusb1 should now be usable on Android.
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
