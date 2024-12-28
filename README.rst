@@ -558,9 +558,9 @@ Fix bug preventing use of setPollFDNotifiers.
 Wrap libusb_interrupt_event_handler, available since libusb 1.0.21, to help
 applications wake an event handling thread (ex: durring exit).
 
-Windows wheels: Update bundled libusb dll to 1.0.26 .
+Windows wheels: Update bundled libusb dll to 1.0.26 (warning: libusb1 7z archive changed since this release, and reports mention the DLLs were of 1.0.25) .
 
-?.?.?
+3.2.0
 -----
 
 Fix callbacks on 32bits Windows.
@@ -577,6 +577,8 @@ Expose more modern libusb1 API:
 - transfer flags LIBUSB_TRANSFER_SHORT_NOT_OK and LIBUSB_TRANSFER_ADD_ZERO_PACKET
 
 As a result, python-libusb1 should now be usable on Android.
+
+Fix tests on python 3.13 .
 
 .. _CPython: http://www.python.org/
 
