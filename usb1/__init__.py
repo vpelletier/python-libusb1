@@ -221,6 +221,8 @@ class USBTransfer:
         after_completion,
         registerFinalizer,
         unregisterFinalizer,
+        short_is_error,
+        add_zero_packet,
     ):
         """
         You should not instanciate this class directly.
@@ -241,6 +243,8 @@ class USBTransfer:
             raise USBErrorNoMem
             # pylint: enable=undefined-variable
         self.__transfer = transfer
+        self.setShortIsError(short_is_error)
+        self.setAddZeroPacket(add_zero_packet)
         finalizer_handle = id(self)
         self.__close = weakref.finalize(
             self,
@@ -719,6 +723,44 @@ class USBTransfer:
         self.__transfer_py_buffer = transfer_py_buffer
         transfer.buffer = cast(buff, c_void_p)
         transfer.length = sizeof(buff)
+
+    def isShortAnError(self):
+        """
+        Returns whether the LIBUSB_TRANSFER_SHORT_NOT_OK flag is set on this
+        transfer.
+        """
+        return bool(self.__transfer.contents.flags & libusb1.LIBUSB_TRANSFER_SHORT_NOT_OK)
+
+    def setShortIsError(self, state):
+        """
+        state (bool)
+            When true, LIBUSB_TRANSFER_SHORT_NOT_OK flag is set on this
+            transfer.
+            Otherwise, it is cleared.
+        """
+        if state:
+            self.__transfer.contents.flags |= libusb1.LIBUSB_TRANSFER_SHORT_NOT_OK
+        else:
+            self.__transfer.contents.flags &= ~libusb1.LIBUSB_TRANSFER_SHORT_NOT_OK
+
+    def isZeroPacketAdded(self):
+        """
+        Returns whether the LIBUSB_TRANSFER_ADD_ZERO_PACKET flag is set on this
+        transfer.
+        """
+        return bool(self.__transfer.contents.flags & libusb1.LIBUSB_TRANSFER_ADD_ZERO_PACKET)
+
+    def setAddZeroPacket(self, state):
+        """
+        state (bool)
+            When true, LIBUSB_TRANSFER_ADD_ZERO_PACKET flag is set on this
+            transfer.
+            Otherwise, it is cleared.
+        """
+        if state:
+            self.__transfer.contents.flags |= libusb1.LIBUSB_TRANSFER_ADD_ZERO_PACKET
+        else:
+            self.__transfer.contents.flags &= ~libusb1.LIBUSB_TRANSFER_ADD_ZERO_PACKET
 
     def isSubmitted(self):
         """
@@ -1508,11 +1550,14 @@ class USBDeviceHandle:
             raise
         return data_buffer[:transferred]
 
-    def getTransfer(self, iso_packets=0):
+    def getTransfer(self, iso_packets=0, short_is_error=False, add_zero_packet=False):
         """
         Get an USBTransfer instance for asynchronous use.
         iso_packets: the number of isochronous transfer descriptors to
           allocate.
+        short_is_error: When true, short frames are reported as errors.
+        add_zero_packet: When true, transfers of a multiple of the endpoint
+          size are followed by a zero-length packet.
         """
         return USBTransfer(
             context=self.__context,
@@ -1522,6 +1567,8 @@ class USBDeviceHandle:
             after_completion=self.__inflight_remove,
             registerFinalizer=self.__registerFinalizer,
             unregisterFinalizer=self.__unregisterFinalizer,
+            short_is_error=short_is_error,
+            add_zero_packet=add_zero_packet,
         )
 
 class USBConfiguration:

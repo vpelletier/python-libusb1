@@ -85,7 +85,7 @@ class USBTransferTests(unittest.TestCase):
         return pointer(transfer)
 
     @staticmethod
-    def getTransfer(iso_packets=0):
+    def getTransfer(iso_packets=0, short_is_error=False, add_zero_packet=False):
         # Dummy handle
         return usb1.USBTransfer(
             context=None,
@@ -95,6 +95,8 @@ class USBTransferTests(unittest.TestCase):
             after_completion=lambda x: None,
             registerFinalizer=lambda handle, finalizer: None,
             unregisterFinalizer=lambda handle: None,
+            short_is_error=short_is_error,
+            add_zero_packet=add_zero_packet,
         )
 
     @staticmethod
@@ -145,6 +147,20 @@ class USBTransferTests(unittest.TestCase):
             request_type, request, value, index, buff, callback=callback)
         # No callback
         transfer.setControl(request_type, request, value, index, buff)
+        self.assertFalse(transfer.isShortAnError())
+        self.assertFalse(transfer.isZeroPacketAdded())
+        transfer.setShortIsError(True)
+        self.assertTrue(transfer.isShortAnError())
+        self.assertFalse(transfer.isZeroPacketAdded())
+        transfer.setAddZeroPacket(True)
+        self.assertTrue(transfer.isShortAnError())
+        self.assertTrue(transfer.isZeroPacketAdded())
+        transfer.setShortIsError(False)
+        self.assertFalse(transfer.isShortAnError())
+        self.assertTrue(transfer.isZeroPacketAdded())
+        transfer.setAddZeroPacket(False)
+        self.assertFalse(transfer.isShortAnError())
+        self.assertFalse(transfer.isZeroPacketAdded())
 
     def _testTransferSetter(self, transfer, setter_id):
         endpoint = 0x81

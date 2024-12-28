@@ -574,6 +574,7 @@ Expose more modern libusb1 API:
 - libusb_set_log_cb
 - libusb_setlocale + libusb_strerror
 - libusb_wrap_sys_device
+- transfer flags LIBUSB_TRANSFER_SHORT_NOT_OK and LIBUSB_TRANSFER_ADD_ZERO_PACKET
 
 As a result, python-libusb1 should now be usable on Android.
 
