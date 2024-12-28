@@ -1044,7 +1044,7 @@ class USBDeviceHandle:
     def __registerFinalizer(self, handle, finalizer):
         if handle in self.__finalizer_dict:
             finalizer.detach()
-            raise ValueError
+            raise ValueError('Finalizer handle {handle} already exists')
         self.__finalizer_dict[handle] = finalizer
 
     def __unregisterFinalizer(self, handle):
@@ -1825,7 +1825,7 @@ class USBDevice:
     def __registerFinalizer(self, handle, finalizer):
         if handle in self.__finalizer_dict:
             finalizer.detach()
-            raise ValueError
+            raise ValueError('Finalizer handle {handle} already exists')
         self.__finalizer_dict[handle] = finalizer
 
     def __unregisterFinalizer(self, handle):
@@ -2216,7 +2216,7 @@ class USBContext:
     def __registerFinalizer(self, handle, finalizer):
         if handle in self.__finalizer_dict:
             finalizer.detach()
-            raise ValueError
+            raise ValueError('Finalizer handle {handle} already exists')
         self.__finalizer_dict[handle] = finalizer
 
     def __unregisterFinalizer(self, handle):
