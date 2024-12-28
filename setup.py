@@ -152,5 +152,4 @@ setup(
         if 'bdist_wheel' in sys.argv else
         []
     ),
-    test_suite='usb1.testUSB1',
 )
