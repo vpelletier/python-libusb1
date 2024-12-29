@@ -35,10 +35,10 @@ class USBContext(usb1.USBContext):
     def open(self):
         try:
             return super().open()
-        except usb1.USBError:
+        except usb1.USBError as exc:
             raise unittest.SkipTest(
                 'usb1.USBContext() fails - no USB bus on system ?'
-            )
+            ) from exc
 
 def checkTransferAllocCount(func):
     @functools.wraps(func)
@@ -111,7 +111,7 @@ class USBTransferTests(unittest.TestCase):
         """
         Just testing hasCapability doesn't raise...
         """
-        usb1.hasCapability(usb1.CAP_HAS_CAPABILITY)
+        usb1.hasCapability(usb1.CAP_HAS_CAPABILITY) # pylint: disable=no-member
 
     @checkTransferAllocCount
     def testSetControl(self):
@@ -119,11 +119,11 @@ class USBTransferTests(unittest.TestCase):
         Simplest test: feed some data, must not raise.
         """
         transfer = self.getTransfer()
-        request_type = usb1.TYPE_STANDARD
-        request = usb1.REQUEST_GET_STATUS
+        request_type = usb1.TYPE_STANDARD # pylint: disable=no-member
+        request = usb1.REQUEST_GET_STATUS # pylint: disable=no-member
         value = 0
         index = 0
-        def callback(transfer):
+        def callback(_):
             pass
         user_data = []
         timeout = 1000
@@ -164,7 +164,7 @@ class USBTransferTests(unittest.TestCase):
 
     def _testTransferSetter(self, transfer, setter_id):
         endpoint = 0x81
-        def callback(transfer):
+        def callback(_):
             pass
         user_data = []
         timeout = 1000
@@ -242,7 +242,7 @@ class USBTransferTests(unittest.TestCase):
     @checkTransferAllocCount
     def testSetGetCallback(self):
         transfer = self.getTransfer()
-        def callback(transfer):
+        def callback(_):
             pass
         transfer.setCallback(callback)
         got_callback = transfer.getCallback()
@@ -253,7 +253,7 @@ class USBTransferTests(unittest.TestCase):
         Test descriptor walk.
         Needs any usb device, which won't be opened.
         """
-        with USBContext() as context:
+        with USBContext() as context: # pylint: disable=too-many-nested-blocks
             device_list = context.getDeviceList(skip_on_error=True)
             found = False
             seen_extra = False
@@ -297,9 +297,7 @@ class USBTransferTests(unittest.TestCase):
         self.assertEqual(locals().get(ENUM_NAME), None)
         self.assertEqual(global_dict.get(ENUM_NAME), None)
         self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
-        # pylint: disable=unused-variable
-        TEST_ENUM = libusb1.Enum({ENUM_NAME: ENUM_VALUE})
-        # pylint: enable=unused-variable
+        _ = libusb1.Enum({ENUM_NAME: ENUM_VALUE})
         self.assertEqual(locals().get(ENUM_NAME), ENUM_VALUE)
         self.assertEqual(global_dict.get(ENUM_NAME), None)
         self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
@@ -314,9 +312,7 @@ class USBTransferTests(unittest.TestCase):
         self.assertEqual(locals().get(ENUM_NAME), None)
         self.assertEqual(global_dict.get(ENUM_NAME), None)
         self.assertEqual(getattr(libusb1, ENUM_NAME, None), None)
-        # pylint: disable=unused-variable
-        TEST_ENUM = libusb1.Enum({ENUM_NAME: ENUM_VALUE}, global_dict)
-        # pylint: enable=unused-variable
+        _ = libusb1.Enum({ENUM_NAME: ENUM_VALUE}, global_dict)
         try:
             self.assertEqual(locals().get(ENUM_NAME), None)
             self.assertEqual(global_dict.get(ENUM_NAME), ENUM_VALUE)
@@ -334,7 +330,9 @@ class USBTransferTests(unittest.TestCase):
         try:
             fd_list = context.getPollFDList()
         except NotImplementedError:
-            raise unittest.SkipTest('libusb without file descriptor events')
+            raise unittest.SkipTest(
+                'libusb without file descriptor events',
+            ) from None
         self.assertNotEqual(fd_list, None)
         context.exit() # Deprecated
         self.assertEqual(context.getPollFDList(), None)
@@ -352,7 +350,7 @@ class USBTransferTests(unittest.TestCase):
         try:
             usb1.setLogCallback(callback)
             with USBContext(
-                log_level=usb1.LOG_LEVEL_DEBUG,
+                log_level=usb1.LOG_LEVEL_DEBUG, # pylint: disable=no-member
             ):
                 pass
         finally:
@@ -365,7 +363,7 @@ class USBTransferTests(unittest.TestCase):
         message_list = []
         def callback(context, level, message):
             message_list.append((context, level, message))
-        def log_silencer(context, level, message):
+        def log_silencer(_, __, ___):
             pass
         try:
             # Note: silencing global logs is needed here because we lower the
@@ -374,7 +372,7 @@ class USBTransferTests(unittest.TestCase):
             # to stderr.
             usb1.setLogCallback(log_silencer)
             with USBContext(
-                log_level=usb1.LOG_LEVEL_DEBUG,
+                log_level=usb1.LOG_LEVEL_DEBUG, # pylint: disable=no-member
                 log_callback=callback,
             ) as ctx:
                 ctx.setLogCallback(None)
@@ -385,7 +383,7 @@ class USBTransferTests(unittest.TestCase):
     def testSetLocale(self):
         if not hasattr(libusb1, 'libusb_setlocale'):
             raise unittest.SkipTest('libusb without libusb_setlocale')
-        err = usb1.USBErrorIO()
+        err = usb1.USBErrorIO() # pylint: disable=no-member
         usb1.setLocale('en')
         caption_en = err.getMessage()
         self.assertTrue(caption_en)
