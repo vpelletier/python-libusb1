@@ -21,6 +21,7 @@ import functools
 import gc
 import itertools
 import unittest
+import warnings
 import weakref
 import usb1
 from . import libusb1
@@ -328,7 +329,11 @@ class USBTransferTests(unittest.TestCase):
         """
         context = USBContext() # Deprecated
         try:
-            fd_list = context.getPollFDList()
+            with warnings.catch_warnings(
+                action='ignore',
+                category=DeprecationWarning,
+            ):
+                fd_list = context.getPollFDList()
         except NotImplementedError:
             raise unittest.SkipTest(
                 'libusb without file descriptor events',
