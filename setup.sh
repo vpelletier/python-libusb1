@@ -29,5 +29,5 @@ twine check --strict "${release_prefix}"*.{whl,tar.gz}
 echo "Done. Next, check their content, sign each:"
 echo "  for release in ${release_prefix}-*.whl ${release_prefix}.tar.gz; do gpg --armor --detach-sign \"\$release\"; done"
 echo "upload them to pypi:"
-echo "  twine upload ${release_prefix}-*.whl{,.asc} ${release_prefix}.tar.gz{,.asc}"
+echo "  twine upload ${release_prefix}-*.whl ${release_prefix}.tar.gz"
 echo "and create a new release on github"
