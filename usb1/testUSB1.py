@@ -330,15 +330,14 @@ class USBTransferTests(unittest.TestCase):
         """
         context = USBContext() # Deprecated
         try:
-            with warnings.catch_warnings(
-                action='ignore',
-                category=DeprecationWarning,
-            ):
-                fd_list = context.getPollFDList()
+            warnings.filterwarnings('ignore', category=DeprecationWarning)
+            fd_list = context.getPollFDList()
         except NotImplementedError:
             raise unittest.SkipTest(
                 'libusb without file descriptor events',
             ) from None
+        finally:
+            warnings.resetwarnings()
         self.assertNotEqual(fd_list, None)
         context.exit() # Deprecated
         self.assertEqual(context.getPollFDList(), None)
