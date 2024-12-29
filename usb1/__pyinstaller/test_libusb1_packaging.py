@@ -10,8 +10,11 @@ Instructions to run these tests:
   > python -m PyInstaller.utils.run_tests --include_only usb1
 
 """
+# pylint: disable=missing-function-docstring
 import subprocess
+# pylint: disable=import-error
 from PyInstaller import __main__ as pyi_main
+# pylint: enable=import-error
 
 
 def test_pyi_hooksample(tmp_path):
