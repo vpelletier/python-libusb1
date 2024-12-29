@@ -53,6 +53,7 @@ from ctypes import byref, c_int, sizeof, POINTER, \
 from ctypes.util import find_library
 import functools
 import inspect
+import itertools
 import sys
 import threading
 import warnings
@@ -172,6 +173,34 @@ def create_binary_buffer(init_or_size):
         init_or_size = bytearray(init_or_size)
     return create_initialised_buffer(init_or_size)
 
+class _LibUSB1Finalizer: # pylint: disable=too-few-public-methods
+    __finalizer_id_generator = itertools.count()
+
+    def __init__(self):
+        self._finalizer_dict = {}
+
+    @staticmethod
+    def __finalize(handle, pop, func, kw):
+        try:
+            func(**kw)
+        finally:
+            pop(handle)
+
+    def _getFinalizer(self, obj, func, **kw):
+        handle = next(self.__finalizer_id_generator)
+        finalizer_dict = self._finalizer_dict
+        finalizer_dict[handle] = finalizer = weakref.finalize(
+            obj,
+            functools.partial(
+                self.__finalize, # Note: static method
+                handle=handle,
+                pop=finalizer_dict.pop,
+                func=func,
+                kw=kw,
+            ),
+        )
+        return finalizer
+
 def create_initialised_buffer(init):
     # raises if init is an integer - this is intentional
     string_type = c_char * len(init)
@@ -219,8 +248,7 @@ class USBTransfer:
         iso_packets,
         before_submit,
         after_completion,
-        registerFinalizer,
-        unregisterFinalizer,
+        getFinalizer,
         short_is_error,
         add_zero_packet,
     ):
@@ -245,20 +273,14 @@ class USBTransfer:
         self.__transfer = transfer
         self.setShortIsError(short_is_error)
         self.setAddZeroPacket(add_zero_packet)
-        finalizer_handle = id(self)
-        self.__close = weakref.finalize(
+        self.__close = getFinalizer(
             self,
             self.__close, # Note: class method
             transfer=transfer,
             context=context,
-            unregisterFinalizer=functools.partial(
-                unregisterFinalizer,
-                handle=finalizer_handle,
-            ),
             libusb_free_transfer=libusb1.libusb_free_transfer,
             libusb_cancel_transfer=libusb1.libusb_cancel_transfer,
         )
-        registerFinalizer(finalizer_handle, self.__close)
 
     def close(self):
         """
@@ -291,7 +313,6 @@ class USBTransfer:
         cls,
         transfer,
         context,
-        unregisterFinalizer,
         libusb_free_transfer,
         libusb_cancel_transfer,
 
@@ -313,7 +334,6 @@ class USBTransfer:
                 except USBErrorInterrupted_:
                     pass
         libusb_free_transfer(transfer)
-        unregisterFinalizer()
 
     def doom(self):
         """
@@ -1028,7 +1048,7 @@ class _ReleaseInterface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._handle.releaseInterface(self._interface)
 
-class USBDeviceHandle:
+class USBDeviceHandle(_LibUSB1Finalizer):
     """
     Represents an opened USB device.
     """
@@ -1039,8 +1059,7 @@ class USBDeviceHandle:
         context,
         handle,
         device,
-        registerFinalizer,
-        unregisterFinalizer,
+        getFinalizer,
         can_close_device,
     ):
         """
@@ -1048,8 +1067,8 @@ class USBDeviceHandle:
         Call "open" method on an USBDevice instance to get an USBDeviceHandle
         instance.
         """
+        super().__init__()
         self.__context = context
-        self.__finalizer_dict = {}
         # Strong references to inflight transfers so they do not get freed
         # even if user drops all strong references to them. If this instance
         # is garbage-collected, we close all transfers, so it's fine.
@@ -1062,8 +1081,7 @@ class USBDeviceHandle:
         self.__inflight_remove = inflight.remove
         self.__handle = handle
         self.__device = device
-        finalizer_handle = id(self)
-        self.close = weakref.finalize(
+        self.close = getFinalizer(
             self,
             self.close, # Note: static method
             context=context,
@@ -1074,23 +1092,9 @@ class USBDeviceHandle:
                 None
             ),
             inflight=inflight,
-            finalizer_dict=self.__finalizer_dict,
-            unregisterFinalizer=functools.partial(
-                unregisterFinalizer,
-                handle=finalizer_handle,
-            ),
+            finalizer_dict=self._finalizer_dict,
             libusb_close=libusb1.libusb_close,
         )
-        registerFinalizer(finalizer_handle, self.close)
-
-    def __registerFinalizer(self, handle, finalizer):
-        if handle in self.__finalizer_dict:
-            finalizer.detach()
-            raise ValueError('Finalizer handle {handle} already exists')
-        self.__finalizer_dict[handle] = finalizer
-
-    def __unregisterFinalizer(self, handle):
-        self.__finalizer_dict.pop(handle)
 
     @staticmethod
     def close( # pylint: disable=method-hidden
@@ -1099,7 +1103,6 @@ class USBDeviceHandle:
         device,
         inflight,
         finalizer_dict,
-        unregisterFinalizer,
         libusb_close,
 
         set_=set,
@@ -1140,7 +1143,6 @@ class USBDeviceHandle:
         if device is not None:
             device.close()
         libusb_close(handle)
-        unregisterFinalizer()
 
     def getDevice(self):
         """
@@ -1565,8 +1567,7 @@ class USBDeviceHandle:
             iso_packets=iso_packets,
             before_submit=self.__inflight_add,
             after_completion=self.__inflight_remove,
-            registerFinalizer=self.__registerFinalizer,
-            unregisterFinalizer=self.__unregisterFinalizer,
+            getFinalizer=self._getFinalizer,
             short_is_error=short_is_error,
             add_zero_packet=add_zero_packet,
         )
@@ -1781,7 +1782,7 @@ class USBEndpoint:
     def getExtra(self):
         return libusb1.get_extra(self.__endpoint)
 
-class USBDevice:
+class USBDevice(_LibUSB1Finalizer):
     """
     Represents a USB device.
 
@@ -1797,8 +1798,7 @@ class USBDevice:
         self,
         context,
         device_p,
-        registerFinalizer,
-        unregisterFinalizer,
+        getFinalizer,
         can_load_configuration,
         can_change_refcount,
         handle_p,
@@ -1807,13 +1807,12 @@ class USBDevice:
         You should not instanciate this class directly.
         Call USBContext methods to receive instances of this class.
         """
+        super().__init__()
         self.__context = context
-        self.__finalizer_dict = finalizer_dict = {}
         self.__configuration_descriptor_list = descriptor_list = []
         if can_change_refcount:
             libusb1.libusb_ref_device(device_p)
-        finalizer_handle = id(self)
-        self.close = weakref.finalize(
+        self.close = getFinalizer(
             self,
             self.close, # Note: static method
             device_p=(
@@ -1821,16 +1820,11 @@ class USBDevice:
                 if can_change_refcount else
                 None
             ),
-            finalizer_dict=finalizer_dict,
-            unregisterFinalizer=functools.partial(
-                unregisterFinalizer,
-                handle=finalizer_handle,
-            ),
+            finalizer_dict=self._finalizer_dict,
             descriptor_list=descriptor_list,
             libusb_unref_device=libusb1.libusb_unref_device,
             libusb_free_config_descriptor=libusb1.libusb_free_config_descriptor,
         )
-        registerFinalizer(finalizer_handle, self.close)
         self.device_p = device_p
         # Fetch device descriptor
         # Note: if this is made lazy, access errors will happen later, breaking
@@ -1864,25 +1858,14 @@ class USBDevice:
                 context=context,
                 handle=handle_p,
                 device=self,
-                registerFinalizer=self.__registerFinalizer,
-                unregisterFinalizer=self.__unregisterFinalizer,
+                getFinalizer=self._getFinalizer,
                 can_close_device=True,
             )
-
-    def __registerFinalizer(self, handle, finalizer):
-        if handle in self.__finalizer_dict:
-            finalizer.detach()
-            raise ValueError('Finalizer handle {handle} already exists')
-        self.__finalizer_dict[handle] = finalizer
-
-    def __unregisterFinalizer(self, handle):
-        self.__finalizer_dict.pop(handle)
 
     @staticmethod
     def close( # pylint: disable=method-hidden
         device_p,
         finalizer_dict,
-        unregisterFinalizer,
         descriptor_list,
         libusb_unref_device,
         libusb_free_config_descriptor,
@@ -1899,7 +1882,6 @@ class USBDevice:
             libusb_free_config_descriptor(
                 byref_(descriptor_list.pop()),
             )
-        unregisterFinalizer()
 
     def __str__(self):
         return (
@@ -2140,8 +2122,7 @@ class USBDevice:
             context=self.__context,
             handle=handle,
             device=self,
-            registerFinalizer=self.__registerFinalizer,
-            unregisterFinalizer=self.__unregisterFinalizer,
+            getFinalizer=self._getFinalizer,
             can_close_device=False,
         )
 
@@ -2150,7 +2131,7 @@ _zero_tv_p = byref(_zero_tv)
 _null_pointer = c_void_p()
 _NULL_LOG_CALLBACK = libusb1.libusb_log_cb_p(0)
 
-class USBContext:
+class USBContext(_LibUSB1Finalizer):
     """
     libusb1 USB context.
 
@@ -2241,6 +2222,7 @@ class USBContext:
         __enter__, open, or the first context-dependent call, whichever happens
         first) to fail if libusb is older than v1.0.27 .
         """
+        super().__init__()
         # Used to prevent an exit to cause a segfault if a concurrent thread
         # is still in libusb.
         self.__context_refcount = 0
@@ -2248,7 +2230,6 @@ class USBContext:
         self.__context_p = libusb1.libusb_context_p()
         assert not self.__context_p
         self.__hotplug_callback_dict = {}
-        self.__finalizer_dict = {}
         self.__log_level = log_level
         self.__use_usbdk = use_usbdk
         self.__with_device_discovery = with_device_discovery
@@ -2260,15 +2241,6 @@ class USBContext:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
-
-    def __registerFinalizer(self, handle, finalizer):
-        if handle in self.__finalizer_dict:
-            finalizer.detach()
-            raise ValueError('Finalizer handle {handle} already exists')
-        self.__finalizer_dict[handle] = finalizer
-
-    def __unregisterFinalizer(self, handle):
-        self.__finalizer_dict.pop(handle)
 
     def open(self):
         """
@@ -2322,7 +2294,7 @@ class USBContext:
             self.___close, # Note: static method
             context_p=self.__context_p,
             hotplug_callback_dict=self.__hotplug_callback_dict,
-            finalizer_dict=self.__finalizer_dict,
+            finalizer_dict=self._finalizer_dict,
             libusb_exit=libusb1.libusb_exit,
             libusb_hotplug_deregister_callback=libusb1.libusb_hotplug_deregister_callback,
         )
@@ -2401,8 +2373,7 @@ class USBContext:
                     device = USBDevice(
                         context=self,
                         device_p=device_p,
-                        registerFinalizer=self.__registerFinalizer,
-                        unregisterFinalizer=self.__unregisterFinalizer,
+                        getFinalizer=self._getFinalizer,
                         can_load_configuration=True,
                         can_change_refcount=True,
                         handle_p=None,
@@ -2502,8 +2473,7 @@ class USBContext:
         return USBDevice(
             context=self,
             device_p=libusb1.libusb_get_device(handle_p),
-            registerFinalizer=self.__registerFinalizer,
-            unregisterFinalizer=self.__unregisterFinalizer,
+            getFinalizer=self._getFinalizer,
             can_load_configuration=True, # XXX: give the caller control ?
             can_change_refcount=False,
             handle_p=handle_p,
@@ -2612,28 +2582,21 @@ class USBContext:
             user_data,
         )
         if not self.__has_pollfd_finalizer:
+            # Note: the above condition is just to avoid creating finalizers on
+            # every call. If more than one is created (because of a
+            # race-condition) it is not a big deal, as __finalizePollFDNotifiers
+            # will do the right thing even if called multiple times in a row.
             self.__has_pollfd_finalizer = True
-            try:
-                finalizer_handle = id(self)
-                finalizer_dict = self.__finalizer_dict
-                finalizer = weakref.finalize(
-                    self,
-                    self.__finalizePollFDNotifiers, # Note: staticmethod
-                    context_p=self.__context_p,
-                    unregisterFinalizer=functools.partial(
-                        finalizer_dict.pop,
-                        finalizer_handle,
-                    ),
-                    libusb_set_pollfd_notifiers=libusb1.libusb_set_pollfd_notifiers,
-                )
-                self.__registerFinalizer(finalizer_handle, finalizer)
-            except ValueError: # Already registered
-                pass
+            self.getFinalizer(
+                self,
+                self.__finalizePollFDNotifiers, # Note: staticmethod
+                context_p=self.__context_p,
+                libusb_set_pollfd_notifiers=libusb1.libusb_set_pollfd_notifiers,
+            )
 
     @staticmethod
     def __finalizePollFDNotifiers(
         context_p,
-        unregisterFinalizer,
         libusb_set_pollfd_notifiers,
 
         null_pointer=_null_pointer,
@@ -2646,7 +2609,6 @@ class USBContext:
             removed_cb_p,
             null_pointer,
         )
-        unregisterFinalizer()
 
     @_validContext
     def getNextTimeout(self):
@@ -2804,8 +2766,7 @@ class USBContext:
             device = USBDevice(
                 context=self,
                 device_p=device_p,
-                registerFinalizer=self.__registerFinalizer,
-                unregisterFinalizer=self.__unregisterFinalizer,
+                getFinalizer=self._getFinalizer,
                 # pylint: disable=undefined-variable
                 can_load_configuration=event != HOTPLUG_EVENT_DEVICE_LEFT,
                 # pylint: enable=undefined-variable

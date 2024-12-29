@@ -94,8 +94,9 @@ class USBTransferTests(unittest.TestCase):
             iso_packets=iso_packets,
             before_submit=lambda x: None,
             after_completion=lambda x: None,
-            registerFinalizer=lambda handle, finalizer: None,
-            unregisterFinalizer=lambda handle: None,
+            getFinalizer=(
+                lambda obj, func, **kw: weakref.finalize(obj, func, **kw)
+            ),
             short_is_error=short_is_error,
             add_zero_packet=add_zero_packet,
         )
