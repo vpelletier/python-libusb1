@@ -160,7 +160,7 @@ class update_libusb(Command):
             try:
                 for name, value in csv.reader(peres_stdout.splitlines()):
                     if name == 'Product Version':
-                        if value != 'x' + CURRENT_DLL_VERSION:
+                        if value != CURRENT_DLL_VERSION:
                             raise ValueError(
                                 f'{out_dll} unexpected DLL version: {value}',
                             )
