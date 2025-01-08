@@ -17,6 +17,7 @@
 from setuptools import setup
 from setuptools import Command
 from codecs import open
+import csv
 import hashlib
 from html.parser import HTMLParser
 import os
@@ -35,6 +36,7 @@ if os.getenv('I_KNOW_HOW_TO_RELEASE_PYTHON_LIBUSB1') != '1' and any(
 CURRENT_WINDOWS_7Z_SHA256 = (
     '19835e290f46fab6bd8ce4be6ab7dc5209f1c04bad177065df485e51dc4118c8'
 )
+CURRENT_DLL_VERSION = '1.0.27.11882'
 
 cmdclass = versioneer.get_cmdclass()
 class upload(Command):
@@ -141,6 +143,32 @@ class update_libusb(Command):
                 stdout=subprocess.DEVNULL,
                 close_fds=True,
             )
+            out_dll = os.path.join(out_dir, 'libusb-1.0.dll')
+            assert os.path.exists(out_dll)
+            peres_stdout = subprocess.run(
+                [
+                    'peres',
+                    '--format', 'csv',
+                    '-v',
+                    out_dll,
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                encoding='ascii',
+                close_fds=True,
+            ).stdout
+            try:
+                for name, value in csv.reader(peres_stdout.splitlines()):
+                    if name == 'Product Version':
+                        if value != 'x' + CURRENT_DLL_VERSION:
+                            raise ValueError(
+                                f'{out_dll} unexpected DLL version: {value}',
+                            )
+                        break
+                else:
+                    raise ValueError('No "Product Version" in peres output')
+            except Exception as exc:
+                raise ValueError(f'Peres stdout: {peres_stdout!r}') from exc
 cmdclass['update_libusb'] = update_libusb
 
 setup(
