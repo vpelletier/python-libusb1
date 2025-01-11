@@ -174,10 +174,10 @@ def create_binary_buffer(init_or_size):
     return create_initialised_buffer(init_or_size)
 
 class _LibUSB1Finalizer: # pylint: disable=too-few-public-methods
-    __finalizer_id_generator = itertools.count()
-
     def __init__(self):
         self._finalizer_dict = {}
+        self.__finalizer_id_generator = itertools.count()
+        self.__finalizer_id_generator_lock = threading.Lock()
 
     @staticmethod
     def __finalize(handle, pop, func, kw):
@@ -187,7 +187,8 @@ class _LibUSB1Finalizer: # pylint: disable=too-few-public-methods
             pop(handle)
 
     def _getFinalizer(self, obj, func, **kw):
-        handle = next(self.__finalizer_id_generator)
+        with self.__finalizer_id_generator_lock:
+            handle = next(self.__finalizer_id_generator)
         finalizer_dict = self._finalizer_dict
         finalizer_dict[handle] = finalizer = weakref.finalize(
             obj,
