@@ -174,6 +174,13 @@ def create_binary_buffer(init_or_size):
     return create_initialised_buffer(init_or_size)
 
 class _LibUSB1Finalizer: # pylint: disable=too-few-public-methods
+    """
+    Create, and keep track of, finalizer objects.
+    Allows outstanding finalizers to be triggered, typically so C resources
+    owned by the objects associated with those finalizers are freed before
+    another one they depend (and owned by the instance of this class) on may
+    be freed.
+    """
     def __init__(self):
         self._finalizer_dict = {}
         self.__finalizer_id_generator = itertools.count()
@@ -187,6 +194,14 @@ class _LibUSB1Finalizer: # pylint: disable=too-few-public-methods
             pop(handle)
 
     def _getFinalizer(self, obj, func, **kw):
+        """
+        Creates and adds to _finalizer_dict a finalizer which will trigger
+        after obj becomes unreachable and before it is garbage-collected.
+        When it triggers, func(**kw) is called and the finalizer is removed
+        from _finalizer_dict.
+
+        Returns the created finalizer object.
+        """
         with self.__finalizer_id_generator_lock:
             handle = next(self.__finalizer_id_generator)
         finalizer_dict = self._finalizer_dict
