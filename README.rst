@@ -580,6 +580,15 @@ As a result, python-libusb1 should now be usable on Android.
 
 Fix tests on python 3.13 .
 
+3.3.0
+-----
+
+Improve deprecation warning, by showing the correct caller location.
+
+Fix finalizer registration errors on pypi by using a thread-safe sequential number generator instead of relying on object id unicity and timely finalizer triggering.
+
+Check in-dll version when creating Windows wheels. Should hopefully version mixups like what happened in 3.1.0 .
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
