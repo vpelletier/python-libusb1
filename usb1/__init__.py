@@ -2603,7 +2603,7 @@ class USBContext(_LibUSB1Finalizer):
             # race-condition) it is not a big deal, as __finalizePollFDNotifiers
             # will do the right thing even if called multiple times in a row.
             self.__has_pollfd_finalizer = True
-            self.getFinalizer(
+            self._getFinalizer(
                 self,
                 self.__finalizePollFDNotifiers, # Note: staticmethod
                 context_p=self.__context_p,
