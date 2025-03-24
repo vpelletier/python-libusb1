@@ -589,6 +589,11 @@ Fix finalizer registration errors on pypi by using a thread-safe sequential numb
 
 Check in-dll version when creating Windows wheels. Should hopefully version mixups like what happened in 3.1.0 .
 
+3.3.1
+-----
+
+Fix ``AttributeError`` in ``USBContext.setPollFDNotifiers`` introduced in 3.3.0 .
+
 .. _CPython: http://www.python.org/
 
 .. _pypy: http://pypy.org/
