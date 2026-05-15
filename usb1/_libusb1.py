@@ -108,6 +108,7 @@ def newStruct(field_name_list):
     #   will have no effect.
     # pylint: disable=protected-access
     result._pack_ = 1
+    result._layout_ = 'ms'
     result._fields_ = field_list
     # pylint: enable=protected-access
     return result
@@ -1070,6 +1071,7 @@ libusb_config_descriptor_p_p = POINTER(libusb_config_descriptor_p)
 
 class libusb_control_setup(Structure):
     _pack_ = 1
+    _layout_ = 'ms'
     _fields_ = [
         ('bmRequestType', c_uint8),
         ('bRequest', c_uint8),
