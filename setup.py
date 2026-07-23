@@ -16,7 +16,6 @@
 
 from setuptools import setup
 from setuptools import Command
-from codecs import open
 import csv
 import hashlib
 from html.parser import HTMLParser
