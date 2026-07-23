@@ -1,5 +1,21 @@
 #!/bin/bash
 set -eu
+if ! command -v pypy3 >/dev/null; then
+  echo "pypy3 missing, please install it"
+  exit 1
+fi
+if ! command -v peres >/dev/null; then
+  echo "peres missing, please install readpe"
+  exit 1
+fi
+if ! command -v twine >/dev/null; then
+  echo "twine missing, please install it"
+  exit 1
+fi
+if [[ ! -e "${HOME}/.gnupg/trustedkeys-libusb.kbx" ]]; then
+  echo -e "Custom keyring missing, please run:\n  curl --fail --silent --show-error --location https://raw.githubusercontent.com/libusb/libusb/master/KEYS | gpg --batch --no-default-keyring --keyring trustedkeys-libusb.kbx --import"
+  exit 1
+fi
 cd "$(dirname "$(realpath "$0")")"
 for python_v in python3 pypy3; do
   if ./runTestLibusb.sh "$python_v" https://github.com/libusb/libusb.git libusb.git master v1.0.19 v1.0.22 v1.0.24 v1.0.25 v1.0.26 v1.0.27; then
